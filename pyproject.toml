@@ -1,0 +1,49 @@
+[project]
+name = "gridiron"
+version = "0.1.0"
+description = "NFL All-22 coaches-film breakdown: CV perception + football intelligence + chat"
+readme = "README.md"
+requires-python = ">=3.9"   # Apple system Python for now; bump to 3.11+ when available
+
+# Core deps needed for the Week-0 / Phase-0 work (PBP + field model + storage).
+# Heavier CV deps (ultralytics, supervision, scenedetect, paddleocr) are added in
+# the [cv] extra so the data/intelligence layers can be built without a GPU stack.
+dependencies = [
+    "nfl_data_py>=0.3.2",  # play-by-play + participation (free nflverse data)
+    "pandas>=2.0",
+    "pyarrow>=14",         # parquet I/O
+    "duckdb>=0.10",        # analytical store over parquet
+    "numpy>=1.24",
+]
+
+[project.optional-dependencies]
+cv = [
+    "opencv-python>=4.9",
+    "supervision>=0.20",   # sv.Detections / InferenceSlicer / ByteTrack wiring
+    "ultralytics>=8.2",    # YOLO11 (AGPL — prototype only; swap to RF-DETR before distribution)
+    "scenedetect>=0.6",    # play segmentation from continuous film
+]
+chat = [
+    "anthropic>=0.40",     # hosted Claude for the chat brain (only hosted piece; CV stays self-hosted)
+]
+dev = [
+    "pytest>=8",
+    "ruff>=0.4",
+    "polars>=1.0",         # fast loads for large Big Data Bowl tables
+]
+
+[project.scripts]
+gridiron-pull-pbp = "gridiron.data.pbp:main"
+gridiron-stats = "gridiron.data.statsapi:main"
+gridiron-chat = "gridiron.chat.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["gridiron*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"

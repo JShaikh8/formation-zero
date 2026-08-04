@@ -1,0 +1,27 @@
+# Secrets
+.env
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# Data — never commit footage or large derived artifacts
+/data/
+!/data/.gitkeep
+
+# nfl_data_py local cache
+.nfl_cache/
+
+# Models / weights
+*.pt
+*.onnx
+*.engine
+
+# OS
+.DS_Store
