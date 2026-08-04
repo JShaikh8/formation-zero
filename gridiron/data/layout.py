@@ -56,6 +56,16 @@ class GamePaths:
         return self.shots_dir / f"{self.game_key}.parquet"
 
     @property
+    def play_index_path(self) -> Path:
+        """Film time <-> play-by-play join — see `gridiron.perception.play_index`."""
+        return self.root / "derived" / "shots" / f"{self.game_key}.plays.parquet"
+
+    @property
+    def groundtruth_dir(self) -> Path:
+        """Hand-made labels. Versioned, unlike everything else under data/."""
+        return self.root / "groundtruth"
+
+    @property
     def tracking_dir(self) -> Path:
         return self.root / "derived" / "tracking"
 
