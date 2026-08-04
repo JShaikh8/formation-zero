@@ -18,6 +18,7 @@ dependencies = [
 
 [project.optional-dependencies]
 cv = [
+    "av>=12",              # bundles ffmpeg — decoding/probing without a system install
     "opencv-python>=4.9",
     "supervision>=0.20",   # sv.Detections / InferenceSlicer / ByteTrack wiring
     "ultralytics>=8.2",    # YOLO11 (AGPL — prototype only; swap to RF-DETR before distribution)
@@ -36,6 +37,7 @@ dev = [
 gridiron-pull-pbp = "gridiron.data.pbp:main"
 gridiron-stats = "gridiron.data.statsapi:main"
 gridiron-chat = "gridiron.chat.cli:main"
+gridiron-shots = "gridiron.perception.shots:main"
 
 [build-system]
 requires = ["setuptools>=68"]

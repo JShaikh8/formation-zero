@@ -7,6 +7,7 @@
         endzone/  pNNN.mp4
       pbp/<game_key>.parquet
       derived/
+        shots/<game_key>.parquet   camera cuts in the continuous film
         tracking/<play_uid>.parquet
         labels/<play_uid>.json
       plays.parquet
@@ -46,6 +47,15 @@ class GamePaths:
         return self.root / "pbp" / f"{self.game_key}.parquet"
 
     @property
+    def shots_dir(self) -> Path:
+        return self.root / "derived" / "shots"
+
+    @property
+    def shots_path(self) -> Path:
+        """Cut boundaries for this game's film — see `gridiron.perception.shots`."""
+        return self.shots_dir / f"{self.game_key}.parquet"
+
+    @property
     def tracking_dir(self) -> Path:
         return self.root / "derived" / "tracking"
 
@@ -59,6 +69,6 @@ class GamePaths:
 
     def ensure_dirs(self) -> "GamePaths":
         for d in (self.source_dir, self.angle_dir("sideline"), self.angle_dir("endzone"),
-                  self.pbp_path.parent, self.tracking_dir, self.labels_dir):
+                  self.pbp_path.parent, self.shots_dir, self.tracking_dir, self.labels_dir):
             d.mkdir(parents=True, exist_ok=True)
         return self
