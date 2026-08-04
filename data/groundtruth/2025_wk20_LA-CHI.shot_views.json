@@ -1,0 +1,373 @@
+{
+ "game_key": "2025_wk20_LA-CHI",
+ "labelled_by": "Claude (visual inspection of contact sheets at 480px/tile)",
+ "labelled_on": "2026-08-04",
+ "method": "10 windows of 6 consecutive shots, 4 windows on green field and 6 after snow began, sampled from the 419-shot detection. Consecutive runs rather than scattered singles so that sideline/endzone alternation can be measured directly. confident=false marks tiles genuinely ambiguous at contact-sheet resolution; those are excluded when scoring.",
+ "keyed_by": "media time, not shot index \u2014 shot indices shift whenever the detector's MIN_DURATION or threshold changes, and these labels must outlive that",
+ "findings": {
+  "alternation_confident_pairs": "37/37 adjacent pairs alternate view (100%)",
+  "threshold_rule_holdout_accuracy": "84% leave-one-window-out; 94% in-sample (overfit)"
+ },
+ "labels": [
+  {
+   "start_s": 2736.72,
+   "end_s": 2748.64,
+   "view": "ENDZONE",
+   "confident": true
+  },
+  {
+   "start_s": 2748.64,
+   "end_s": 2760.6,
+   "view": "SIDELINE",
+   "confident": true
+  },
+  {
+   "start_s": 2760.6,
+   "end_s": 2774.6,
+   "view": "ENDZONE",
+   "confident": true
+  },
+  {
+   "start_s": 2774.6,
+   "end_s": 2788.6,
+   "view": "SIDELINE",
+   "confident": true
+  },
+  {
+   "start_s": 2788.6,
+   "end_s": 2807.92,
+   "view": "ENDZONE",
+   "confident": true
+  },
+  {
+   "start_s": 2807.92,
+   "end_s": 2826.84,
+   "view": "SIDELINE",
+   "confident": true
+  },
+  {
+   "start_s": 3060.76,
+   "end_s": 3074.72,
+   "view": "SIDELINE",
+   "confident": true
+  },
+  {
+   "start_s": 3074.76,
+   "end_s": 3090.8,
+   "view": "ENDZONE",
+   "confident": true
+  },
+  {
+   "start_s": 3090.8,
+   "end_s": 3106.84,
+   "view": "SIDELINE",
+   "confident": true
+  },
+  {
+   "start_s": 3106.84,
+   "end_s": 3127.04,
+   "view": "ENDZONE",
+   "confident": true
+  },
+  {
+   "start_s": 3127.04,
+   "end_s": 3173.16,
+   "view": "SIDELINE",
+   "confident": false
+  },
+  {
+   "start_s": 3173.2,
+   "end_s": 3199.12,
+   "view": "SIDELINE",
+   "confident": false
+  },
+  {
+   "start_s": 3365.84,
+   "end_s": 3378.64,
+   "view": "SIDELINE",
+   "confident": true
+  },
+  {
+   "start_s": 3378.64,
+   "end_s": 3391.8,
+   "view": "ENDZONE",
+   "confident": true
+  },
+  {
+   "start_s": 3391.8,
+   "end_s": 3404.6,
+   "view": "SIDELINE",
+   "confident": true
+  },
+  {
+   "start_s": 3404.6,
+   "end_s": 3422.68,
+   "view": "ENDZONE",
+   "confident": true
+  },
+  {
+   "start_s": 3422.72,
+   "end_s": 3433.8,
+   "view": "SIDELINE",
+   "confident": true
+  },
+  {
+   "start_s": 3433.8,
+   "end_s": 3455.64,
+   "view": "ENDZONE",
+   "confident": true
+  },
+  {
+   "start_s": 3685.8,
+   "end_s": 3702.68,
+   "view": "SIDELINE",
+   "confident": true
+  },
+  {
+   "start_s": 3702.72,
+   "end_s": 3720.0,
+   "view": "ENDZONE",
+   "confident": true
+  },
+  {
+   "start_s": 3720.0,
+   "end_s": 3736.84,
+   "view": "SIDELINE",
+   "confident": true
+  },
+  {
+   "start_s": 3736.84,
+   "end_s": 3755.8,
+   "view": "ENDZONE",
+   "confident": true
+  },
+  {
+   "start_s": 3755.8,
+   "end_s": 3774.72,
+   "view": "SIDELINE",
+   "confident": true
+  },
+  {
+   "start_s": 3774.76,
+   "end_s": 3792.84,
+   "view": "ENDZONE",
+   "confident": true
+  },
+  {
+   "start_s": 4378.32,
+   "end_s": 4391.52,
+   "view": "ENDZONE",
+   "confident": true
+  },
+  {
+   "start_s": 4391.52,
+   "end_s": 4404.32,
+   "view": "SIDELINE",
+   "confident": true
+  },
+  {
+   "start_s": 4404.32,
+   "end_s": 4419.52,
+   "view": "ENDZONE",
+   "confident": true
+  },
+  {
+   "start_s": 4419.52,
+   "end_s": 4430.72,
+   "view": "SIDELINE",
+   "confident": true
+  },
+  {
+   "start_s": 4430.72,
+   "end_s": 4434.32,
+   "view": "SIDELINE",
+   "confident": false
+  },
+  {
+   "start_s": 4434.32,
+   "end_s": 4449.52,
+   "view": "ENDZONE",
+   "confident": true
+  },
+  {
+   "start_s": 4982.72,
+   "end_s": 4995.92,
+   "view": "ENDZONE",
+   "confident": true
+  },
+  {
+   "start_s": 4995.92,
+   "end_s": 5005.12,
+   "view": "SIDELINE",
+   "confident": true
+  },
+  {
+   "start_s": 5005.12,
+   "end_s": 5008.72,
+   "view": "ENDZONE",
+   "confident": false
+  },
+  {
+   "start_s": 5008.72,
+   "end_s": 5022.72,
+   "view": "ENDZONE",
+   "confident": true
+  },
+  {
+   "start_s": 5022.72,
+   "end_s": 5030.32,
+   "view": "SIDELINE",
+   "confident": true
+  },
+  {
+   "start_s": 5030.32,
+   "end_s": 5036.72,
+   "view": "ENDZONE",
+   "confident": false
+  },
+  {
+   "start_s": 5629.92,
+   "end_s": 5650.72,
+   "view": "ENDZONE",
+   "confident": true
+  },
+  {
+   "start_s": 5650.72,
+   "end_s": 5671.92,
+   "view": "SIDELINE",
+   "confident": true
+  },
+  {
+   "start_s": 5671.92,
+   "end_s": 5692.72,
+   "view": "ENDZONE",
+   "confident": true
+  },
+  {
+   "start_s": 5692.72,
+   "end_s": 5710.72,
+   "view": "SIDELINE",
+   "confident": true
+  },
+  {
+   "start_s": 5710.72,
+   "end_s": 5713.92,
+   "view": "SIDELINE",
+   "confident": false
+  },
+  {
+   "start_s": 5713.92,
+   "end_s": 5728.72,
+   "view": "ENDZONE",
+   "confident": true
+  },
+  {
+   "start_s": 6340.32,
+   "end_s": 6351.12,
+   "view": "SIDELINE",
+   "confident": true
+  },
+  {
+   "start_s": 6351.12,
+   "end_s": 6366.32,
+   "view": "ENDZONE",
+   "confident": true
+  },
+  {
+   "start_s": 6366.32,
+   "end_s": 6381.12,
+   "view": "SIDELINE",
+   "confident": true
+  },
+  {
+   "start_s": 6381.12,
+   "end_s": 6396.32,
+   "view": "ENDZONE",
+   "confident": true
+  },
+  {
+   "start_s": 6396.32,
+   "end_s": 6411.52,
+   "view": "SIDELINE",
+   "confident": true
+  },
+  {
+   "start_s": 6411.52,
+   "end_s": 6426.32,
+   "view": "ENDZONE",
+   "confident": true
+  },
+  {
+   "start_s": 6997.12,
+   "end_s": 7009.12,
+   "view": "SIDELINE",
+   "confident": true
+  },
+  {
+   "start_s": 7009.12,
+   "end_s": 7026.32,
+   "view": "ENDZONE",
+   "confident": true
+  },
+  {
+   "start_s": 7026.32,
+   "end_s": 7043.12,
+   "view": "SIDELINE",
+   "confident": true
+  },
+  {
+   "start_s": 7043.12,
+   "end_s": 7056.32,
+   "view": "ENDZONE",
+   "confident": true
+  },
+  {
+   "start_s": 7056.32,
+   "end_s": 7069.12,
+   "view": "SIDELINE",
+   "confident": true
+  },
+  {
+   "start_s": 7069.12,
+   "end_s": 7083.12,
+   "view": "ENDZONE",
+   "confident": true
+  },
+  {
+   "start_s": 7634.72,
+   "end_s": 7650.72,
+   "view": "SIDELINE",
+   "confident": false
+  },
+  {
+   "start_s": 7650.72,
+   "end_s": 7666.72,
+   "view": "SIDELINE",
+   "confident": false
+  },
+  {
+   "start_s": 7666.72,
+   "end_s": 7675.52,
+   "view": "ENDZONE",
+   "confident": true
+  },
+  {
+   "start_s": 7675.52,
+   "end_s": 7684.72,
+   "view": "SIDELINE",
+   "confident": true
+  },
+  {
+   "start_s": 7684.72,
+   "end_s": 7701.92,
+   "view": "SIDELINE",
+   "confident": false
+  },
+  {
+   "start_s": 7701.92,
+   "end_s": 7718.72,
+   "view": "SIDELINE",
+   "confident": false
+  }
+ ]
+}
