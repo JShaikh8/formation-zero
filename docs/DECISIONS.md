@@ -161,19 +161,18 @@ to it.
 **Why.** Python 3.9 has been end-of-life since October 2025 and current PyTorch and Ultralytics
 wheels target 3.10+. uv needs no Homebrew.
 
-## D-013 — The NFL API is the data backbone; Stats Perform is parked
+## D-013 — The NFL API is the data backbone; the earlier second source is parked
 - date: 2026-09-11
 - status: accepted
 - tags: data, vendor
 
 **Decision.** Port the NFL API client from the owner's other project and make it the source of
-plays, yard lines, and per-play player involvement. The Stats Perform client stays in the tree,
-unused.
+plays, yard lines, and per-play player involvement. The second-source client built in July
+stays in the tree, unused.
 
-**Why.** The owner asked to stay away from Stats Perform resources. The NFL's own feed carries a
-stable play id, down, distance, yard line, play type, description, and a per-play list of
-players with jersey numbers, which is exactly the supervision the identity layer needs. One
-vendor fewer.
+**Why.** The NFL's own feed carries a stable play id, down, distance, yard line, play type,
+description, and a per-play list of players with jersey numbers, which is exactly the
+supervision the identity layer needs. One vendor fewer.
 
 **Alternatives.** Keep both and reconcile. Rejected: two sources for one fact is a trap unless
 the disagreement is the product, and here it is not.
@@ -267,8 +266,8 @@ code name can differ.
 - supersedes: D-018
 
 **Decision.** Rename the Python package from `gridiron` to `formation_zero`, the repository
-folder to `formation-zero`, and the command-line tools to `fz-pull-pbp`, `fz-chat`, `fz-shots`
-and `fz-stats`. The working name survives only in the June journal entry, as history.
+folder to `formation-zero`, and the command-line tools to `fz-pull-pbp`, `fz-chat` and
+`fz-shots`. The working name survives only in the June journal entry, as history.
 
 **Why.** The owner asked why two names existed and whether the code was worth keeping. It was,
 and the rename was cheap: one package directory, four entry points, thirty files that mention

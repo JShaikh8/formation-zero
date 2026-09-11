@@ -18,7 +18,7 @@
         { "key": "GRD-7", "title": "Shot segmentation of continuous film (cut detection, tilt signal)", "status": "done" },
         { "key": "GRD-8", "title": "Hand-labelled camera-angle ground truth for the demo game", "status": "done" },
         { "key": "GRD-9", "title": "Play index: Viterbi view labelling, merge, pair, join to play-by-play", "status": "done" },
-        { "key": "GRD-10", "title": "Stats Perform API client", "status": "parked", "note": "Built 2026-07-26, parked 2026-09-11. Replaced by the NFL API." }
+        { "key": "GRD-10", "title": "Second play-by-play source client", "status": "parked", "note": "Built 2026-07-26, parked 2026-09-11. The NFL API covers the need." }
       ]
     },
     {
@@ -31,7 +31,7 @@
       "stories": [
         { "key": "GRD-11", "title": "System blueprint: architecture, stack, file structure, build order", "status": "done" },
         { "key": "GRD-12", "title": "Decide: stick with the existing repo or restart", "status": "done", "note": "Stick." },
-        { "key": "GRD-13", "title": "Decide: Stats Perform vs NFL API as the data backbone", "status": "done", "note": "NFL API. Stats Perform parked." },
+        { "key": "GRD-13", "title": "Decide the data backbone", "status": "done", "note": "The NFL's own API. The earlier second source is parked." },
         { "key": "GRD-14", "title": "Evaluate SAM 3 and the current model landscape", "status": "done", "note": "SAM 3 is the teacher, not the runtime detector." },
         { "key": "GRD-15", "title": "Design the semi-automatic labelling path", "status": "done" },
         { "key": "GRD-16", "title": "Explain and set the hosted vision budget", "status": "done", "note": "$5 per game starting cap, triggers only." },

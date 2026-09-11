@@ -21,7 +21,6 @@
         { "name": "NFL API (api.nfl.com)", "status": "planned", "plain": "The NFL's own feed: every play, down, distance, yard line, and which jersey numbers touched the ball.", "why": "Official, per-play ids, and it names players per play, which trains identity for free.", "license": "org-issued credentials" },
         { "name": "nflverse (nfl_data_py)", "status": "in_use", "plain": "Free public play-by-play with formation and personnel labels for past seasons.", "why": "The NFL API does not carry personnel or formation; nflverse does.", "license": "MIT / open data" },
         { "name": "Big Data Bowl tracking data", "status": "planned", "plain": "Kaggle's NFL player-tracking datasets, same shape as what our vision layer will produce.", "why": "Lets the football-intelligence code be validated before the vision code is trustworthy.", "license": "Kaggle competition terms" },
-        { "name": "Stats Perform API", "status": "parked", "plain": "A commercial sports-data feed.", "why": "Built in July, parked in September: the NFL API covers the same need without a second vendor.", "license": "commercial" },
         { "name": "DuckDB + Parquet", "status": "in_use", "plain": "Files on disk that act like a fast database.", "why": "Columnar, joins a season in memory on 16 GB, no server to run.", "license": "MIT / Apache-2.0" }
       ]
     },
