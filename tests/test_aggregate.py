@@ -3,7 +3,7 @@
 import duckdb
 import pandas as pd
 
-from gridiron.chat.query import run_aggregate_plays, run_query_plays
+from formation_zero.chat.query import run_aggregate_plays, run_query_plays
 
 
 def rich_con():

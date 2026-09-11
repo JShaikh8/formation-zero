@@ -1,6 +1,6 @@
 """Unit tests for the personnel/formation parser."""
 
-from gridiron.intelligence.personnel import (
+from formation_zero.intelligence.personnel import (
     defensive_front,
     offensive_grouping,
     parse_personnel,

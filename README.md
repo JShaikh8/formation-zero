@@ -1,4 +1,4 @@
-# Formation Zero (package: gridiron)
+# Formation Zero (package: formation_zero)
 
 NFL **All-22** coaches-film breakdown: computer-vision perception + rule-based football
 intelligence + a chat interface ("show me all the Cover 3 defenses").
@@ -16,10 +16,10 @@ See the full build plan at `~/.claude/plans/hello-i-want-to-spicy-quiche.md`.
 
 ## Architecture (5 layers)
 
-1. **Perception** (`gridiron/perception/`) — video → tracking table (player x/y in field yards).
-2. **Intelligence** (`gridiron/intelligence/`) — tracking → roles, formation, personnel, technique, coverage.
-3. **Storage** (`gridiron/data/`) — DuckDB + Parquet, `plays.parquet` master index.
-4. **Chat** (`gridiron/chat/`) — text-to-SQL over a constrained semantic layer (hosted Claude).
+1. **Perception** (`formation_zero/perception/`) — video → tracking table (player x/y in field yards).
+2. **Intelligence** (`formation_zero/intelligence/`) — tracking → roles, formation, personnel, technique, coverage.
+3. **Storage** (`formation_zero/data/`) — DuckDB + Parquet, `plays.parquet` master index.
+4. **Chat** (`formation_zero/chat/`) — text-to-SQL over a constrained semantic layer (hosted Claude).
 5. **UX** — Next.js film room (separate app, built last).
 
 ## Strategy
@@ -32,13 +32,13 @@ field registration (the hardest CV piece) to a known yard line.
 ## Quickstart (Week 0)
 
 ```bash
-cd ~/projects/gridiron
+cd ~/projects/formation-zero
 python3 -m venv .venv && source .venv/bin/activate
 pip install -e .            # core (PBP + field model + storage)
 # pip install -e '.[cv,dev]'  # add the CV stack when you start perception
 
 # Pull play-by-play for one game (canonical play list + labels/alignment backbone):
-gridiron-pull-pbp --season 2024 --week 5 --away BUF --home NYJ --out data
+fz-pull-pbp --season 2024 --week 5 --away BUF --home NYJ --out data
 ```
 
 That writes `data/pbp/2024_wk05_BUF-NYJ.parquet` — down, distance, line-of-scrimmage,
@@ -48,9 +48,9 @@ personnel, and a `play_index` you align your segmented film clips against.
 # Chat with the data (hosted Claude; the CV stays self-hosted):
 pip install -e '.[chat]'
 export ANTHROPIC_API_KEY=sk-ant-...
-gridiron-chat "how often did KC run 11 personnel on third down?"
-gridiron-chat "which personnel grouping was most efficient?"   # EPA/play, success, explosive
-gridiron-chat            # interactive REPL
+fz-chat "how often did KC run 11 personnel on third down?"
+fz-chat "which personnel grouping was most efficient?"   # EPA/play, success, explosive
+fz-chat            # interactive REPL
 ```
 
 The chat brain (`claude-opus-4-8`) translates football questions into two constrained tools —

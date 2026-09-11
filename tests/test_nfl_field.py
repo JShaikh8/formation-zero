@@ -1,6 +1,6 @@
 """Geometry checks for the NFL field model — no external deps, run with pytest."""
 
-from gridiron.configs.nfl_field import (
+from formation_zero.configs.nfl_field import (
     FIELD_LENGTH_YD,
     FIELD_WIDTH_YD,
     NFLFieldConfiguration,

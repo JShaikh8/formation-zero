@@ -11,11 +11,11 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from gridiron.perception.play_index import (
+from formation_zero.perception.play_index import (
     FILMABLE_PLAY_TYPES, Play, emissions_from, filmable, join, kde_logpdf, label_views,
     merge_same_view, pair_plays,
 )
-from gridiron.perception.shots import Shot
+from formation_zero.perception.shots import Shot
 
 
 def shots(n, duration=14.0):

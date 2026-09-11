@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import json
 
-from gridiron.chat.query import (
+from formation_zero.chat.query import (
     AGG_ARGS,
     AGGREGATE_PLAYS_TOOL,
     QUERY_ARGS,

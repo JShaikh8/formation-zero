@@ -3,7 +3,7 @@
 import duckdb
 import pandas as pd
 
-from gridiron.chat.query import run_query_plays
+from formation_zero.chat.query import run_query_plays
 
 
 def make_con():

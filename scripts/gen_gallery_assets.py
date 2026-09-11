@@ -2,7 +2,7 @@
 
 Three images, written to site/assets/:
 
-    field.svg            the NFL field model, drawn from gridiron.configs.nfl_field
+    field.svg            the NFL field model, drawn from formation_zero.configs.nfl_field
     shots-histogram.svg  take durations and the tilt signal for the demo game's 419 shots
     play-timeline.svg    the 184 plays of the demo game on the film's clock
 
@@ -19,7 +19,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from gridiron.configs.nfl_field import (
+from formation_zero.configs.nfl_field import (
     END_ZONE_DEPTH_YD,
     FIELD_LENGTH_YD,
     FIELD_WIDTH_YD,

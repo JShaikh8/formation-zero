@@ -13,7 +13,7 @@ Alignment is expressed relative to the ball at the snap, not in absolute field c
     lateral : yards left(-) / right(+) of the ball, from the offense's point of view
     depth   : yards behind the line of scrimmage (0 = on the line, positive = backfield)
 
-`to_snap_frame` converts absolute (x, y) in `gridiron.configs.nfl_field` coordinates into that
+`to_snap_frame` converts absolute (x, y) in `formation_zero.configs.nfl_field` coordinates into that
 frame given the LOS and the direction of attack.
 
 Region thresholds come from real football geometry, not from the display coordinates the

@@ -9,14 +9,14 @@ This is the **labels + alignment backbone** of the whole system:
 The LOS yard line is what later anchors field registration to a known landmark.
 
 CLI:
-    gridiron-pull-pbp --season 2024 --week 5 --away BUF --home NYJ --out data
+    fz-pull-pbp --season 2024 --week 5 --away BUF --home NYJ --out data
 """
 
 from __future__ import annotations
 
 import argparse
 
-from gridiron.ids import game_key, nflverse_game_id, play_uid
+from formation_zero.ids import game_key, nflverse_game_id, play_uid
 
 # Plays that typically appear in offensive All-22 coaches film, in order.
 SCRIMMAGE_PLAY_TYPES = {"pass", "run", "qb_kneel", "qb_spike"}
@@ -43,7 +43,7 @@ def pull_game_pbp(season: int, week: int, away: str, home: str,
         import nfl_data_py as nfl
     except ImportError as e:  # pragma: no cover - environment guidance
         raise SystemExit(
-            "nfl_data_py is not installed. Run:  pip install -e .  (from ~/projects/gridiron)"
+            "nfl_data_py is not installed. Run:  pip install -e .  (from ~/projects/formation_zero)"
         ) from e
     import pandas as pd
 
@@ -109,7 +109,7 @@ def _join_participation(nfl, season: int, game, pd):
 
 def write_game_pbp(season: int, week: int, away: str, home: str, out: str = "data") -> str:
     """Pull + write data/pbp/<game_key>.parquet. Returns the output path."""
-    from gridiron.data.layout import GamePaths
+    from formation_zero.data.layout import GamePaths
 
     tidy = pull_game_pbp(season, week, away, home)
     paths = GamePaths(out, season, week, away, home).ensure_dirs()

@@ -249,7 +249,7 @@ a higher cap, the log records the new number and what it bought.
 
 ## D-018 — Public name: Formation Zero; package name stays gridiron
 - date: 2026-09-11
-- status: accepted
+- status: superseded
 - tags: naming
 
 **Decision.** The project, the GitHub repository and the tracker site are called Formation
@@ -257,3 +257,22 @@ Zero. The Python package keeps its working name, gridiron, so nothing has to be 
 
 **Why.** Renaming a package touches every import for no functional gain. A public name and a
 code name can differ.
+
+**Superseded by.** D-019, the same day. The reasoning above was weak at this size.
+
+## D-019 — One name everywhere: the package is formation_zero
+- date: 2026-09-11
+- status: accepted
+- tags: naming
+- supersedes: D-018
+
+**Decision.** Rename the Python package from `gridiron` to `formation_zero`, the repository
+folder to `formation-zero`, and the command-line tools to `fz-pull-pbp`, `fz-chat`, `fz-shots`
+and `fz-stats`. The working name survives only in the June journal entry, as history.
+
+**Why.** The owner asked why two names existed and whether the code was worth keeping. It was,
+and the rename was cheap: one package directory, four entry points, thirty files that mention
+the name, fifteen minutes. In six months it would be an afternoon. A single name removes a
+question every new reader would otherwise ask.
+
+**Gained / lost.** Gained one name. Lost nothing; all 158 tests pass after the rename.

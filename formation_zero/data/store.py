@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from gridiron.intelligence.personnel import summarize_play
+from formation_zero.intelligence.personnel import summarize_play
 
 # Columns added by the intelligence layer (parallel to summarize_play()).
 ENRICHED_COLS = [
@@ -46,7 +46,7 @@ def load_plays(data_root: str | Path = "data", con=None):
     if not paths:
         raise FileNotFoundError(
             f"No PBP parquet in {pbp_dir}. Run e.g.:\n"
-            f"  gridiron-pull-pbp --season 2023 --week 1 --away DET --home KC --out {data_root}"
+            f"  fz-pull-pbp --season 2023 --week 1 --away DET --home KC --out {data_root}"
         )
     df = pd.concat([pd.read_parquet(p) for p in paths], ignore_index=True)
     plays = enrich_plays(df)

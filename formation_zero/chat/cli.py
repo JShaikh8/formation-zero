@@ -1,7 +1,7 @@
-"""`gridiron-chat` — ask the play database questions in natural language (hosted Claude).
+"""`fz-chat` — ask the play database questions in natural language (hosted Claude).
 
-    gridiron-chat "how often did KC run 11 personnel on third down?"
-    gridiron-chat            # interactive REPL
+    fz-chat "how often did KC run 11 personnel on third down?"
+    fz-chat            # interactive REPL
 
 Requires ANTHROPIC_API_KEY (the only hosted dependency; the CV pipeline stays self-hosted).
 """
@@ -29,8 +29,8 @@ def main(argv: list[str] | None = None) -> int:
               "self-hosted.", file=sys.stderr)
         return 1
 
-    from gridiron.chat.agent import chat
-    from gridiron.data.store import load_plays
+    from formation_zero.chat.agent import chat
+    from formation_zero.data.store import load_plays
 
     con = load_plays(args.data)
     n = con.execute("SELECT COUNT(*) FROM plays").fetchone()[0]
@@ -47,7 +47,7 @@ def main(argv: list[str] | None = None) -> int:
         ask(" ".join(args.question))
         return 0
 
-    print(f"gridiron chat — {n} plays loaded. Ask about formations / personnel / situations. "
+    print(f"formation_zero chat — {n} plays loaded. Ask about formations / personnel / situations. "
           "Ctrl-D to exit.")
     while True:
         try:

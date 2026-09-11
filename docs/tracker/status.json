@@ -1,7 +1,7 @@
 {
   "project": {
     "name": "Formation Zero",
-    "codename": "gridiron",
+    "codename": "formation_zero",
     "tagline": "Teaching a computer to watch NFL coaches film.",
     "site": "https://formation-zero.onrender.com",
     "repo": "https://github.com/JShaikh8/formation-zero",

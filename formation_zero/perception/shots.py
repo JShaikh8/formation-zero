@@ -229,7 +229,7 @@ def main(argv: list[str] | None = None) -> int:
     """CLI: scan a film window and write the shot table for a game."""
     import argparse
 
-    from gridiron.data.layout import GamePaths
+    from formation_zero.data.layout import GamePaths
 
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     parser.add_argument("video", help="path to the film (use the proxy rendition; it is faster "

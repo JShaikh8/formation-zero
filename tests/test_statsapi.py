@@ -4,7 +4,7 @@ import hashlib
 
 import pytest
 
-from gridiron.data import statsapi
+from formation_zero.data import statsapi
 
 
 def test_signature_matches_sha256_of_key_secret_timestamp():

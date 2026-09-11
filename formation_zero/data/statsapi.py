@@ -1,6 +1,6 @@
 """STATS Perform API (api.stats.com) client — schedule lookup + full event play-by-play.
 
-An alternative PBP source to nflverse (see gridiron.data.pbp). Two reasons it matters here:
+An alternative PBP source to nflverse (see formation_zero.data.pbp). Two reasons it matters here:
 
   1. nflverse participation (personnel/formation) is FTN-sourced, post-season only, and has no
      2025+ data — so nflverse alone can't label recent film.
@@ -17,9 +17,9 @@ Stdlib only — no new dependencies.
 
 CLI::
 
-    gridiron-stats events --season 2025 --team CHI     # find the eventId
-    gridiron-stats pbp --event-id 2879591              # fetch + cache raw JSON
-    gridiron-stats pbp --event-id 2879591 --show       # ... and summarize its shape
+    fz-stats events --season 2025 --team CHI     # find the eventId
+    fz-stats pbp --event-id 2879591              # fetch + cache raw JSON
+    fz-stats pbp --event-id 2879591 --show       # ... and summarize its shape
 """
 
 from __future__ import annotations
@@ -44,7 +44,7 @@ _MAX_WALK_DEPTH = 12
 
 
 def repo_root() -> Path:
-    """Repo root (parent of the `gridiron` package)."""
+    """Repo root (parent of the `formation_zero` package)."""
     return Path(__file__).resolve().parents[2]
 
 
@@ -324,7 +324,7 @@ _EVENT_TYPE_ARG = {"preseason": 0, "regular": 1, "postseason": 2}
 
 
 def _cmd_events(args) -> int:
-    from gridiron.data.teams import load_registry
+    from formation_zero.data.teams import load_registry
 
     registry = load_registry(args.season, args.out)
     team_id = registry.resolve_id(args.team) if args.team else None
@@ -344,8 +344,8 @@ def _cmd_events(args) -> int:
 
 
 def _cmd_pbp(args) -> int:
-    from gridiron.data.stats_pbp import normalize_event
-    from gridiron.data.teams import load_registry
+    from formation_zero.data.stats_pbp import normalize_event
+    from formation_zero.data.teams import load_registry
 
     payload = fetch_event(args.event_id)
     raw_path = save_raw(payload, f"event_{args.event_id}", args.out)

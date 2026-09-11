@@ -36,6 +36,7 @@
         { "key": "GRD-15", "title": "Design the semi-automatic labelling path", "status": "done" },
         { "key": "GRD-16", "title": "Explain and set the hosted vision budget", "status": "done", "note": "$5 per game starting cap, triggers only." },
         { "key": "GRD-17", "title": "Companion tracker: docs as source of truth, static site build", "status": "done" },
+        { "key": "GRD-62", "title": "Rename the package to formation_zero; one name everywhere", "status": "done" },
         { "key": "GRD-18", "title": "Push to GitHub and connect the Render static site", "status": "todo" },
         { "key": "GRD-19", "title": "Confirm whether the film carries painted LOS / first-down graphics", "status": "todo" },
         { "key": "GRD-20", "title": "NFL API credentials available on the build machine", "status": "todo" }

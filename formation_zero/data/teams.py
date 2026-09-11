@@ -138,7 +138,7 @@ def load_registry(season: int = 2025, data_root: str | Path = "data",
         return TeamRegistry.from_payload(json.loads(cache.read_text()))
     if fetch:
         try:
-            from gridiron.data.statsapi import fetch_teams, save_raw
+            from formation_zero.data.statsapi import fetch_teams, save_raw
 
             payload = fetch_teams(season)
             save_raw(payload, f"teams_{season}", data_root)

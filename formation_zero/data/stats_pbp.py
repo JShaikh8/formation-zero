@@ -1,4 +1,4 @@
-"""Normalize a STATS event payload into the tidy per-play schema used by `gridiron.data.pbp`.
+"""Normalize a STATS event payload into the tidy per-play schema used by `formation_zero.data.pbp`.
 
 What STATS gives that nflverse does not
 ---------------------------------------
@@ -16,14 +16,14 @@ Yard lines
 ----------
 STATS writes the ball spot team-relative ("Chi37" = the Bears' 37). Converting to nflverse's
 `yardline_100` (yards to the *defending* goal line) needs the possessing team, and that is what
-`gridiron.configs.nfl_field.line_of_scrimmage_x` consumes to anchor field registration.
+`formation_zero.configs.nfl_field.line_of_scrimmage_x` consumes to anchor field registration.
 """
 
 from __future__ import annotations
 
 import re
 
-from gridiron.data.teams import TeamRegistry
+from formation_zero.data.teams import TeamRegistry
 
 _YARDLINE_RE = re.compile(r"^([A-Za-z]+)\s*(\d{1,2})$")
 
@@ -128,7 +128,7 @@ def parse_yardline(yardline: str | None, posteam_abbr: str | None) -> int | None
     side, yard = match.group(1), int(match.group(2))
     if not 0 <= yard <= 50:
         return None
-    from gridiron.data.teams import to_nflverse
+    from formation_zero.data.teams import to_nflverse
 
     own_half = to_nflverse(side) == posteam_abbr.upper()
     return 100 - yard if own_half else yard
@@ -158,7 +158,7 @@ def _int_or_none(value):
 
 def event_node(payload: dict) -> dict:
     """The single event record inside an event-detail payload."""
-    from gridiron.data.statsapi import iter_events
+    from formation_zero.data.statsapi import iter_events
 
     for _type_id, _name, event in iter_events(payload):
         return event
@@ -166,19 +166,19 @@ def event_node(payload: dict) -> dict:
 
 
 def normalize_event(payload: dict, registry: TeamRegistry | None = None):
-    """STATS event payload -> tidy per-play DataFrame matching gridiron.data.pbp's schema.
+    """STATS event payload -> tidy per-play DataFrame matching formation_zero.data.pbp's schema.
 
     Adds `play_index` / `play_uid` over scrimmage plays only — the alignment key against
     segmented film clips (Nth clip -> Nth scrimmage play).
     """
     import pandas as pd
 
-    from gridiron.ids import game_key, play_uid
+    from formation_zero.ids import game_key, play_uid
 
     registry = registry or TeamRegistry.fallback()
     event = event_node(payload)
 
-    from gridiron.data.statsapi import home_away, start_date
+    from formation_zero.data.statsapi import home_away, start_date
 
     home, away = home_away(event)
     home_abbr = registry.abbreviation(home.get("teamId")) if home else None
@@ -244,7 +244,7 @@ def normalize_event(payload: dict, registry: TeamRegistry | None = None):
 
 def _season_of(payload: dict, event: dict) -> int:
     """Season for an event, from the envelope, falling back to the start date's year."""
-    from gridiron.data.statsapi import season_node, start_date
+    from formation_zero.data.statsapi import season_node, start_date
 
     season = season_node(payload).get("season")
     if season:

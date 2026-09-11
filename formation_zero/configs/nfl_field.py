@@ -22,7 +22,7 @@ Dimensions (NFL rulebook)
 
 The repeating 5-yd grid is intentionally regular — which is exactly why pure line/keypoint
 calibration is ambiguous. We disambiguate using the play's line-of-scrimmage yard line from
-play-by-play data (see gridiron.data.pbp).
+play-by-play data (see formation_zero.data.pbp).
 """
 
 from __future__ import annotations

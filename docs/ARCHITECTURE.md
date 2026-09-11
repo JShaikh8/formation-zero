@@ -9,8 +9,8 @@ code that already exists in this repository as of 2026-09-11.
 
 Decisions changed on 2026-09-11, after the first draft:
 
-- **Stats Perform is out.** `gridiron/data/statsapi.py` and `stats_pbp.py` stay in the tree but
-  are parked: nothing new depends on them and the `gridiron-stats` CLI is not part of any
+- **Stats Perform is out.** `formation_zero/data/statsapi.py` and `stats_pbp.py` stay in the tree but
+  are parked: nothing new depends on them and the `fz-stats` CLI is not part of any
   milestone. The NFL's own API (`api.nfl.com`) is the play-by-play and identity backbone
   instead (section 5). nflverse stays for the free labels the NFL API does not carry.
 - **SAM 3 is the teacher, not the runtime detector** (section 6). It does the labelling; a small
@@ -26,12 +26,12 @@ The repo is not empty. Four commits, 158 passing tests, and these working pieces
 
 | Layer | Module | Status |
 |---|---|---|
-| Play-by-play backbone | `gridiron/data/pbp.py`, `teams.py` | Working. nflverse normalised to one schema, per-play `play_uid`. The NFL API adapter (section 5) is the next source; `statsapi.py` / `stats_pbp.py` are parked. |
-| Field model | `gridiron/configs/nfl_field.py` | Working. Yard-accurate landmark grid, LOS anchoring from `yardline_100`. |
-| Shot segmentation | `gridiron/perception/shots.py` | Working, calibrated on `2025_wk20_LA-CHI`. Continuous film → camera cuts. |
-| Play index | `gridiron/perception/play_index.py` | Working. Viterbi view labelling + pairing → 184 plays matched PBP exactly. |
-| Intelligence | `gridiron/intelligence/personnel.py`, `formations.py` | Working. Personnel parsing; slot-based formation taxonomy in a snap-relative frame. |
-| Store + chat | `gridiron/data/store.py`, `gridiron/chat/*` | Working. DuckDB semantic layer, two constrained tools, hosted Claude agent. |
+| Play-by-play backbone | `formation_zero/data/pbp.py`, `teams.py` | Working. nflverse normalised to one schema, per-play `play_uid`. The NFL API adapter (section 5) is the next source; `statsapi.py` / `stats_pbp.py` are parked. |
+| Field model | `formation_zero/configs/nfl_field.py` | Working. Yard-accurate landmark grid, LOS anchoring from `yardline_100`. |
+| Shot segmentation | `formation_zero/perception/shots.py` | Working, calibrated on `2025_wk20_LA-CHI`. Continuous film → camera cuts. |
+| Play index | `formation_zero/perception/play_index.py` | Working. Viterbi view labelling + pairing → 184 plays matched PBP exactly. |
+| Intelligence | `formation_zero/intelligence/personnel.py`, `formations.py` | Working. Personnel parsing; slot-based formation taxonomy in a snap-relative frame. |
+| Store + chat | `formation_zero/data/store.py`, `formation_zero/chat/*` | Working. DuckDB semantic layer, two constrained tools, hosted Claude agent. |
 
 What does **not** exist yet is everything between "this stretch of film is play 17" and
 "here is where all 22 players were on every frame of play 17": decoding, detection, tracking,
@@ -115,7 +115,7 @@ virtual camera is that same table with player pose lifted off the ground plane.
 
 ### 1.3 Component responsibilities
 
-**A. Video ingestion (`gridiron/ingest/`)**
+**A. Video ingestion (`formation_zero/ingest/`)**
 
 - `probe`: fps, frame count, keyframe positions, codec, resolution. Written once per source file
   to a JSON sidecar so no stage re-probes.
@@ -130,7 +130,7 @@ virtual camera is that same table with player pose lifted off the ground plane.
   range, yields `(frame_index, timestamp, ndarray)`. Handles the seek-then-drop pattern that
   `shots.py` already uses.
 
-**B. Local inference pipeline (`gridiron/perception/`)**
+**B. Local inference pipeline (`formation_zero/perception/`)**
 
 Every model sits behind a `Protocol` in `perception/base.py` and is chosen by name from a
 YAML config, so swapping YOLO11 for RF-DETR is a config change. The stages, in dependency order:
@@ -172,7 +172,7 @@ Output per play: `derived/tracking/<play_uid>.parquet` in Big Data Bowl column n
 (`frame_id, nfl_id/track_id, team, jersey, x, y, s, a, dis, o, dir, event`) plus
 `conf`, `angle_source`, `phase`.
 
-**C. Reasoning router (`gridiron/reasoning/`)**
+**C. Reasoning router (`formation_zero/reasoning/`)**
 
 - `triggers.py` turns the pipeline's quality signals into typed `ReasoningRequest` objects.
   Initial trigger set:
@@ -197,7 +197,7 @@ Output per play: `derived/tracking/<play_uid>.parquet` in Big Data Bowl column n
   and label tables by the intelligence layer, never overwriting the local estimate, always
   recorded alongside it with its source.
 
-**D. Intelligence (`gridiron/intelligence/`)**
+**D. Intelligence (`formation_zero/intelligence/`)**
 
 Existing modules stay. New modules consume the tracking table:
 
@@ -216,7 +216,7 @@ Existing modules stay. New modules consume the tracking table:
 The same modules run unchanged on Big Data Bowl tracking data, which is how they get validated
 before our own CV output is trustworthy.
 
-**E. Storage and export (`gridiron/data/`, `gridiron/viz/`)**
+**E. Storage and export (`formation_zero/data/`, `formation_zero/viz/`)**
 
 - One Parquet file per artifact per play, one DuckDB database file per data root with views
   over all of them. No row-store database; nothing here is transactional.
@@ -225,7 +225,7 @@ before our own CV output is trustworthy.
 - Exports: overlay MP4 (boxes, tracks, jersey, phase), 2D top-down MP4 and PNG contact sheets,
   per-play JSON, CSV of the tracking table, and the existing chat interface.
 
-### 1.4 Pipeline orchestration (`gridiron/pipeline/`)
+### 1.4 Pipeline orchestration (`formation_zero/pipeline/`)
 
 A small stage graph, not Airflow or Prefect. Each `Stage` declares its inputs, outputs, and
 config keys. The `Runner` walks the graph for a set of `play_uid`s, checks manifests, and runs
@@ -268,7 +268,7 @@ Install path (no Homebrew required):
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
 uv python install 3.12
-cd ~/projects/gridiron && uv venv --python 3.12 && source .venv/bin/activate
+cd ~/projects/formation-zero && uv venv --python 3.12 && source .venv/bin/activate
 uv pip install -e '.[cv,chat,reasoning,viz,dev]'
 ```
 
@@ -304,7 +304,7 @@ uv pip install -e '.[cv,chat,reasoning,viz,dev]'
 | Async | `asyncio` for the router; `concurrent.futures` for decode | Right tool for each: I/O-bound vs CPU-bound. |
 | Storage | **Parquet** (pyarrow) per artifact per play + **DuckDB** views | Columnar, zero-copy scans, joins across a season in memory on 16 GB; already chosen and working. |
 | Labels / ground truth | JSON per game under `data/groundtruth/`, versioned | Same convention `play_index.py` uses. |
-| Config | **pydantic-settings** + YAML files under `gridiron/configs/` | Model choice, provider choice, thresholds, device, budgets all live outside code. |
+| Config | **pydantic-settings** + YAML files under `formation_zero/configs/` | Model choice, provider choice, thresholds, device, budgets all live outside code. |
 | Cache | SQLite file under `data/cache/` keyed by content hash | Router responses, SigLIP embeddings. |
 
 ### 2.5 Visualisation and tooling
@@ -317,7 +317,7 @@ uv pip install -e '.[cv,chat,reasoning,viz,dev]'
 | Annotation | CVAT (self-hosted, Docker) or Roboflow Annotate for keypoints and boxes |
 | Tests | pytest with synthetic tracking fixtures; one small real clip fixture checked into `tests/fixtures/` |
 | Lint / format | ruff (existing) |
-| CLI | argparse, one umbrella `gridiron` entrypoint dispatching to the existing stage commands |
+| CLI | argparse, one umbrella `fz` entrypoint dispatching to the existing stage commands |
 
 ---
 
@@ -326,7 +326,7 @@ uv pip install -e '.[cv,chat,reasoning,viz,dev]'
 Additions are marked `+`. Existing files are listed so the whole tree is visible.
 
 ```
-gridiron/                                   repo root
+formation-zero/                             repo root
 ├── pyproject.toml                          extras: cv, chat, +reasoning, +viz, dev
 ├── README.md
 ├── .env.example                            +NFL_API_CLIENT_ID/KEY/SECRET/DEVICE_ID, +ANTHROPIC_API_KEY, +GRIDIRON_DEVICE
@@ -334,10 +334,10 @@ gridiron/                                   repo root
 │   ├── ARCHITECTURE.md                     this file
 │   ├── +SCHEMAS.md                         every Parquet artifact, column by column
 │   └── +LABELLING.md                       how to label field keypoints / balls / jerseys
-├── gridiron/
+├── formation_zero/
 │   ├── __init__.py
 │   ├── ids.py                              game_key / play_uid (exists)
-│   ├── +cli.py                             `gridiron <stage> ...` umbrella entrypoint
+│   ├── +cli.py                             `fz <stage> ...` umbrella entrypoint
 │   ├── configs/
 │   │   ├── nfl_field.py                    field landmark model (exists)
 │   │   ├── +settings.py                    pydantic-settings: paths, device, budgets, model/provider names
@@ -428,7 +428,7 @@ gridiron/                                   repo root
 │   ├── groundtruth/                        versioned hand labels
 │   ├── derived/{shots,tracking,labels,reasoning,registration}/
 │   ├── cache/
-│   └── gridiron.duckdb
+│   └── formation_zero.duckdb
 ├── scripts/                                one-off tooling (label export, weight download)
 ├── notebooks/                              exploration only; nothing imports from here
 ├── tests/
@@ -447,7 +447,7 @@ Rules that keep this modular:
    never pass Python objects to each other across the runner.
 3. Heavy imports (`torch`, `ultralytics`, `av`) stay inside functions, as `shots.py` already
    does, so the core package imports without the CV stack installed.
-4. `notebooks/` and `scripts/` are leaves. Nothing under `gridiron/` imports from them.
+4. `notebooks/` and `scripts/` are leaves. Nothing under `formation_zero/` imports from them.
 
 ---
 
@@ -457,7 +457,7 @@ Each milestone ends with something you can watch or query.
 
 | # | Milestone | Proof it works |
 |---|---|---|
-| 1 | Runtime upgrade + ingestion: uv/3.12, proxy, clips, frame iterator; NFL API adapter | Every play of the demo game as two clips joined to NFL API `playId`; `gridiron clips` idempotent via manifest |
+| 1 | Runtime upgrade + ingestion: uv/3.12, proxy, clips, frame iterator; NFL API adapter | Every play of the demo game as two clips joined to NFL API `playId`; `formation_zero clips` idempotent via manifest |
 | 2 | Label bootstrap: SAM 3 teacher on sampled frames, first review sheet, first student detector | Student detector trained from zero hand-drawn boxes; review sheet took under 30 minutes |
 | 3 | Detect + track + team split, overlay export | Overlay MP4 of ten plays with stable ids and correct team colours |
 | 4 | Field registration + snap/phase + projection | **2D top-down MP4** of ten plays; formation frame matches nflverse `offense_formation` |
@@ -479,7 +479,7 @@ offline on a laptop and needs the raw payloads on disk.
 
 ### 5.1 What we take from each endpoint
 
-| Endpoint | What gridiron uses it for |
+| Endpoint | What Formation Zero uses it for |
 |---|---|
 | `/experience/v1/gamedetailsbyslug/{slug}?includeReplays=false` | The play list. From `driveChart.plays[]`: `playId`, `quarter`, `clockTime`, `down`, `yardsRemaining`, `yardLine` (team-relative, e.g. `PHI 1`), `playType`, `playDescription`, `playScored`, `playDeleted`, `driveSequence`, and `stats[]`. `homeTeam.id` / `awayTeam.id` are the team GUIDs; `externalIds[source=gsis]` is the GSIS game id used to join nflverse. |
 | `stats[]` on each play | Per-player records: `statType`, `teamId`, `yards`, `gsisPlayerId`, `gsisPlayerName`, `gsisPlayerJerseyNumber`. This is the identity supervision: for every play we know which jersey numbers passed, carried, caught, tackled, were targeted, hit the QB, or were flagged. Codes come from the GSIS table copied verbatim from `packages/shared/src/nfl-stat-types.ts`; we never restate a code inline. |

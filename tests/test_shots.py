@@ -9,8 +9,8 @@ precisely so the logic is testable without a video file or the [cv] extra instal
 import numpy as np
 import pytest
 
-from gridiron.perception import shots
-from gridiron.perception.shots import Shot, group, line_tilt, to_frame
+from formation_zero.perception import shots
+from formation_zero.perception.shots import Shot, group, line_tilt, to_frame
 
 
 def samples(*runs, step=0.4, cut_diff=40.0, tilt=80.0):

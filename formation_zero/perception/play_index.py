@@ -40,7 +40,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from gridiron.perception.shots import Shot
+from formation_zero.perception.shots import Shot
 
 VIEWS = ("SIDELINE", "ENDZONE")
 
@@ -240,7 +240,7 @@ def main(argv: list[str] | None = None) -> int:
 
     import pandas as pd
 
-    from gridiron.data.layout import GamePaths
+    from formation_zero.data.layout import GamePaths
 
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     parser.add_argument("--season", type=int, required=True)

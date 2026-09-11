@@ -2,7 +2,7 @@
 
 import pytest
 
-from gridiron.intelligence.formations import (
+from formation_zero.intelligence.formations import (
     ALIASES,
     ALL_SLOTS,
     FORMATIONS,

@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from gridiron.ids import game_key
+from formation_zero.ids import game_key
 
 
 class GamePaths:
@@ -52,12 +52,12 @@ class GamePaths:
 
     @property
     def shots_path(self) -> Path:
-        """Cut boundaries for this game's film — see `gridiron.perception.shots`."""
+        """Cut boundaries for this game's film — see `formation_zero.perception.shots`."""
         return self.shots_dir / f"{self.game_key}.parquet"
 
     @property
     def play_index_path(self) -> Path:
-        """Film time <-> play-by-play join — see `gridiron.perception.play_index`."""
+        """Film time <-> play-by-play join — see `formation_zero.perception.play_index`."""
         return self.root / "derived" / "shots" / f"{self.game_key}.plays.parquet"
 
     @property

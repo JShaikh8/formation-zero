@@ -2,7 +2,7 @@
 
 import pytest
 
-from gridiron.data.teams import STATIC_TEAM_IDS, TeamRegistry, to_nflverse
+from formation_zero.data.teams import STATIC_TEAM_IDS, TeamRegistry, to_nflverse
 
 _TEAMS_PAYLOAD = {
     "apiResults": [{"league": {"season": {"conferences": [{
