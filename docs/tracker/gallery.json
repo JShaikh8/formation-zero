@@ -1,6 +1,24 @@
 {
   "items": [
     {
+      "title": "The film room, bird's-eye view",
+      "kind": "image",
+      "src": "assets/demo-birdseye.png",
+      "date": "2026-09-11",
+      "milestone": "M0",
+      "caption": "A hand-made example of the finished product: the real play list on the left, the play animating from above with trails and the ball in flight, and the play record read out on the right. Open it from the Demo button. Every path on the field was authored by hand; the real one replaces it at milestone 4.",
+      "link": "demo/"
+    },
+    {
+      "title": "The film room, sideline camera",
+      "kind": "image",
+      "src": "assets/demo-sideline.png",
+      "date": "2026-09-11",
+      "milestone": "M0",
+      "caption": "The same play from a sideline camera that follows the ball. Bird's-eye, sideline, end zone and a free camera are all one renderer over the same positions, which is the point: once positions are right, every view is free.",
+      "link": "demo/"
+    },
+    {
       "title": "The field, in yards",
       "kind": "image",
       "src": "assets/field.svg",

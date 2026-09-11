@@ -276,7 +276,7 @@
   function renderGallery() {
     const items = FZ.gallery.items.map((g) => g.kind === 'placeholder'
       ? `<figure class="figure placeholder"><div class="ph">${esc(g.milestone)} · coming</div><figcaption class="figcap"><div class="t">${esc(g.title)}</div><div class="c">${esc(g.caption)}</div></figcaption></figure>`
-      : `<figure class="figure"><img src="${esc(g.src)}" alt="${esc(g.title)}" loading="lazy"><figcaption class="figcap"><div class="t">${esc(g.title)}</div><div class="c">${esc(g.caption)}</div><div class="chips"><span class="chip">${esc(g.milestone)}</span><span class="chip">${esc(g.date)}</span></div></figcaption></figure>`);
+      : `<figure class="figure">${g.link ? `<a href="${esc(g.link)}">` : ''}<img src="${esc(g.src)}" alt="${esc(g.title)}" loading="lazy">${g.link ? '</a>' : ''}<figcaption class="figcap"><div class="t">${g.link ? `<a href="${esc(g.link)}">${esc(g.title)} →</a>` : esc(g.title)}</div><div class="c">${esc(g.caption)}</div><div class="chips"><span class="chip">${esc(g.milestone)}</span><span class="chip">${esc(g.date)}</span></div></figcaption></figure>`);
     return `<div class="section-head"><h2>Gallery</h2><p>Real outputs so far, and the demos each milestone will add. Everything here was generated from the project's own data.</p></div><div class="gallery">${items.join('')}</div>`;
   }
 

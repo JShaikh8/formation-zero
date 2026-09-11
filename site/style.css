@@ -129,6 +129,8 @@ td.num, th.num { text-align: right; font-family: var(--mono); font-variant-numer
 .tabs a { font-family: var(--display); font-weight: 600; font-size: 1.05rem; letter-spacing: 0.02em; text-transform: uppercase; color: var(--ink-2); text-decoration: none; padding: 6px 10px; border-radius: 4px; border-bottom: 2px solid transparent; }
 .tabs a:hover { background: var(--paper-3); }
 .tabs a[aria-current="page"] { color: var(--ink); border-bottom-color: var(--first); }
+.tabs a.demo-btn { background: var(--first); color: var(--first-ink); border-bottom-color: transparent; margin-left: 6px; }
+.tabs a.demo-btn:hover { background: #E6BC3E; }
 
 /* ---- sections --------------------------------------------------------------- */
 .tab { padding-block: 32px 56px; }
