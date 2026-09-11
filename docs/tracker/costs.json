@@ -1,0 +1,30 @@
+{
+  "currency": "USD",
+  "policy": {
+    "headline": "Hosted model calls are the only thing that costs money per game. Everything else runs on a laptop we already own.",
+    "cap_per_game": 5,
+    "rule": "The router refuses to exceed the cap. Every request is cached by content hash, so re-running a game never re-bills for unchanged work. Actual usage from every response is logged and replaces the estimates below.",
+    "starting_policy": "Triggers only: send frames to the hosted model only when the local models signal trouble (piles, contested catches, lost ball, lost identity, failed field registration)."
+  },
+  "assumptions": "Estimates at Anthropic list prices as of 2026-09-11. One request is about 8 frames downscaled to about 1000 by 1000 pixels (about 1,300 tokens each) plus a short structured answer. Roughly 180 plays per game.",
+  "models": [
+    { "name": "Claude Opus 5", "input_per_m": 5.0, "output_per_m": 25.0, "per_request": 0.07 },
+    { "name": "Claude Sonnet 5", "input_per_m": 2.0, "output_per_m": 10.0, "per_request": 0.03 }
+  ],
+  "scenarios": [
+    { "name": "Triggers only, about 15% of plays fire", "requests": 30, "opus5": 2, "sonnet5": 1, "recommended": true },
+    { "name": "Every play, one angle", "requests": 180, "opus5": 13, "sonnet5": 5 },
+    { "name": "Every play, both angles, plus jersey contact sheets", "requests": 500, "opus5": 35, "sonnet5": 15 }
+  ],
+  "fixed": [
+    { "item": "Apple M4 MacBook, 16 GB", "amount": 0, "note": "Already owned. No cloud GPU rented so far." },
+    { "item": "NFL+ Premium (All-22 film access)", "amount": null, "note": "Owner's existing subscription; not billed to the project." },
+    { "item": "NFL API credentials", "amount": 0, "note": "Org-issued. No per-call charge." },
+    { "item": "GitHub + Render static site", "amount": 0, "note": "Free tiers." }
+  ],
+  "ledger": [],
+  "future_options": [
+    { "item": "Rented cloud GPU for training runs", "estimate": "about $1 to $3 per hour", "when": "If SAM 3 teacher passes or detector training take longer than a night on the laptop." },
+    { "item": "Second hosted model vendor", "estimate": "similar per-request cost", "when": "Only if a comparison on the same frames shows a clear accuracy gain." }
+  ]
+}

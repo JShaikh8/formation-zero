@@ -1,0 +1,17 @@
+# Render Blueprint for the Formation Zero tracker site.
+# The site is prebuilt: `make site` writes site/data/content.js and it is committed, so the
+# static publish needs no build command. Connect the repo in Render and pick this blueprint.
+services:
+  - type: web
+    name: formation-zero
+    runtime: static
+    staticPublishPath: site
+    buildCommand: ""
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: public, max-age=300
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

@@ -1,0 +1,33 @@
+{
+  "project": {
+    "name": "Formation Zero",
+    "codename": "gridiron",
+    "tagline": "Teaching a computer to watch NFL coaches film.",
+    "site": "https://formation-zero.onrender.com",
+    "repo": "https://github.com/JShaikh8/formation-zero",
+    "owner": "Jalal Shaikh"
+  },
+  "updated": "2026-09-11",
+  "phase": {
+    "milestone": "M0",
+    "name": "Research, planning and decisions",
+    "plain": "We are not writing the vision code yet. We are deciding what to build, in what order, with which tools, and writing that down so the build has a map. The foundation from earlier this summer (play-by-play data, the field model, cutting the film into plays, a chat interface over the data) is done and tested."
+  },
+  "what_it_is": [
+    "Every NFL game is filmed from two high angles that show all 22 players at once. Coaches call it All-22. It is the film they actually study.",
+    "Formation Zero watches that film with computer vision: it finds the players and the ball on every frame, works out where each one is standing in real yards, and turns a video into a spreadsheet of positions.",
+    "From that spreadsheet it reads football: the formation, the personnel on the field, who lined up where, who moved before the snap. Then you can ask it questions in plain English, and it can redraw any play from above, or from any angle, like a video game replay."
+  ],
+  "next_up": [
+    "Push this repository to GitHub and connect the Render site so it updates on every push.",
+    "Confirm whether the film carries painted line-of-scrimmage and first-down graphics (it changes how we find the field).",
+    "Get the NFL API credentials onto the build machine so play-by-play pulls work locally.",
+    "Milestone 1: upgrade the Python runtime, cut the film into per-play clips, port the NFL API client."
+  ],
+  "numbers": [
+    { "label": "Tests passing", "value": "158", "note": "run 2026-09-10" },
+    { "label": "Plays indexed on film", "value": "184", "note": "demo game, exact match to play-by-play" },
+    { "label": "Days worked", "value": "5", "note": "since 2026-06-24" },
+    { "label": "Hosted model spend", "value": "$0", "note": "nothing billed yet" }
+  ]
+}

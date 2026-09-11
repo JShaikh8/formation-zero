@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 380" width="1000" height="380" role="img" aria-label="Shot durations and tilt for the demo game">
+<rect x="0" y="0" width="1000" height="380" fill="#F3F5F0"/>
+<text x="30.0" y="34.0" font-family="'Barlow Condensed', 'Arial Narrow', 'Helvetica Neue', Arial, sans-serif" font-size="26" font-weight="700" fill="#16211B" text-anchor="start" >419 camera takes, Rams at Bears 2025 wk 20</text>
+<text x="30.0" y="56.0" font-family="'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="400" fill="#6B7A70" text-anchor="start" >left: how long each take lasts.  right: dominant edge angle per take, the signal that separates the two camera angles.</text>
+<text x="70.0" y="98.0" font-family="'Barlow Condensed', 'Arial Narrow', 'Helvetica Neue', Arial, sans-serif" font-size="18" font-weight="700" fill="#16211B" text-anchor="start" >Take duration</text>
+<line x1="70.0" y1="306.0" x2="470.0" y2="306.0" stroke="#D9DFD8" stroke-width="1"/>
+<text x="64.0" y="310.0" font-family="'IBM Plex Mono', Menlo, Consolas, monospace" font-size="11" font-weight="400" fill="#6B7A70" text-anchor="end" >0</text>
+<line x1="70.0" y1="258.5" x2="470.0" y2="258.5" stroke="#D9DFD8" stroke-width="1"/>
+<text x="64.0" y="262.5" font-family="'IBM Plex Mono', Menlo, Consolas, monospace" font-size="11" font-weight="400" fill="#6B7A70" text-anchor="end" >21</text>
+<line x1="70.0" y1="211.0" x2="470.0" y2="211.0" stroke="#D9DFD8" stroke-width="1"/>
+<text x="64.0" y="215.0" font-family="'IBM Plex Mono', Menlo, Consolas, monospace" font-size="11" font-weight="400" fill="#6B7A70" text-anchor="end" >42</text>
+<line x1="70.0" y1="163.5" x2="470.0" y2="163.5" stroke="#D9DFD8" stroke-width="1"/>
+<text x="64.0" y="167.5" font-family="'IBM Plex Mono', Menlo, Consolas, monospace" font-size="11" font-weight="400" fill="#6B7A70" text-anchor="end" >64</text>
+<line x1="70.0" y1="116.0" x2="470.0" y2="116.0" stroke="#D9DFD8" stroke-width="1"/>
+<text x="64.0" y="120.0" font-family="'IBM Plex Mono', Menlo, Consolas, monospace" font-size="11" font-weight="400" fill="#6B7A70" text-anchor="end" >85</text>
+<rect x="71.0" y="306.0" width="14.7" height="0.0" fill="#2E7D4F"/>
+<rect x="87.7" y="272.5" width="14.7" height="33.5" fill="#2E7D4F"/>
+<rect x="104.3" y="283.6" width="14.7" height="22.4" fill="#2E7D4F"/>
+<rect x="121.0" y="252.4" width="14.7" height="53.6" fill="#2E7D4F"/>
+<rect x="137.7" y="234.5" width="14.7" height="71.5" fill="#2E7D4F"/>
+<rect x="154.3" y="221.1" width="14.7" height="84.9" fill="#2E7D4F"/>
+<rect x="171.0" y="131.6" width="14.7" height="174.4" fill="#2E7D4F"/>
+<rect x="187.7" y="116.0" width="14.7" height="190.0" fill="#2E7D4F"/>
+<rect x="204.3" y="171.9" width="14.7" height="134.1" fill="#2E7D4F"/>
+<rect x="221.0" y="209.9" width="14.7" height="96.1" fill="#2E7D4F"/>
+<rect x="237.7" y="263.5" width="14.7" height="42.5" fill="#2E7D4F"/>
+<rect x="254.3" y="285.9" width="14.7" height="20.1" fill="#2E7D4F"/>
+<rect x="271.0" y="297.1" width="14.7" height="8.9" fill="#2E7D4F"/>
+<rect x="287.7" y="306.0" width="14.7" height="0.0" fill="#2E7D4F"/>
+<rect x="304.3" y="306.0" width="14.7" height="0.0" fill="#2E7D4F"/>
+<rect x="321.0" y="306.0" width="14.7" height="0.0" fill="#2E7D4F"/>
+<rect x="337.7" y="306.0" width="14.7" height="0.0" fill="#2E7D4F"/>
+<rect x="354.3" y="306.0" width="14.7" height="0.0" fill="#2E7D4F"/>
+<rect x="371.0" y="306.0" width="14.7" height="0.0" fill="#2E7D4F"/>
+<rect x="387.7" y="306.0" width="14.7" height="0.0" fill="#2E7D4F"/>
+<rect x="404.3" y="306.0" width="14.7" height="0.0" fill="#2E7D4F"/>
+<rect x="421.0" y="306.0" width="14.7" height="0.0" fill="#2E7D4F"/>
+<rect x="437.7" y="303.8" width="14.7" height="2.2" fill="#2E7D4F"/>
+<rect x="454.3" y="303.8" width="14.7" height="2.2" fill="#2E7D4F"/>
+<text x="70.0" y="322.0" font-family="'IBM Plex Mono', Menlo, Consolas, monospace" font-size="11" font-weight="400" fill="#6B7A70" text-anchor="middle" >0</text>
+<text x="136.7" y="322.0" font-family="'IBM Plex Mono', Menlo, Consolas, monospace" font-size="11" font-weight="400" fill="#6B7A70" text-anchor="middle" >8</text>
+<text x="203.3" y="322.0" font-family="'IBM Plex Mono', Menlo, Consolas, monospace" font-size="11" font-weight="400" fill="#6B7A70" text-anchor="middle" >16</text>
+<text x="270.0" y="322.0" font-family="'IBM Plex Mono', Menlo, Consolas, monospace" font-size="11" font-weight="400" fill="#6B7A70" text-anchor="middle" >24</text>
+<text x="336.7" y="322.0" font-family="'IBM Plex Mono', Menlo, Consolas, monospace" font-size="11" font-weight="400" fill="#6B7A70" text-anchor="middle" >32</text>
+<text x="403.3" y="322.0" font-family="'IBM Plex Mono', Menlo, Consolas, monospace" font-size="11" font-weight="400" fill="#6B7A70" text-anchor="middle" >40</text>
+<text x="470.0" y="322.0" font-family="'IBM Plex Mono', Menlo, Consolas, monospace" font-size="11" font-weight="400" fill="#6B7A70" text-anchor="middle" >48</text>
+<text x="470.0" y="338.0" font-family="'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="400" fill="#6B7A70" text-anchor="end" >seconds</text>
+<line x1="70.0" y1="306.0" x2="470.0" y2="306.0" stroke="#16211B" stroke-width="1"/>
+<text x="560.0" y="98.0" font-family="'Barlow Condensed', 'Arial Narrow', 'Helvetica Neue', Arial, sans-serif" font-size="18" font-weight="700" fill="#16211B" text-anchor="start" >Tilt</text>
+<line x1="560.0" y1="306.0" x2="960.0" y2="306.0" stroke="#D9DFD8" stroke-width="1"/>
+<text x="554.0" y="310.0" font-family="'IBM Plex Mono', Menlo, Consolas, monospace" font-size="11" font-weight="400" fill="#6B7A70" text-anchor="end" >0</text>
+<line x1="560.0" y1="258.5" x2="960.0" y2="258.5" stroke="#D9DFD8" stroke-width="1"/>
+<text x="554.0" y="262.5" font-family="'IBM Plex Mono', Menlo, Consolas, monospace" font-size="11" font-weight="400" fill="#6B7A70" text-anchor="end" >10</text>
+<line x1="560.0" y1="211.0" x2="960.0" y2="211.0" stroke="#D9DFD8" stroke-width="1"/>
+<text x="554.0" y="215.0" font-family="'IBM Plex Mono', Menlo, Consolas, monospace" font-size="11" font-weight="400" fill="#6B7A70" text-anchor="end" >20</text>
+<line x1="560.0" y1="163.5" x2="960.0" y2="163.5" stroke="#D9DFD8" stroke-width="1"/>
+<text x="554.0" y="167.5" font-family="'IBM Plex Mono', Menlo, Consolas, monospace" font-size="11" font-weight="400" fill="#6B7A70" text-anchor="end" >31</text>
+<line x1="560.0" y1="116.0" x2="960.0" y2="116.0" stroke="#D9DFD8" stroke-width="1"/>
+<text x="554.0" y="120.0" font-family="'IBM Plex Mono', Menlo, Consolas, monospace" font-size="11" font-weight="400" fill="#6B7A70" text-anchor="end" >41</text>
+<rect x="561.0" y="125.3" width="11.3" height="180.7" fill="#2C5BD1"/>
+<rect x="574.3" y="116.0" width="11.3" height="190.0" fill="#2C5BD1"/>
+<rect x="587.7" y="213.3" width="11.3" height="92.7" fill="#2C5BD1"/>
+<rect x="601.0" y="222.6" width="11.3" height="83.4" fill="#2C5BD1"/>
+<rect x="614.3" y="231.9" width="11.3" height="74.1" fill="#2C5BD1"/>
+<rect x="627.7" y="250.4" width="11.3" height="55.6" fill="#2C5BD1"/>
+<rect x="641.0" y="259.7" width="11.3" height="46.3" fill="#2C5BD1"/>
+<rect x="654.3" y="278.2" width="11.3" height="27.8" fill="#2C5BD1"/>
+<rect x="667.7" y="218.0" width="11.3" height="88.0" fill="#2C5BD1"/>
+<rect x="681.0" y="180.9" width="11.3" height="125.1" fill="#2C5BD1"/>
+<rect x="694.3" y="236.5" width="11.3" height="69.5" fill="#2C5BD1"/>
+<rect x="707.7" y="213.3" width="11.3" height="92.7" fill="#2C5BD1"/>
+<rect x="721.0" y="264.3" width="11.3" height="41.7" fill="#2C5BD1"/>
+<rect x="734.3" y="287.5" width="11.3" height="18.5" fill="#2C5BD1"/>
+<rect x="747.7" y="278.2" width="11.3" height="27.8" fill="#2C5BD1"/>
+<rect x="761.0" y="278.2" width="11.3" height="27.8" fill="#2C5BD1"/>
+<rect x="774.3" y="287.5" width="11.3" height="18.5" fill="#2C5BD1"/>
+<rect x="787.7" y="278.2" width="11.3" height="27.8" fill="#2C5BD1"/>
+<rect x="801.0" y="301.4" width="11.3" height="4.6" fill="#2C5BD1"/>
+<rect x="814.3" y="296.7" width="11.3" height="9.3" fill="#2C5BD1"/>
+<rect x="827.7" y="292.1" width="11.3" height="13.9" fill="#2C5BD1"/>
+<rect x="841.0" y="282.8" width="11.3" height="23.2" fill="#2C5BD1"/>
+<rect x="854.3" y="273.6" width="11.3" height="32.4" fill="#2C5BD1"/>
+<rect x="867.7" y="282.8" width="11.3" height="23.2" fill="#2C5BD1"/>
+<rect x="881.0" y="287.5" width="11.3" height="18.5" fill="#2C5BD1"/>
+<rect x="894.3" y="278.2" width="11.3" height="27.8" fill="#2C5BD1"/>
+<rect x="907.7" y="213.3" width="11.3" height="92.7" fill="#2C5BD1"/>
+<rect x="921.0" y="199.4" width="11.3" height="106.6" fill="#2C5BD1"/>
+<rect x="934.3" y="134.5" width="11.3" height="171.5" fill="#2C5BD1"/>
+<rect x="947.7" y="176.2" width="11.3" height="129.8" fill="#2C5BD1"/>
+<text x="560.0" y="322.0" font-family="'IBM Plex Mono', Menlo, Consolas, monospace" font-size="11" font-weight="400" fill="#6B7A70" text-anchor="middle" >0</text>
+<text x="626.7" y="322.0" font-family="'IBM Plex Mono', Menlo, Consolas, monospace" font-size="11" font-weight="400" fill="#6B7A70" text-anchor="middle" >15</text>
+<text x="693.3" y="322.0" font-family="'IBM Plex Mono', Menlo, Consolas, monospace" font-size="11" font-weight="400" fill="#6B7A70" text-anchor="middle" >30</text>
+<text x="760.0" y="322.0" font-family="'IBM Plex Mono', Menlo, Consolas, monospace" font-size="11" font-weight="400" fill="#6B7A70" text-anchor="middle" >45</text>
+<text x="826.7" y="322.0" font-family="'IBM Plex Mono', Menlo, Consolas, monospace" font-size="11" font-weight="400" fill="#6B7A70" text-anchor="middle" >60</text>
+<text x="893.3" y="322.0" font-family="'IBM Plex Mono', Menlo, Consolas, monospace" font-size="11" font-weight="400" fill="#6B7A70" text-anchor="middle" >75</text>
+<text x="960.0" y="322.0" font-family="'IBM Plex Mono', Menlo, Consolas, monospace" font-size="11" font-weight="400" fill="#6B7A70" text-anchor="middle" >90</text>
+<text x="960.0" y="338.0" font-family="'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="400" fill="#6B7A70" text-anchor="end" >degrees</text>
+<line x1="560.0" y1="306.0" x2="960.0" y2="306.0" stroke="#16211B" stroke-width="1"/>
+<text x="470.0" y="330.0" font-family="'IBM Plex Mono', Menlo, Consolas, monospace" font-size="12" font-weight="400" fill="#6B7A70" text-anchor="end" >median 14.0s</text>
+<text x="960.0" y="330.0" font-family="'IBM Plex Mono', Menlo, Consolas, monospace" font-size="12" font-weight="400" fill="#6B7A70" text-anchor="end" >sideline ≈ 88°   end zone ≈ 47°</text>
+</svg>

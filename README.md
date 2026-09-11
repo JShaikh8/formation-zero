@@ -1,7 +1,12 @@
-# gridiron
+# Formation Zero (package: gridiron)
 
 NFL **All-22** coaches-film breakdown: computer-vision perception + rule-based football
 intelligence + a chat interface ("show me all the Cover 3 defenses").
+
+- **Blueprint:** [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+- **Progress tracker (public site):** https://formation-zero.onrender.com — generated from
+  [docs/](docs/) by `make site`; see [docs/TRACKING.md](docs/TRACKING.md) for how to update it.
+- **Decision log:** [docs/DECISIONS.md](docs/DECISIONS.md) · **Journal:** [docs/journal/](docs/journal/)
 
 This package holds all the **football logic**. It *imports* [`roboflow/sports`](https://github.com/roboflow/sports)
 as CV scaffolding (detection, tracking, team-split, the `ViewTransformer` homography engine);

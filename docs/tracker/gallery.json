@@ -1,0 +1,46 @@
+{
+  "items": [
+    {
+      "title": "The field, in yards",
+      "kind": "image",
+      "src": "assets/field.svg",
+      "date": "2026-06-24",
+      "milestone": "F0",
+      "caption": "Drawn straight from the code's field model: 120 yards including end zones, 53.3 yards wide, hash marks 23.58 yards in from each sideline. Every landmark here is a point the camera image will be pinned to."
+    },
+    {
+      "title": "419 camera cuts in 96 minutes of film",
+      "kind": "image",
+      "src": "assets/shots-histogram.svg",
+      "date": "2026-08-04",
+      "milestone": "F0",
+      "caption": "How long each camera take lasts, and the 'tilt' signal that separates sideline from end-zone angles. Real measurements from the demo game. The tilt is bimodal on purpose: sideline takes read near 88 degrees, end-zone takes near 47."
+    },
+    {
+      "title": "184 plays, laid out on the film's clock",
+      "kind": "image",
+      "src": "assets/play-timeline.svg",
+      "date": "2026-08-04",
+      "milestone": "F0",
+      "caption": "Each bar is one play, coloured by type, placed where it sits in the film. The count matched the official play-by-play exactly, which nothing in the code arranged. It fell out."
+    },
+    {
+      "title": "Overlay video: boxes and tracks on the broadcast frame",
+      "kind": "placeholder",
+      "milestone": "M3",
+      "caption": "Ten plays with stable player ids and team colours. Arrives with milestone 3."
+    },
+    {
+      "title": "The bird's-eye view",
+      "kind": "placeholder",
+      "milestone": "M4",
+      "caption": "Every player as a dot on the field, from above, at full frame rate. The first thing the camera never showed us. Arrives with milestone 4."
+    },
+    {
+      "title": "Free-camera 3D replay",
+      "kind": "placeholder",
+      "milestone": "M8",
+      "caption": "Fly the camera behind the quarterback or above the safeties. Arrives with milestone 8."
+    }
+  ]
+}

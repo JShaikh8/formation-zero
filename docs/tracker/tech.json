@@ -1,0 +1,67 @@
+{
+  "legend": {
+    "in_use": "Running in the repository today",
+    "planned": "Chosen, not yet built",
+    "evaluated": "Looked at seriously; kept as an alternative",
+    "rejected": "Looked at and set aside, with the reason",
+    "parked": "Built, then shelved"
+  },
+  "groups": [
+    {
+      "name": "Runtime",
+      "items": [
+        { "name": "Python 3.12 via uv", "status": "planned", "plain": "The language everything is written in, on a modern version. uv installs it without needing Homebrew.", "why": "System Python 3.9 is end-of-life and current vision libraries target 3.10+.", "license": "PSF / MIT" },
+        { "name": "PyTorch on Apple MPS", "status": "planned", "plain": "The engine that runs the neural networks, using the Mac's GPU.", "why": "Only accelerator on the machine; a device setting swaps to CUDA on a rented box.", "license": "BSD" },
+        { "name": "Apple M4, 16 GB", "status": "in_use", "plain": "The laptop. No cloud GPU yet.", "why": "Free, and enough for a small real-time detector on 1080p film.", "license": "hardware" }
+      ]
+    },
+    {
+      "name": "Data",
+      "items": [
+        { "name": "NFL API (api.nfl.com)", "status": "planned", "plain": "The NFL's own feed: every play, down, distance, yard line, and which jersey numbers touched the ball.", "why": "Official, per-play ids, and it names players per play, which trains identity for free.", "license": "org-issued credentials" },
+        { "name": "nflverse (nfl_data_py)", "status": "in_use", "plain": "Free public play-by-play with formation and personnel labels for past seasons.", "why": "The NFL API does not carry personnel or formation; nflverse does.", "license": "MIT / open data" },
+        { "name": "Big Data Bowl tracking data", "status": "planned", "plain": "Kaggle's NFL player-tracking datasets, same shape as what our vision layer will produce.", "why": "Lets the football-intelligence code be validated before the vision code is trustworthy.", "license": "Kaggle competition terms" },
+        { "name": "Stats Perform API", "status": "parked", "plain": "A commercial sports-data feed.", "why": "Built in July, parked in September: the NFL API covers the same need without a second vendor.", "license": "commercial" },
+        { "name": "DuckDB + Parquet", "status": "in_use", "plain": "Files on disk that act like a fast database.", "why": "Columnar, joins a season in memory on 16 GB, no server to run.", "license": "MIT / Apache-2.0" }
+      ]
+    },
+    {
+      "name": "Video",
+      "items": [
+        { "name": "PyAV (bundled ffmpeg)", "status": "in_use", "plain": "Reads and writes video files frame by frame.", "why": "Already used for shot detection; frame-accurate seeking; no system install.", "license": "BSD / LGPL" },
+        { "name": "OpenCV", "status": "planned", "plain": "Image maths: warping, line finding, drawing.", "why": "The standard toolbox for homography and drawing.", "license": "Apache-2.0" }
+      ]
+    },
+    {
+      "name": "Vision models",
+      "items": [
+        { "name": "SAM 3 (Meta)", "status": "planned", "plain": "A big model you can point at a picture and say 'football player' and it finds them all. Used to make our training data, and on the few frames sent for deep reasoning.", "why": "Best open model for finding things by name. Too slow on a laptop to run on every frame, so it teaches the fast model instead.", "license": "SAM license" },
+        { "name": "SAM 3D Body (Meta)", "status": "planned", "plain": "Turns one photo of a person into a 3D skeleton.", "why": "This is what lets the 3D replay show real body poses rather than capsules.", "license": "SAM license" },
+        { "name": "RF-DETR (Roboflow)", "status": "planned", "plain": "The fast detector that runs on every frame once trained.", "why": "Apache-licensed, real-time, accurate, safe to distribute.", "license": "Apache-2.0" },
+        { "name": "YOLO11 / YOLO26 (Ultralytics)", "status": "evaluated", "plain": "The quickest path to a first detector.", "why": "Great for a prototype; AGPL license means it cannot ship in a distributed product without care.", "license": "AGPL-3.0" },
+        { "name": "ByteTrack (via supervision)", "status": "planned", "plain": "Follows each detected player from frame to frame and gives them a stable id.", "why": "Cheap and robust; association is on boxes only.", "license": "MIT" },
+        { "name": "SigLIP team classifier", "status": "planned", "plain": "Sorts player crops into home, away, and officials by how they look.", "why": "Borrowed from roboflow/sports; no labels needed.", "license": "Apache-2.0" },
+        { "name": "YOLO11-pose / RTMPose", "status": "planned", "plain": "2D body keypoints on every frame: stance, contact, height.", "why": "Fast enough for every frame; SAM 3D Body is reserved for keyframes.", "license": "AGPL / Apache-2.0" },
+        { "name": "EasyOCR", "status": "evaluated", "plain": "Reads text (jersey numbers) from image crops.", "why": "Offline fallback for jersey reads; runs on Apple Silicon.", "license": "Apache-2.0" },
+        { "name": "PaddleOCR", "status": "rejected", "plain": "Another text reader.", "why": "PaddlePaddle wheels are unreliable on Apple Silicon.", "license": "Apache-2.0" },
+        { "name": "SAM 2 (Meta)", "status": "evaluated", "plain": "The previous segmentation model.", "why": "Lighter than SAM 3; kept as the fallback if SAM 3 weights are gated.", "license": "Apache-2.0" }
+      ]
+    },
+    {
+      "name": "Reasoning",
+      "items": [
+        { "name": "Claude (Anthropic) via the official SDK", "status": "in_use", "plain": "The hosted model that answers chat questions today, and later looks at hard frames (piles, contested catches).", "why": "Already in the repo; structured outputs; one vendor relationship. The only hosted piece of the system.", "license": "commercial API" },
+        { "name": "OpenAI / Gemini providers", "status": "planned", "plain": "Alternative hosted vision models behind the same interface.", "why": "Keeps the vendor swappable with a config change.", "license": "commercial API" },
+        { "name": "Pydantic v2 + pydantic-settings", "status": "planned", "plain": "Checks that every data record and every model response has the right shape.", "why": "Validates provider responses and Parquet schemas; config lives in YAML, not code.", "license": "MIT" }
+      ]
+    },
+    {
+      "name": "Tooling",
+      "items": [
+        { "name": "pytest, ruff", "status": "in_use", "plain": "Tests and linting.", "why": "158 tests pass today.", "license": "MIT" },
+        { "name": "Custom review sheets (HTML)", "status": "planned", "plain": "A web page with keyboard shortcuts for approving auto-generated labels.", "why": "No CVAT or Roboflow account needed; decisions save to a JSON file that gets versioned.", "license": "ours" },
+        { "name": "This tracker (docs + build.py + Render)", "status": "in_use", "plain": "Markdown and JSON in the repo, compiled to a static site.", "why": "One source of truth, no database, auto-deploys on push.", "license": "ours" }
+      ]
+    }
+  ]
+}

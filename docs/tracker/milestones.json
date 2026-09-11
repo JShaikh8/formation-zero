@@ -1,0 +1,166 @@
+{
+  "key_scheme": "Epics are milestones M0 to M8 (plus F0, the summer foundation). Stories are GRD-### and map one-to-one to Jira issues. Statuses: done, active, todo, parked.",
+  "milestones": [
+    {
+      "id": "F0",
+      "title": "Foundation",
+      "plain": "The groundwork built over the summer: pull the official play list for a game, model the field in real yards, cut a 96-minute film into its 184 plays, and chat with the data.",
+      "status": "done",
+      "progress": 100,
+      "proof": "158 tests pass. The demo game's film was cut into exactly 184 plays, the same count as the official play-by-play.",
+      "stories": [
+        { "key": "GRD-1", "title": "Project scaffold and package layout", "status": "done" },
+        { "key": "GRD-2", "title": "NFL field model in yards (landmarks, hashes, LOS anchor)", "status": "done" },
+        { "key": "GRD-3", "title": "Play-by-play puller from nflverse with stable play ids", "status": "done" },
+        { "key": "GRD-4", "title": "Personnel and formation parser", "status": "done" },
+        { "key": "GRD-5", "title": "DuckDB store with enriched play table", "status": "done" },
+        { "key": "GRD-6", "title": "Chat brain: two constrained tools over the store", "status": "done" },
+        { "key": "GRD-7", "title": "Shot segmentation of continuous film (cut detection, tilt signal)", "status": "done" },
+        { "key": "GRD-8", "title": "Hand-labelled camera-angle ground truth for the demo game", "status": "done" },
+        { "key": "GRD-9", "title": "Play index: Viterbi view labelling, merge, pair, join to play-by-play", "status": "done" },
+        { "key": "GRD-10", "title": "Stats Perform API client", "status": "parked", "note": "Built 2026-07-26, parked 2026-09-11. Replaced by the NFL API." }
+      ]
+    },
+    {
+      "id": "M0",
+      "title": "Research, planning, decisions",
+      "plain": "Decide what to build and in what order. Write the blueprint. Pick the tools. Set up this tracker so everyone can follow along.",
+      "status": "active",
+      "progress": 80,
+      "proof": "The architecture document exists, the tracker site exists, and every open decision has a written answer.",
+      "stories": [
+        { "key": "GRD-11", "title": "System blueprint: architecture, stack, file structure, build order", "status": "done" },
+        { "key": "GRD-12", "title": "Decide: stick with the existing repo or restart", "status": "done", "note": "Stick." },
+        { "key": "GRD-13", "title": "Decide: Stats Perform vs NFL API as the data backbone", "status": "done", "note": "NFL API. Stats Perform parked." },
+        { "key": "GRD-14", "title": "Evaluate SAM 3 and the current model landscape", "status": "done", "note": "SAM 3 is the teacher, not the runtime detector." },
+        { "key": "GRD-15", "title": "Design the semi-automatic labelling path", "status": "done" },
+        { "key": "GRD-16", "title": "Explain and set the hosted vision budget", "status": "done", "note": "$5 per game starting cap, triggers only." },
+        { "key": "GRD-17", "title": "Companion tracker: docs as source of truth, static site build", "status": "done" },
+        { "key": "GRD-18", "title": "Push to GitHub and connect the Render static site", "status": "todo" },
+        { "key": "GRD-19", "title": "Confirm whether the film carries painted LOS / first-down graphics", "status": "todo" },
+        { "key": "GRD-20", "title": "NFL API credentials available on the build machine", "status": "todo" }
+      ]
+    },
+    {
+      "id": "M1",
+      "title": "Ingestion and the NFL API",
+      "plain": "Get the film and the official data into a shape the vision code can eat: a cheaper copy of the video, one clip per play per angle, and a Python client for the NFL's own API.",
+      "status": "todo",
+      "progress": 0,
+      "proof": "Every play of the demo game exists as two clips, joined to the NFL API's play id. Re-running does nothing if nothing changed.",
+      "stories": [
+        { "key": "GRD-21", "title": "Install uv and Python 3.12; move the project off system Python 3.9", "status": "todo" },
+        { "key": "GRD-22", "title": "Probe and proxy: video metadata sidecar and a 540p frame-aligned rendition", "status": "todo" },
+        { "key": "GRD-23", "title": "Per-play clips for both angles from the play index", "status": "todo" },
+        { "key": "GRD-24", "title": "One frame iterator the whole pipeline uses", "status": "todo" },
+        { "key": "GRD-25", "title": "NFL API port: token client, game detail, rosters, teams, stat types", "status": "todo" },
+        { "key": "GRD-26", "title": "Play index rebuilt on NFL API plays (join by playId)", "status": "todo" },
+        { "key": "GRD-27", "title": "Artifact manifests and the stage runner with skip-if-unchanged", "status": "todo" }
+      ]
+    },
+    {
+      "id": "M2",
+      "title": "Label bootstrap",
+      "plain": "Make the training data without drawing boxes by hand. A big slow model labels sampled frames; a human approves contact sheets with one key per image; a small fast model learns from it.",
+      "status": "todo",
+      "progress": 0,
+      "proof": "A detector trained from zero hand-drawn boxes, and the review sheet took under 30 minutes.",
+      "stories": [
+        { "key": "GRD-28", "title": "Frame sampler stratified by angle, phase, and half of the film", "status": "todo" },
+        { "key": "GRD-29", "title": "SAM 3 teacher: text prompts to boxes and masks, geometry filters", "status": "todo" },
+        { "key": "GRD-30", "title": "Review contact sheets: one-key approve / reject / flag, saved as JSON", "status": "todo" },
+        { "key": "GRD-31", "title": "Train the first student detector; disagreement-driven second round", "status": "todo" },
+        { "key": "GRD-32", "title": "Measure SAM 3 throughput on the M4 (the number the whole plan assumes)", "status": "todo" }
+      ]
+    },
+    {
+      "id": "M3",
+      "title": "Detect, track, team split",
+      "plain": "On every frame of every clip, find the players and the ball, follow each one over time, and sort them into home, away, and officials.",
+      "status": "todo",
+      "progress": 0,
+      "proof": "An overlay video of ten plays with stable player ids and correct team colours.",
+      "stories": [
+        { "key": "GRD-33", "title": "Detector behind a protocol; YOLO11 and RF-DETR implementations", "status": "todo" },
+        { "key": "GRD-34", "title": "ByteTrack tracking with per-track confidence and fragmentation", "status": "todo" },
+        { "key": "GRD-35", "title": "Team classifier (SigLIP embeddings), reconciled across the game", "status": "todo" },
+        { "key": "GRD-36", "title": "Overlay video export", "status": "todo" }
+      ]
+    },
+    {
+      "id": "M4",
+      "title": "Field registration and the 2D view",
+      "plain": "Turn pixels into yards. Find the yard lines and hashes in each frame, pin them to the known line of scrimmage, and project every player onto a top-down field. This is the milestone that decides whether the whole thing works.",
+      "status": "todo",
+      "progress": 0,
+      "proof": "A bird's-eye video of ten plays, and the formation frame agrees with the official formation label.",
+      "stories": [
+        { "key": "GRD-37", "title": "Classical line detection plus LOS anchor for easy frames", "status": "todo" },
+        { "key": "GRD-38", "title": "Self-labelled field keypoints; train and iterate the keypoint model", "status": "todo" },
+        { "key": "GRD-39", "title": "Per-frame homography with temporal smoothing and rejection", "status": "todo" },
+        { "key": "GRD-40", "title": "Snap detection and pre / live / post phases from line motion", "status": "todo" },
+        { "key": "GRD-41", "title": "Ball trajectory fit", "status": "todo" },
+        { "key": "GRD-42", "title": "Two-angle fusion at snap-aligned time", "status": "todo" },
+        { "key": "GRD-43", "title": "Top-down render, MP4 and contact sheets", "status": "todo" }
+      ]
+    },
+    {
+      "id": "M5",
+      "title": "Football intelligence on real tracking",
+      "plain": "Read football from the positions: who plays which role, where the defensive line is aligned (the 3-tech), who motioned before the snap, what coverage shell the safeties show, which routes the receivers ran.",
+      "status": "todo",
+      "progress": 0,
+      "proof": "Ask the chat 'show me every 3-tech alignment' and get answers from our own vision output.",
+      "stories": [
+        { "key": "GRD-44", "title": "Role assignment from the formation frame", "status": "todo" },
+        { "key": "GRD-45", "title": "Defensive line technique (0 to 9, wide-9, head-up)", "status": "todo" },
+        { "key": "GRD-46", "title": "Pre-snap motion and shifts", "status": "todo" },
+        { "key": "GRD-47", "title": "Coverage shell and man / zone heuristics", "status": "todo" },
+        { "key": "GRD-48", "title": "Route classification and event detection", "status": "todo" },
+        { "key": "GRD-49", "title": "Validate every module on Big Data Bowl tracking data first", "status": "todo" }
+      ]
+    },
+    {
+      "id": "M6",
+      "title": "Reasoning router",
+      "plain": "When the local models cannot tell what happened (a goal-line pile, a contested catch, a lost ball), send a handful of frames to a hosted vision model and ask. With a budget, a cache, and a record of who answered.",
+      "status": "todo",
+      "progress": 0,
+      "proof": "Goal-line plays resolved with the source recorded, and re-running the game costs nothing.",
+      "stories": [
+        { "key": "GRD-50", "title": "Trigger rules from pipeline quality signals", "status": "todo" },
+        { "key": "GRD-51", "title": "Async router with budget, concurrency, retries, content-hash cache", "status": "todo" },
+        { "key": "GRD-52", "title": "Anthropic provider; OpenAI and Gemini behind the same protocol", "status": "todo" },
+        { "key": "GRD-53", "title": "Keyframe picker with SAM 3 masks", "status": "todo" },
+        { "key": "GRD-54", "title": "Merge results into labels without overwriting local estimates", "status": "todo" }
+      ]
+    },
+    {
+      "id": "M7",
+      "title": "Player identity",
+      "plain": "Put names on the dots. Read jersey numbers across a track, match to the roster, and cross-check against the NFL API's record of who touched each play.",
+      "status": "todo",
+      "progress": 0,
+      "proof": "Player names in the top-down view, validated against the NFL API's per-play jersey records.",
+      "stories": [
+        { "key": "GRD-55", "title": "Weak jersey labels from contact-sheet reads constrained to the roster", "status": "todo" },
+        { "key": "GRD-56", "title": "Promote tracks that agree with NFL API stats records", "status": "todo" },
+        { "key": "GRD-57", "title": "Train the 0 to 99 crop classifier", "status": "todo" },
+        { "key": "GRD-58", "title": "Roster join and name display", "status": "todo" }
+      ]
+    },
+    {
+      "id": "M8",
+      "title": "3D virtual camera and film room",
+      "plain": "Replay any play from any angle. Players get real 3D pose on key frames and the web film room lets you fly the camera behind the quarterback or above the safeties.",
+      "status": "todo",
+      "progress": 0,
+      "proof": "A free-camera replay of one full drive.",
+      "stories": [
+        { "key": "GRD-59", "title": "SAM 3D Body on keyframes", "status": "todo" },
+        { "key": "GRD-60", "title": "Web film room (Next.js + Three.js) reading the Parquet", "status": "todo" },
+        { "key": "GRD-61", "title": "Free camera replay of a drive", "status": "todo" }
+      ]
+    }
+  ]
+}
