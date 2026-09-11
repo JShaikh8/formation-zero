@@ -275,3 +275,29 @@ the name, fifteen minutes. In six months it would be an afternoon. A single name
 question every new reader would otherwise ask.
 
 **Gained / lost.** Gained one name. Lost nothing; all 158 tests pass after the rename.
+
+## D-020 — The play record is the product contract; a read API serves it
+- date: 2026-09-11
+- status: accepted
+- tags: product, data, api
+
+**Decision.** Every play produces one versioned JSON record with sections for the situation,
+the official result, personnel, pre-snap (initial formation, shifts, motions with type and
+direction, formation at the snap, defensive front and shell), at-snap, live (routes with
+route-tree labels and break points, run gap and scheme, quarterback drop and time to throw,
+blocks, coverage, pass rush, ball flight, an events timeline), post-snap (tackle, spot, yards,
+yards after catch), and a per-player block with alignment, role, technique, stance, direction
+and body orientation at the snap. Every field carries its source and a confidence. The schema
+is written in milestone 1 and served by a read-only JSON API in milestone 9.
+
+**Why.** The owner read the plan and found those items named as modules but never specified as
+an output that a client could receive. Without a contract, each stage would invent its own
+shape and the export would be an afterthought. Writing the record first means every stage
+fills in a field that already exists, and a client can integrate against it before the vision
+work is finished, because the official sections are populated from day one.
+
+**Alternatives.** Export the tracking Parquet and let clients derive football from it.
+Rejected: the football reading is the product; clients should not have to rebuild it.
+
+**Gained / lost.** Gained a stable deliverable and a place for every future feature to land.
+Cost: a schema to maintain and version, and one more milestone.

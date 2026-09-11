@@ -363,6 +363,7 @@ formation-zero/                             repo root
 │   │   │   ├── +stat_types.py              GSIS statType table (copied from nfl-stat-types.ts)
 │   │   │   └── +slugs.py                   game_key <-> NFL slug; season parsed from the slug
 │   │   ├── +schemas.py                     Pydantic + pyarrow schemas for every artifact
+│   │   ├── +schemas/play_record.schema.json  the client contract (section 9), versioned
 │   │   ├── +rosters.py                     game roster view: jersey -> player, position (any source)
 │   │   ├── +bdb.py                         Big Data Bowl loader -> our tracking schema
 │   │   ├── +manifest.py                    per-game artifact manifest with input/config hashes
@@ -396,7 +397,14 @@ formation-zero/                             repo root
 │   ├── intelligence/
 │   │   ├── personnel.py  formations.py     (exist)
 │   │   ├── +roles.py  +technique.py  +motion.py  +coverage.py  +routes.py  +events.py
+│   │   ├── +vocab.py                       closed vocabularies from section 9.3
+│   │   ├── +play_record.py                 assemble + validate derived/plays/<play_uid>.json
 │   │   └── +merge.py                       fold router results into labels without overwriting
+│   ├── +api/                               read-only JSON API over DuckDB (section 10)
+│   │   ├── +app.py                         FastAPI app, API-key auth, versioned responses
+│   │   ├── +models.py                      Pydantic models generated from the play-record schema
+│   │   ├── +routers/                       games.py  plays.py  players.py  export.py  schema.py
+│   │   └── +store.py                       DuckDB views: play_records over JSON, hot-field table
 │   ├── +reasoning/
 │   │   ├── +base.py                        VisionProvider protocol, ReasoningRequest/Result
 │   │   ├── +triggers.py                    quality signals -> requests
@@ -465,9 +473,12 @@ Each milestone ends with something you can watch or query.
 | 6 | Reasoning router with `pile` and `contested_catch` triggers | Goal-line plays resolved with source recorded; cache hit on re-run |
 | 7 | Jersey identity + roster join | Player names in the top-down view; validated against NFL API `stats[]` jersey records |
 | 8 | 3D virtual camera in the web film room, SAM 3D Body on keyframes | Free-camera replay of one drive |
+| 9 | Play record API and client export (section 10) | A client pulls a whole game as JSONL and filters plays by motion type and coverage over HTTP |
 
 Milestone 4 is the one that decides whether the whole thing works. It is scheduled as early as
-its dependencies allow.
+its dependencies allow. The play record schema (section 9) is written in milestone 1 so every
+later stage fills in a contract that already exists, and milestone 9 can start as soon as
+milestone 5 produces real records.
 
 ---
 
@@ -684,3 +695,260 @@ What that means per game of ~180 plays:
 These are estimates, not quotes. The router logs actual `usage` from every response, and the
 content-hash cache means re-running a game never re-bills for unchanged requests. A sensible
 starting budget is $5 per game with triggers only; the first real number replaces the estimate.
+
+---
+
+## 9. The play record: what every play knows
+
+Added 2026-09-11 after the owner read the plan and asked where routes, player direction,
+pre-snap movement, at-snap motion and formation, live routes and post-snap events were. They
+were named as modules and never specified as an output. This section is the contract. Every
+pipeline stage exists to fill in part of it, and the API in section 10 serves it.
+
+### 9.1 Principles
+
+- **One record per play, one file per record.** `derived/plays/<play_uid>.json`, validated
+  against a published JSON Schema (`formation_zero/data/schemas/play_record.schema.json`).
+  Versioned with `schema_version`; additive changes bump the minor, breaking changes the major.
+- **Every field carries its source and confidence.** A formation can come from the official
+  labels, from our vision, or from the hosted model. The record says which. Clients can filter
+  on it. Nothing is presented as fact that was inferred.
+- **Frames are the clock.** Every event and every phase is a frame number in the play's clip,
+  with fps stated, so a client can seek the video. Wall-clock seconds are derived, never stored.
+- **Field coordinates are the language.** Positions are in the field frame from section 1
+  (x along the field 0 to 120, y across 0 to 53.3, yards). Alignments are also given relative to
+  the ball (lateral, depth) because that is how coaches talk. Both are present; neither is
+  computed client-side.
+- **Per-frame trajectories stay in Parquet.** The record summarises them and points to them.
+  The API can embed them on request.
+- **Populated in layers.** On day one, before any vision runs, a record already exists for every
+  play with `situation`, `official` and `personnel` filled from the NFL API and nflverse. Vision
+  and intelligence stages fill in the rest as they land. A client integration built against the
+  schema in milestone 1 keeps working as fields fill in.
+
+### 9.2 Shape of one record
+
+Abbreviated but complete in structure. Field names are the schema's.
+
+```json
+{
+  "schema_version": "1.0",
+  "play_uid": "2025_wk20_LA-CHI_p017",
+  "game": {
+    "game_key": "2025_wk20_LA-CHI", "season": 2025, "week": 20,
+    "away": "LA", "home": "CHI", "nfl_game_id": "…", "nfl_play_id": 1234
+  },
+  "situation": {
+    "quarter": 1, "clock": "11:49", "down": 2, "distance": 7,
+    "possession": "LA", "yardline_100": 63, "los_x": 47.0, "first_down_x": 54.0,
+    "direction_of_attack": "right", "hash": "L",
+    "score": {"away": 0, "home": 3}
+  },
+  "official": {
+    "play_type": "pass", "description": "M.Stafford pass short right to P.Nacua for 9 yards.",
+    "yards_gained": 9, "first_down": true, "touchdown": false, "turnover": false,
+    "players_involved": [
+      {"gsis_id": "00-0026498", "jersey": "9", "team": "LA", "role": "passer"},
+      {"gsis_id": "00-0038543", "jersey": "17", "team": "LA", "role": "receiver"}
+    ],
+    "labels": {"offense_formation": "SHOTGUN", "offense_personnel": "11", "defense_personnel": "4-2-5",
+               "source": "nflverse"}
+  },
+  "film": {
+    "fps": 25,
+    "sideline": {"clip": "raw/2025/wk20/LA_at_CHI/sideline/p017.mp4", "frames": 380},
+    "endzone":  {"clip": "raw/2025/wk20/LA_at_CHI/endzone/p017.mp4",  "frames": 372},
+    "snap_frame": 96, "whistle_frame": 231,
+    "phases": {"pre_snap": [0, 95], "live": [96, 231], "post_snap": [232, 379]}
+  },
+  "personnel": {
+    "offense": {"grouping": "11", "rb": 1, "te": 1, "wr": 3, "source": "cv", "confidence": 0.94},
+    "defense": {"package": "nickel", "dl": 4, "lb": 2, "db": 5, "source": "cv", "confidence": 0.91}
+  },
+  "pre_snap": {
+    "formation_initial": {"frame": 12, "name": "trips_right_bunch", "strength": "right",
+                          "qb": "shotgun", "backfield": "offset_left", "source": "cv", "confidence": 0.88},
+    "shifts": [
+      {"track_id": 7, "from_slot": "TEL", "to_slot": "TER", "start_frame": 30, "end_frame": 52}
+    ],
+    "motions": [
+      {"track_id": 11, "type": "jet", "direction": "left", "start_frame": 70, "end_frame": 96,
+       "at_snap": "in_motion", "speed_at_snap_yds_s": 6.1}
+    ],
+    "formation_at_snap": {"frame": 96, "name": "trips_right_bunch", "strength": "right",
+                          "source": "cv", "confidence": 0.90},
+    "defense": {"front": "over", "shell": "2-high", "box_count": 6,
+                "safeties_depth_yds": [13.5, 12.0], "press_corners": [true, false],
+                "source": "cv", "confidence": 0.81}
+  },
+  "at_snap": {
+    "frame": 96,
+    "ball": {"x": 47.0, "y": 23.6},
+    "in_motion": [11],
+    "offense_alignment": "see players[].alignment_at_snap",
+    "defense_alignment": "see players[].alignment_at_snap"
+  },
+  "live": {
+    "play_family": "dropback", "play_action": false, "rpo": false,
+    "qb": {"track_id": 3, "drop": "3-step", "time_to_throw_s": 2.3, "pocket": "clean",
+           "scramble": false},
+    "routes": [
+      {"track_id": 11, "route": "flat", "tree": 1, "break_frame": 118, "depth_at_break_yds": 1.5,
+       "break_direction": "left", "targeted": false, "source": "cv", "confidence": 0.86},
+      {"track_id": 17, "route": "out", "tree": 4, "break_frame": 128, "depth_at_break_yds": 8.9,
+       "break_direction": "right", "targeted": true, "catch_frame": 141,
+       "source": "cv", "confidence": 0.79}
+    ],
+    "run": null,
+    "blocks": [
+      {"track_id": 71, "assignment": "pass_pro", "engaged_with": 94, "engaged_frames": [100, 138]}
+    ],
+    "defense": {
+      "coverage": {"family": "cover_3", "man_zone": "zone", "rotation": "strong",
+                   "source": "cv", "confidence": 0.62},
+      "pass_rush": [{"track_id": 94, "rushed": true, "path": "edge_left"}],
+      "blitz": false
+    },
+    "ball": {"release_frame": 132, "arrival_frame": 141, "air_yards": 8, "outcome": "complete",
+             "flight": "derived/tracking/2025_wk20_LA-CHI_p017.ball.parquet"},
+    "events": [
+      {"frame": 96,  "type": "snap"},
+      {"frame": 132, "type": "pass_forward"},
+      {"frame": 141, "type": "pass_outcome_caught", "track_id": 17},
+      {"frame": 152, "type": "first_contact", "track_id": 17, "by": [24]},
+      {"frame": 158, "type": "tackle", "track_id": 17, "by": [24, 31]}
+    ]
+  },
+  "post_snap": {
+    "result": "complete", "yards_gained": 9, "yards_after_catch": 1,
+    "ball_spot": {"x": 56.0, "y": 31.2}, "first_down": true,
+    "tackle": {"frame": 158, "x": 56.0, "y": 31.2, "by": [24, 31]},
+    "out_of_bounds": false, "penalty": null, "end_frame": 231
+  },
+  "players": [
+    {
+      "track_id": 17, "team": "LA", "side": "offense",
+      "gsis_id": "00-0038543", "jersey": "17", "name": "Puka Nacua", "position_roster": "WR",
+      "role": "WR", "slot_pre_snap": "WSR", "slot_at_snap": "WSR",
+      "alignment_pre_snap": {"lateral": 9.5, "depth": 0.5, "x": 46.5, "y": 33.1, "frame": 12},
+      "alignment_at_snap":  {"lateral": 9.5, "depth": 0.5, "x": 46.5, "y": 33.1, "frame": 96},
+      "stance": "2pt", "technique": null,
+      "direction_at_snap_deg": 92.0, "orientation_at_snap_deg": 88.0,
+      "motion": null, "route": "out", "block": null, "coverage": null,
+      "summary": {"distance_yds": 31.4, "max_speed_yds_s": 8.2, "frames_tracked": 372,
+                  "frames_lost": 4},
+      "events": [{"frame": 141, "type": "pass_outcome_caught"}, {"frame": 158, "type": "tackle"}]
+    },
+    {
+      "track_id": 94, "team": "CHI", "side": "defense",
+      "gsis_id": "…", "jersey": "94", "name": "…", "position_roster": "DE",
+      "role": "EDGE", "technique": "7", "stance": "3pt",
+      "alignment_at_snap": {"lateral": -6.5, "depth": -0.8, "x": 47.8, "y": 17.1, "frame": 96},
+      "direction_at_snap_deg": 270.0, "orientation_at_snap_deg": 272.0,
+      "pass_rush": {"rushed": true, "path": "edge_left", "pressure": true, "hit": false},
+      "summary": {"distance_yds": 12.0, "max_speed_yds_s": 6.9, "frames_tracked": 372, "frames_lost": 0}
+    }
+  ],
+  "tracking": {
+    "parquet": "derived/tracking/2025_wk20_LA-CHI_p017.parquet",
+    "frames": 372, "fps": 25,
+    "columns": ["frame", "track_id", "x", "y", "s", "a", "dis", "o", "dir", "phase", "conf", "angle_source"]
+  },
+  "quality": {
+    "registration_error_px": 1.8, "tracks_fragmented": 1, "identity_unresolved": 0,
+    "router": [{"trigger": "contested_catch", "provider": "anthropic", "cache_hit": false}],
+    "overall_confidence": 0.84
+  },
+  "generated": {"pipeline_version": "0.3.0", "at": "2026-11-02T18:40:11Z"}
+}
+```
+
+### 9.3 Vocabularies
+
+Closed lists, so clients can rely on them. Each lives in `formation_zero/intelligence/vocab.py`
+and is exported with the schema.
+
+| Field | Values |
+|---|---|
+| `phases` | `pre_snap`, `live`, `post_snap` |
+| `pre_snap.motions[].type` | `jet`, `orbit`, `across`, `short`, `return`, `shift_only` |
+| `pre_snap.motions[].at_snap` | `in_motion`, `set` |
+| `pre_snap.formation.qb` | `under_center`, `shotgun`, `pistol` |
+| `pre_snap.defense.shell` | `0-high`, `1-high`, `2-high` |
+| `pre_snap.defense.front` | `over`, `under`, `bear`, `odd`, `even`, `wide_9` |
+| `live.play_family` | `dropback`, `play_action`, `rpo`, `screen`, `run`, `scramble`, `trick`, `kick` |
+| `live.qb.drop` | `1-step`, `3-step`, `5-step`, `7-step`, `rollout_left`, `rollout_right`, `none` |
+| `live.routes[].route` | `flat`, `slant`, `comeback`, `curl`, `out`, `dig`, `corner`, `post`, `go`, `seam`, `wheel`, `screen`, `swing`, `angle`, `whip`, `stick`, `hitch`, `cross`, `block` |
+| `live.routes[].tree` | 0–9 on the standard route tree; `null` for routes outside it |
+| `live.run.gap` | `A`, `B`, `C`, `D` with side, e.g. `B-left` |
+| `live.run.scheme` | `inside_zone`, `outside_zone`, `power`, `counter`, `duo`, `draw`, `trap`, `sweep`, `qb_design` |
+| `live.defense.coverage.family` | `cover_0`, `cover_1`, `cover_2`, `cover_2_man`, `cover_3`, `cover_4`, `cover_6`, `unknown` |
+| `live.events[].type` | `snap`, `handoff`, `pass_forward`, `pass_outcome_caught`, `pass_outcome_incomplete`, `pass_outcome_interception`, `first_contact`, `tackle`, `out_of_bounds`, `touchdown`, `fumble`, `qb_sack`, `qb_scramble`, `lateral`, `whistle` (Big Data Bowl vocabulary, extended) |
+| `players[].role` | `QB`, `RB`, `FB`, `WR`, `TE`, `LT`, `LG`, `C`, `RG`, `RT`, `EDGE`, `DT`, `NT`, `LB`, `CB`, `NB`, `S`, `K`, `P`, `LS`, `OFFICIAL` |
+| `players[].technique` | `0`, `1`, `2i`, `2`, `3`, `4i`, `4`, `5`, `7`, `9`, `wide_9`, `null` |
+| `players[].stance` | `2pt`, `3pt`, `4pt`, `null` |
+| `*.source` | `official`, `nflverse`, `cv`, `hosted_model`, `human` |
+
+Direction and orientation follow the Big Data Bowl convention: degrees, 0 pointing to the
+top sideline, clockwise. `dir` is where the player is moving; `o` is where the body faces
+(from pose, or `null` when pose is off). Both are per frame in the Parquet and sampled at the
+snap in the record.
+
+### 9.4 Who fills in what
+
+| Section | Stage | Milestone |
+|---|---|---|
+| `game`, `situation`, `official`, `personnel` (labels) | NFL API + nflverse adapters | M1 |
+| `film` clips and fps | Ingestion | M1 |
+| `film.snap_frame`, `phases`, `at_snap.ball` | Snap and phase detection | M4 |
+| `players[].alignment_*`, `direction_*`, `orientation_*`, `tracking` | Detect, track, register, project, pose | M3, M4 |
+| `personnel` (cv), `pre_snap.*`, `at_snap.*`, `players[].role/slot/technique/stance` | Roles, formations, motion, technique | M5 |
+| `live.routes`, `live.run`, `live.blocks`, `live.qb`, `live.defense`, `live.events`, `post_snap` | Routes, coverage, events | M5 |
+| `players[].gsis_id/name` | Identity | M7 |
+| `quality.router`, hosted-model-sourced fields | Router | M6 |
+| Assembly, validation, write | `intelligence/play_record.py` | M5 (skeleton in M1) |
+
+---
+
+## 10. The API: getting play records to clients
+
+Read-only, JSON, over the same DuckDB the chat uses. Built with FastAPI and served from the
+laptop first, a small VM later. Clients never touch Parquet unless they ask for it.
+
+### 10.1 Endpoints
+
+| Method and path | Returns |
+|---|---|
+| `GET /v1/schema/play-record` | The JSON Schema for the current record version, with the vocabularies. |
+| `GET /v1/games` | Every game in the store: key, teams, season, week, play count, pipeline coverage per section. |
+| `GET /v1/games/{game_key}` | One game with its plays listed (uid, quarter, down, distance, play type, one-line result). |
+| `GET /v1/games/{game_key}/plays?…` | Filtered plays. Filters are record fields: `down`, `distance_min`, `formation`, `personnel`, `motion_type`, `route`, `coverage`, `play_family`, `player` (gsis id or jersey), `min_confidence`. Paginated. |
+| `GET /v1/plays/{play_uid}` | The full play record. `?include=tracking` embeds the per-frame table; `?fields=pre_snap,live` trims it. |
+| `GET /v1/plays/{play_uid}/tracking?phase=live&format=json` | Per-frame positions, speed, direction, orientation. `format=parquet` streams the file. |
+| `GET /v1/plays/{play_uid}/frame/{n}` | Every player at one frame, in field yards, plus the ball. The snapshot behind the bird's-eye view. |
+| `GET /v1/players/{gsis_id}/plays?season=` | Every play a player appears in, with their per-play summary (route, alignment, technique). |
+| `GET /v1/export/games/{game_key}.jsonl` | Bulk: one record per line, the whole game. `?since=` for incremental pulls. |
+| `GET /v1/export/games/{game_key}.parquet` | Bulk tracking for a game. |
+
+Errors are JSON with a stable `code`. Every response carries `schema_version` and
+`pipeline_version`. Authentication is an API key header from the first release, so a client
+can be revoked without a deploy. Rate limits and per-client scopes come when there is more
+than one client.
+
+### 10.2 How it is stored and served
+
+- The intelligence stage writes `derived/plays/<play_uid>.json` and appends to a per-game
+  `plays.jsonl`. DuckDB reads JSON natively, so a `play_records` view over those files backs the
+  filters with no separate index. Hot fields (down, distance, formation, personnel, play family,
+  coverage) are also materialised into the existing `plays` table so the chat and the API share
+  one semantic layer.
+- The API layer is `formation_zero/api/` (FastAPI app, routers per resource, Pydantic models
+  generated from the same schema the records are validated against). One code path validates
+  records on write and serialises them on read, so the two cannot drift.
+- Bulk export is a file stream, not a query, so a season pull does not tie up the database.
+
+### 10.3 Delivery
+
+The record exists from milestone 1 with the official sections filled, so a client can integrate
+early. The API itself is milestone 9. Until then, `fz export --game <key>` writes the same JSONL
+to disk for hand delivery.

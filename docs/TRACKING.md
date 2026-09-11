@@ -37,8 +37,8 @@ Rhythm at the end of a work session:
 
 ## Conventions
 
-- **Milestone ids** are stable. Ten of them make the hundred-yard Drive; each is ten yards. The
-  ball sits at the sum of `progress` across milestones.
+- **Milestone ids** are stable. The hundred-yard Drive is divided evenly among them; the ball
+  sits at the weighted sum of `progress` across milestones.
 - **Story keys** `GRD-###` never change or get reused. They are the join to Jira: create the
   Jira issue with the same key in its summary or as a label.
 - **Statuses**: stories are `done`, `active`, `todo`, `parked`. Tech is `in_use`, `planned`,

@@ -88,4 +88,19 @@ Expected points added. A measure of how much a play changed a team's expected sc
 Kaggle's annual competition using the NFL's real player-tracking data. That data has the same shape our vision layer will produce, so it lets us test the football logic before the vision is ready.
 
 ### Milestone
-One of the numbered chunks of work on the Plan page. Ten yards each on the Drive: F0 and M0 to M8 make a hundred-yard field.
+One of the numbered chunks of work on the Plan page. The Drive divides the hundred yards evenly among them: F0 and M0 to M9.
+
+### Play record
+The one JSON document per play that holds everything the system knows about it: situation, official result, formation before and at the snap, motions, routes, coverage, events, the tackle, and every player's position and role, each with a source and a confidence. It is the product. Clients receive it through the API.
+
+### Motion and shift
+Both happen before the snap. A shift is a player moving to a new spot and setting. A motion is a player still moving when the ball is snapped, or moving right up to it: jet (fast across the formation), orbit (looping behind the quarterback), across, short, or return.
+
+### Route tree
+The standard numbering of pass routes, 0 to 9: flat, slant, comeback, curl, out, dig, corner, post, go, and a few outside the tree such as wheel, screen and stick. Each receiver's route on a play gets a name, the frame where it broke, and the depth and direction of the break.
+
+### Direction and orientation
+Two different angles for every player on every frame. Direction is where they are moving. Orientation is where their body faces. A cornerback backpedalling has a direction pointing downfield and an orientation pointing at the quarterback.
+
+### Coverage family
+The defensive shell after the snap, named the way coaches name it: Cover 0 through Cover 6, with whether it was man or zone and which way the safeties rotated.

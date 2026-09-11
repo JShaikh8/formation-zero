@@ -22,7 +22,7 @@
     "Push this repository to GitHub and connect the Render site so it updates on every push.",
     "Confirm whether the film carries painted line-of-scrimmage and first-down graphics (it changes how we find the field).",
     "Get the NFL API credentials onto the build machine so play-by-play pulls work locally.",
-    "Milestone 1: upgrade the Python runtime, cut the film into per-play clips, port the NFL API client."
+    "Milestone 1: upgrade the Python runtime, cut the film into per-play clips, port the NFL API client, and publish version 1 of the play record schema (the JSON every play will be delivered as)."
   ],
   "numbers": [
     { "label": "Tests passing", "value": "158", "note": "run 2026-09-10" },

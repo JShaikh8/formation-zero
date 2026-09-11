@@ -1,5 +1,5 @@
 {
-  "key_scheme": "Epics are milestones M0 to M8 (plus F0, the summer foundation). Stories are GRD-### and map one-to-one to Jira issues. Statuses: done, active, todo, parked.",
+  "key_scheme": "Epics are milestones M0 to M9 (plus F0, the summer foundation). Stories are GRD-### and map one-to-one to Jira issues. Statuses: done, active, todo, parked.",
   "milestones": [
     {
       "id": "F0",
@@ -56,7 +56,10 @@
         { "key": "GRD-24", "title": "One frame iterator the whole pipeline uses", "status": "todo" },
         { "key": "GRD-25", "title": "NFL API port: token client, game detail, rosters, teams, stat types", "status": "todo" },
         { "key": "GRD-26", "title": "Play index rebuilt on NFL API plays (join by playId)", "status": "todo" },
-        { "key": "GRD-27", "title": "Artifact manifests and the stage runner with skip-if-unchanged", "status": "todo" }
+        { "key": "GRD-27", "title": "Artifact manifests and the stage runner with skip-if-unchanged", "status": "todo" },
+        { "key": "GRD-63", "title": "Play record schema v1 (JSON Schema + vocabularies): the client contract", "status": "todo" },
+        { "key": "GRD-64", "title": "Emit a play record for every play from official data alone (situation, official, personnel)", "status": "todo" },
+        { "key": "GRD-65", "title": "fz export: a whole game as JSONL for hand delivery", "status": "todo" }
       ]
     },
     {
@@ -107,17 +110,22 @@
     },
     {
       "id": "M5",
-      "title": "Football intelligence on real tracking",
-      "plain": "Read football from the positions: who plays which role, where the defensive line is aligned (the 3-tech), who motioned before the snap, what coverage shell the safeties show, which routes the receivers ran.",
+      "title": "Football intelligence and the play record",
+      "plain": "Read football from the positions, phase by phase. Before the snap: the formation, who shifted, who motioned and which way. At the snap: the formation as it stood, who was still moving. Live: every receiver's route, the run gap and scheme, the quarterback's drop, the coverage, the ball's flight. After: the tackle, the spot, the yards. Every player gets a direction and body orientation on every frame. It all lands in one JSON record per play.",
       "status": "todo",
       "progress": 0,
-      "proof": "Ask the chat 'show me every 3-tech alignment' and get answers from our own vision output.",
+      "proof": "A complete play record for every play of the demo game, validated against the schema, and the chat answers 'show me every jet motion into a Cover 3' from our own vision output.",
       "stories": [
-        { "key": "GRD-44", "title": "Role assignment from the formation frame", "status": "todo" },
-        { "key": "GRD-45", "title": "Defensive line technique (0 to 9, wide-9, head-up)", "status": "todo" },
-        { "key": "GRD-46", "title": "Pre-snap motion and shifts", "status": "todo" },
-        { "key": "GRD-47", "title": "Coverage shell and man / zone heuristics", "status": "todo" },
-        { "key": "GRD-48", "title": "Route classification and event detection", "status": "todo" },
+        { "key": "GRD-44", "title": "Role assignment from the formation frame (QB, RB, WR, TE, line, EDGE, LB, CB, S)", "status": "todo" },
+        { "key": "GRD-45", "title": "Defensive line technique (0 to 9, wide-9, head-up) and stance", "status": "todo" },
+        { "key": "GRD-46", "title": "Pre-snap: initial formation, shifts, motions with type and direction, formation at the snap", "status": "todo" },
+        { "key": "GRD-66", "title": "Per-player direction and body orientation on every frame; sampled at the snap", "status": "todo" },
+        { "key": "GRD-48", "title": "Live routes: route-tree label, break frame, depth and direction of break, target", "status": "todo" },
+        { "key": "GRD-67", "title": "Live run plays: ball carrier, gap, scheme, blocks and engagements", "status": "todo" },
+        { "key": "GRD-68", "title": "Quarterback: drop type, time to throw, pocket, scramble; ball release and arrival", "status": "todo" },
+        { "key": "GRD-47", "title": "Defense: coverage family, man or zone, rotation, pass rush paths, blitz", "status": "todo" },
+        { "key": "GRD-69", "title": "Events timeline and post-snap: first contact, tackle, spot, yards after catch, out of bounds", "status": "todo" },
+        { "key": "GRD-70", "title": "Play record assembler: fill every section with source and confidence, validate, write JSON", "status": "todo" },
         { "key": "GRD-49", "title": "Validate every module on Big Data Bowl tracking data first", "status": "todo" }
       ]
     },
@@ -161,6 +169,22 @@
         { "key": "GRD-59", "title": "SAM 3D Body on keyframes", "status": "todo" },
         { "key": "GRD-60", "title": "Web film room (Next.js + Three.js) reading the Parquet", "status": "todo" },
         { "key": "GRD-61", "title": "Free camera replay of a drive", "status": "todo" }
+      ]
+    },
+    {
+      "id": "M9",
+      "title": "Play record API for clients",
+      "plain": "Hand the play records to clients over the web. One JSON endpoint per play, filters over a whole game (every jet motion, every Cover 3, every 3rd and long), per-frame positions on request, and a bulk download of a whole game. Same database the chat uses.",
+      "status": "todo",
+      "progress": 0,
+      "proof": "A client pulls a whole game as JSONL and filters plays by motion type and coverage over HTTP, with an API key.",
+      "stories": [
+        { "key": "GRD-71", "title": "DuckDB view over the JSON records plus a hot-field table shared with the chat", "status": "todo" },
+        { "key": "GRD-72", "title": "FastAPI app: schema, games, plays with filters, one play, frame snapshot", "status": "todo" },
+        { "key": "GRD-73", "title": "Tracking endpoint: per-frame JSON or Parquet stream, by phase", "status": "todo" },
+        { "key": "GRD-74", "title": "Player endpoint: every play a player appears in with their per-play summary", "status": "todo" },
+        { "key": "GRD-75", "title": "Bulk export endpoints (JSONL, Parquet) with incremental pulls", "status": "todo" },
+        { "key": "GRD-76", "title": "API keys, versioned responses, stable error codes, client docs", "status": "todo" }
       ]
     }
   ]
