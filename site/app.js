@@ -106,6 +106,10 @@
             <h2>What this project is</h2>
             <div class="prose measure" style="margin-top:10px">${st.what_it_is.map((p) => `<p>${esc(p)}</p>`).join('')}</div>
           </div>
+          ${st.end_state ? `<div>
+            <h2>${esc(st.end_state.title)}</h2>
+            <ol class="steps" style="margin-top:12px">${st.end_state.steps.map((t) => `<li>${esc(t)}</li>`).join('')}</ol>
+          </div>` : ''}
           <div class="latest">
             <div class="eyebrow">Latest from the journal · ${esc(latest.date)}</div>
             <h3 style="margin-top:6px">${esc(latest.title)}</h3>

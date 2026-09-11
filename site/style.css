@@ -150,6 +150,9 @@ td.num, th.num { text-align: right; font-family: var(--mono); font-variant-numer
 .next-list li { display: grid; grid-template-columns: 22px 1fr; gap: 10px; align-items: start; }
 .next-list .dot { width: 14px; height: 14px; margin-top: 5px; border-radius: 50%; background: var(--first); border: 2px solid var(--paper); box-shadow: 0 0 0 1px var(--first); }
 .latest { border-top: 3px solid var(--los); padding-top: 14px; }
+.steps { list-style: none; counter-reset: step; padding: 0; margin: 0; display: grid; gap: 10px; max-width: 66ch; }
+.steps li { counter-increment: step; display: grid; grid-template-columns: 34px 1fr; gap: 10px; align-items: start; }
+.steps li::before { content: counter(step); font-family: var(--display); font-weight: 700; font-size: 1.25rem; line-height: 1.2; color: var(--turf); text-align: right; padding-right: 4px; border-right: 2px solid var(--rule); }
 
 /* ---- the drive -------------------------------------------------------------- */
 .drive { background: var(--paper-2); border: 1px solid var(--rule); border-radius: var(--radius); padding: 16px 16px 10px; box-shadow: var(--shadow); }
