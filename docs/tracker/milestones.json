@@ -38,7 +38,8 @@
         { "key": "GRD-17", "title": "Companion tracker: docs as source of truth, static site build", "status": "done" },
         { "key": "GRD-62", "title": "Rename the package to formation_zero; one name everywhere", "status": "done" },
         { "key": "GRD-77", "title": "Film room demo: hand-made example of the finished product (home, game, play list, four cameras, play record, chat, JSON)", "status": "done", "note": "Three real plays fully authored; every other play shows official data only." },
-        { "key": "GRD-78", "title": "Demo review: perfect the film room UX with the owner", "status": "active" },
+        { "key": "GRD-78", "title": "Demo review: perfect the film room UX with the owner", "status": "active", "note": "Round two shipped 2026-09-11: separation, closeness, pursuit, pressure; Film view with split; chase camera; alignment card; confidence chips; search and filters; share a moment." },
+        { "key": "GRD-79", "title": "Film room: mobile layout pass", "status": "todo" },
         { "key": "GRD-18", "title": "Push to GitHub and connect the Render static site", "status": "todo" },
         { "key": "GRD-19", "title": "Confirm whether the film carries painted LOS / first-down graphics", "status": "todo" },
         { "key": "GRD-20", "title": "NFL API credentials available on the build machine", "status": "todo" }

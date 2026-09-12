@@ -104,3 +104,12 @@ Two different angles for every player on every frame. Direction is where they ar
 
 ### Coverage family
 The defensive shell after the snap, named the way coaches name it: Cover 0 through Cover 6, with whether it was man or zone and which way the safeties rotated.
+
+### Separation
+How many yards of space a receiver has from the nearest defender, measured at the moment the ball leaves the quarterback's hand and again at the catch. Read from the defender's side it is closeness: how tightly he stayed on his man.
+
+### Pursuit
+For every defender, the distance to whoever has the ball, frame by frame: how close he got, when, and how fast he was closing.
+
+### Pressure
+How close the nearest pass rusher got to the quarterback during the dropback, and how long after the snap the first one arrived.

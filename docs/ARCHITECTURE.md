@@ -756,8 +756,8 @@ Abbreviated but complete in structure. Field names are the schema's.
   },
   "film": {
     "fps": 25,
-    "sideline": {"clip": "raw/2025/wk20/LA_at_CHI/sideline/p017.mp4", "frames": 380},
-    "endzone":  {"clip": "raw/2025/wk20/LA_at_CHI/endzone/p017.mp4",  "frames": 372},
+    "sideline": {"clip": "raw/2025/wk20/LA_at_CHI/sideline/p017.mp4", "frames": 380, "url": null},
+    "endzone":  {"clip": "raw/2025/wk20/LA_at_CHI/endzone/p017.mp4",  "frames": 372, "url": null},
     "snap_frame": 96, "whistle_frame": 231,
     "phases": {"pre_snap": [0, 95], "live": [96, 231], "post_snap": [232, 379]}
   },
@@ -791,7 +791,9 @@ Abbreviated but complete in structure. Field names are the schema's.
   "live": {
     "play_family": "dropback", "play_action": false, "rpo": false,
     "qb": {"track_id": 3, "drop": "3-step", "time_to_throw_s": 2.3, "pocket": "clean",
-           "scramble": false},
+           "scramble": false,
+           "pressure": {"nearest_rusher_min_yds": 2.5, "at_frame": 120, "time_to_pressure_s": 1.8,
+                        "rushers_within_3yds_at_throw": 1}},
     "routes": [
       {"track_id": 11, "route": "flat", "tree": 1, "break_frame": 118, "depth_at_break_yds": 1.5,
        "break_direction": "left", "targeted": false, "source": "cv", "confidence": 0.86},
@@ -837,6 +839,9 @@ Abbreviated but complete in structure. Field names are the schema's.
       "motion": null, "route": "out", "block": null, "coverage": null,
       "summary": {"distance_yds": 31.4, "max_speed_yds_s": 8.2, "frames_tracked": 372,
                   "frames_lost": 4},
+      "metrics": {"kind": "separation", "at_throw_yds": 2.8, "nearest_at_throw": 94,
+                  "at_catch_yds": 2.9, "nearest_at_catch": 94, "min_live_yds": 0.4,
+                  "mean_live_yds": 1.9, "min_at_frame": 121},
       "events": [{"frame": 141, "type": "pass_outcome_caught"}, {"frame": 158, "type": "tackle"}]
     },
     {
@@ -846,7 +851,12 @@ Abbreviated but complete in structure. Field names are the schema's.
       "alignment_at_snap": {"lateral": -6.5, "depth": -0.8, "x": 47.8, "y": 17.1, "frame": 96},
       "direction_at_snap_deg": 270.0, "orientation_at_snap_deg": 272.0,
       "pass_rush": {"rushed": true, "path": "edge_left", "pressure": true, "hit": false},
-      "summary": {"distance_yds": 12.0, "max_speed_yds_s": 6.9, "frames_tracked": 372, "frames_lost": 0}
+      "summary": {"distance_yds": 12.0, "max_speed_yds_s": 6.9, "frames_tracked": 372, "frames_lost": 0},
+      "metrics": {"kind": "coverage", "assignment": null, "mean_to_assignment_yds": 6.0,
+                  "min_to_assignment_yds": 0.8, "to_assignment_at_throw_yds": 10.6,
+                  "nearest_at_catch": false,
+                  "pursuit": {"min_to_carrier_yds": 0.8, "at_frame": 199,
+                              "first_within_2yds_frame": 164, "closing_speed_max_yds_s": 15.1}}
     }
   ],
   "tracking": {
@@ -862,6 +872,25 @@ Abbreviated but complete in structure. Field names are the schema's.
   "generated": {"pipeline_version": "0.3.0", "at": "2026-11-02T18:40:11Z"}
 }
 ```
+
+### 9.2a Distances: separation, closeness, pursuit, pressure
+
+Added 2026-09-11 after the film-room review. All four are one measurement read from
+different sides, computed from the tracking table and summarised in the record; the viewer draws
+the per-frame curves from the frames themselves.
+
+| Who | `players[].metrics` | What it says |
+|---|---|---|
+| Receivers and backs (`kind: separation`) | distance to the nearest defender at the throw and at the catch, the minimum and mean over the live phase, and which defender was nearest each time | how open they were |
+| Defenders (`kind: coverage`) | mean and minimum distance to their assignment (man) or nearest receiver (zone), distance at the throw, whether they were nearest at the catch; plus `pursuit`: closest approach to whoever had the ball, when, first frame inside two yards, and peak closing speed | how tight they stayed, and how they chased |
+| Quarterback (`live.qb.pressure`) | nearest rusher over the dropback, time to first pressure (a rusher inside 2.5 yards), rushers within three yards at the throw | how clean the pocket was |
+
+Closing speed is only measured between frames with the same ball carrier; a handoff or catch
+moves the ball, not the defender.
+
+**Film.** `film.<angle>.url` is the slot for a client's licensed clip. Frames in the record are
+the film's frames, so any player that can seek by frame scrubs in lockstep with the recreation.
+No footage is stored in the record or published anywhere by us.
 
 ### 9.3 Vocabularies
 

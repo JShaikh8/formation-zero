@@ -112,9 +112,101 @@ def summary(track: list[list[float]]) -> dict:
             "frames_tracked": len(track), "frames_lost": 0}
 
 
+def dist(a, b) -> float:
+    return math.hypot(a[0] - b[0], a[1] - b[1])
+
+
+def metrics_for(play: dict, movers: list[Mover], tracks: dict, ball: dict, frames: int) -> tuple[dict, dict]:
+    """Separation, closeness and pursuit, read from the same distances on both sides.
+
+    Offense skill players: distance to the nearest defender per frame (separation).
+    Defenders: distance to their assignment (man) or nearest receiver (zone), and to whoever
+    has the ball (pursuit). Quarterback: nearest rusher over the dropback (pressure).
+    Summaries go in the record; the viewer draws the per-frame curves from the tracking table.
+    """
+    snap_f, whistle_f = play["snap_frame"], play["whistle_frame"]
+    live = range(snap_f, whistle_f + 1)
+    release = play["live"]["ball"]["release_frame"]
+    arrival = play["live"]["ball"]["arrival_frame"]
+    by_id = {m.id: m for m in movers}
+    offense = [m.id for m in movers if m.side == "offense"]
+    skill = [m.id for m in movers if m.side == "offense" and (m.extra.get("route_detail") or m.extra.get("ball_carrier"))]
+    receivers = [m.id for m in movers if m.side == "offense" and m.extra.get("route_detail")]
+    defenders = [m.id for m in movers if m.side == "defense"]
+    rushers = [d for d in defenders if (by_id[d].extra.get("pass_rush") or {}).get("rushed")]
+    qb = next((m.id for m in movers if m.extra.get("qb")), None)
+    out: dict = {}
+
+    def nearest(f: int, src: str, pool: list[str]):
+        best, bd = None, 1e9
+        for pid in pool:
+            d = dist(tracks[src][f], tracks[pid][f])
+            if d < bd:
+                best, bd = pid, d
+        return best, bd
+
+    for pid in skill:
+        sep = [nearest(f, pid, defenders)[1] for f in live]
+        m = {"kind": "separation",
+             "min_live_yds": round(min(sep), 1), "mean_live_yds": round(sum(sep) / len(sep), 1),
+             "min_at_frame": snap_f + sep.index(min(sep))}
+        if release is not None:
+            n, d = nearest(release, pid, defenders)
+            m["at_throw_yds"], m["nearest_at_throw"] = round(d, 1), n
+        if arrival is not None:
+            n, d = nearest(arrival, pid, defenders)
+            m["at_catch_yds"], m["nearest_at_catch"] = round(d, 1), n
+        out[pid] = m
+
+    for did in defenders:
+        cov = by_id[did].extra.get("coverage") or {}
+        assignment = cov.get("on")
+        pool = [assignment] if assignment else receivers
+        close = [nearest(f, did, pool)[1] for f in live] if pool else []
+        m = {"kind": "coverage" if pool else "front"}
+        if close:
+            m.update({"assignment": assignment, "mean_to_assignment_yds": round(sum(close) / len(close), 1),
+                      "min_to_assignment_yds": round(min(close), 1)})
+            if release is not None:
+                m["to_assignment_at_throw_yds"] = round(nearest(release, did, pool)[1], 1)
+            if arrival is not None:
+                target = play["live"]["events"]
+                catcher = next((e.get("track_id") for e in target if e["type"] == "pass_outcome_caught"), None)
+                if catcher:
+                    m["nearest_at_catch"] = nearest(arrival, catcher, defenders)[0] == did
+                    m["to_catch_yds"] = round(dist(tracks[did][arrival], tracks[catcher][arrival]), 1)
+        # Pursuit: distance to whoever has the ball, each live frame.
+        carriers = [ball["carrier"](f) for f in live]
+        pur = [dist(tracks[did][f], tracks[c][f]) for f, c in zip(live, carriers)]
+        first_close = next((f for f, d in zip(live, pur) if d <= 2.0), None)
+        # Closing speed only between frames with the same carrier: a handoff or catch moves
+        # the ball, not the defender, and would otherwise read as an impossible burst.
+        closing = [(pur[i] - pur[i + 1]) * FPS for i in range(len(pur) - 1) if carriers[i] == carriers[i + 1]]
+        m["pursuit"] = {"min_to_carrier_yds": round(min(pur), 1), "at_frame": snap_f + pur.index(min(pur)),
+                        "first_within_2yds_frame": first_close,
+                        "closing_speed_max_yds_s": round(max(0.0, max(closing)) if closing else 0.0, 1)}
+        out[did] = m
+
+    qb_pressure = None
+    if qb and rushers:
+        end = release if release is not None else min(whistle_f, snap_f + 3 * FPS)
+        span = list(range(snap_f, end + 1))
+        near = [nearest(f, qb, rushers)[1] for f in span]
+        first = next((f for f, d in zip(span, near) if d <= 2.5), None)
+        qb_pressure = {"nearest_rusher_min_yds": round(min(near), 1), "at_frame": snap_f + near.index(min(near)),
+                       "time_to_pressure_s": round((first - snap_f) / FPS, 2) if first is not None else None,
+                       "rushers_within_3yds_at_throw": (sum(dist(tracks[qb][release], tracks[r][release]) <= 3.0 for r in rushers)
+                                                       if release is not None else None)}
+        out[qb] = {"kind": "passer"}
+    return out, qb_pressure
+
+
 def build(play: dict, movers: list[Mover], ball: dict, frames: int) -> dict:
     los_x, ball_y, snap_f = play["los_x"], play["ball_y"], play["snap_frame"]
     tracks = {m.id: m.sample(frames) for m in movers}
+    metrics, qb_pressure = metrics_for(play, movers, tracks, ball, frames)
+    if qb_pressure is not None:
+        play["live"]["qb"]["pressure"] = qb_pressure
     players = []
     for m in movers:
         tr = tracks[m.id]
@@ -130,7 +222,8 @@ def build(play: dict, movers: list[Mover], ball: dict, frames: int) -> dict:
                                   "x": snap[0], "y": snap[1], "frame": snap_f},
             "direction_at_snap_deg": snap[2], "orientation_at_snap_deg": m.face,
             "summary": summary(tr),
-            "source": "human", "confidence": 1.0,
+            "metrics": metrics.get(m.id),
+            "source": "human", "confidence": 1.0 if m.name or m.side == "official" else 0.55,
         }
         block.update(m.extra)
         players.append(block)
@@ -155,8 +248,10 @@ def build(play: dict, movers: list[Mover], ball: dict, frames: int) -> dict:
                  "nfl_game_id": "2025_20_LA_CHI", "nfl_play_id": play["nfl_play_id"]},
         "situation": play["situation"],
         "official": play["official"],
-        "film": {"fps": FPS, "sideline": {"clip": f"raw/2025/wk20/LA_at_CHI/sideline/{play['uid'][-4:]}.mp4", "frames": frames},
-                 "endzone": {"clip": f"raw/2025/wk20/LA_at_CHI/endzone/{play['uid'][-4:]}.mp4", "frames": frames},
+        "film": {"fps": FPS,
+                 "sideline": {"clip": f"raw/2025/wk20/LA_at_CHI/sideline/{play['uid'][-4:]}.mp4", "frames": frames, "url": None},
+                 "endzone": {"clip": f"raw/2025/wk20/LA_at_CHI/endzone/{play['uid'][-4:]}.mp4", "frames": frames, "url": None},
+                 "video_note": "Clips are frame-locked to the recreation. The url is filled with whatever footage the client is licensed to load; none is published here.",
                  "snap_frame": snap_f, "whistle_frame": play["whistle_frame"],
                  "phases": {"pre_snap": [0, snap_f - 1], "live": [snap_f, play["whistle_frame"]],
                             "post_snap": [play["whistle_frame"] + 1, frames - 1]}},
@@ -320,7 +415,7 @@ def play_001() -> dict:
         extra={"coverage": {"assignment": "deep_middle", "man_zone": "zone"}}))
     d.append(Mover("LA3", "LA", "defense", "3", "Kam Curl", "S", "SS", 270, [
         (0, *rel(los, by, -6.0, -9.0)), (snap_t, *rel(los, by, -6.0, -9.0)), (snap_t + 0.6, *rel(los, by, -4.0, -5.0)),   # bites on the fake
-        (throw_t, *rel(los, by, -9.0, -4.5)), (catch_t + 0.5, *rel(los, by, -10.0, -9.0)), (tackle_t, *rel(los, by, -18.0, -30.0)), (end_t, *rel(los, by, -19.0, -32.0))],
+        (throw_t, *rel(los, by, -4.0, -3.0)), (catch_t + 0.5, *rel(los, by, -7.0, -5.5)), (tackle_t, *rel(los, by, -18.0, -30.0)), (end_t, *rel(los, by, -19.0, -32.0))],
         extra={"coverage": {"assignment": "curl_flat_right", "man_zone": "zone"}}))
 
     movers = ol + [qb, rb, te_kmet, te_love, moore, odunze] + d + officials(los, by, snap_t, end_t)
@@ -377,7 +472,7 @@ def play_001() -> dict:
                  "break_direction": "left", "targeted": False, "source": "human", "confidence": 1.0}],
             "run": None,
             "blocks": [{"track_id": "CHI84", "assignment": "arc_block", "engaged_with": "LA8", "engaged_frames": [int((snap_t + 0.5) * FPS), int((snap_t + 1.3) * FPS)]}],
-            "defense": {"coverage": {"family": "cover_3", "man_zone": "zone", "rotation": "strong", "source": "human", "confidence": 1.0},
+            "defense": {"coverage": {"family": "cover_3", "man_zone": "zone", "rotation": "strong", "source": "human", "confidence": 0.72},
                         "pass_rush": [{"track_id": "LA8", "rushed": True, "path": "edge_right"}, {"track_id": "LA0", "rushed": True, "path": "edge_left"},
                                       {"track_id": "LA95", "rushed": True, "path": "interior"}, {"track_id": "LA55", "rushed": True, "path": "interior"},
                                       {"track_id": "LA91", "rushed": True, "path": "interior"}],
@@ -588,8 +683,8 @@ def play_062() -> dict:
         (snap_t + 0.6, *rel(los, by, -8.0, -3.0)), (throw_t, *rel(los, by, -15.0, -4.0)), (end_t, *rel(los, by, -16.0, -6.0))],
         extra={"coverage": {"assignment": "man", "man_zone": "man", "on": "LA12"}}))
     d.append(Mover("CHI20", "CHI", "defense", "20", None, "CB", "CB", 270, [
-        (0, *rel(los, by, -6.0, -6.0)), (snap_t, *rel(los, by, -6.0, -6.0)), (snap_t + 1.5, *rel(los, by, -5.0, -11.0)),
-        (snap_t + 2.4, *rel(los, by, -8.0, -16.0)), (catch_t, *rel(los, by, -15.0, -20.0)), (tackle_t, 63.0, 9.5), (end_t, 63.5, 9.0)],
+        (0, *rel(los, by, -6.0, -6.0)), (snap_t, *rel(los, by, -6.0, -6.0)), (snap_t + 1.5, *rel(los, by, -3.0, -9.0)),
+        (snap_t + 2.4, *rel(los, by, -6.5, -15.5)), (catch_t, *rel(los, by, -14.0, -20.5)), (tackle_t, 63.0, 9.5), (end_t, 63.5, 9.0)],
         extra={"coverage": {"assignment": "man", "man_zone": "man", "on": "LA89"}}))
     d.append(Mover("CHI9", "CHI", "defense", "9", "Jaquan Brisker", "S", "SS", 270, [
         (0, *rel(los, by, -8.0, -10.0)), (snap_t, *rel(los, by, -8.0, -10.0)), (throw_t, *rel(los, by, -6.0, -12.0)), (tackle_t, 60.0, 14.0), (end_t, 61.0, 12.0)],
@@ -647,7 +742,7 @@ def play_062() -> dict:
                  "break_direction": "right", "targeted": False, "source": "human", "confidence": 1.0}],
             "run": None,
             "blocks": [{"track_id": "LA23", "assignment": "pass_pro", "engaged_with": "CHI54", "engaged_frames": [int((snap_t + 0.8) * FPS), int(throw_t * FPS)]}],
-            "defense": {"coverage": {"family": "cover_1", "man_zone": "man", "rotation": None, "source": "human", "confidence": 1.0},
+            "defense": {"coverage": {"family": "cover_1", "man_zone": "man", "rotation": None, "source": "human", "confidence": 0.8},
                         "pass_rush": [{"track_id": "CHI98", "rushed": True, "path": "edge_right"}, {"track_id": "CHI54", "rushed": True, "path": "edge_left"},
                                       {"track_id": "CHI97", "rushed": True, "path": "interior"}, {"track_id": "CHI99", "rushed": True, "path": "interior"}],
                         "blitz": False},
