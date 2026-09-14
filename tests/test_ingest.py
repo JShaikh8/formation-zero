@@ -97,21 +97,21 @@ def test_longest_run_tolerates_short_gaps():
     assert filmwindow.longest_run([False, False], max_gap=1) is None
 
 
-def test_film_window_found_in_menu_film_menu(make_video):
-    # 4 s menu, 20 s film with a 2 s cut to grey inside it, 4 s frozen menu. 25 fps.
-    path, _ = make_video(n=0, segments=[(100, False), (250, True), (50, False), (250, True), (100, False)])
+def test_film_window_found_between_menu_and_frozen_tail(make_video):
+    # 10 s menu, 40 s film, 10 s frozen frame, at 25 fps; 5-second windows.
+    path, _ = make_video(n=0, segments=[(250, False), (1000, True), (250, False, "frozen")])
     with FileSource(path) as src:
-        w = filmwindow.find(src, step_s=1.0, max_gap_s=4.0, min_duration_s=10.0)
+        w = filmwindow.find(src, step_s=1.0, window_s=5.0, max_gap_s=5.0, min_duration_s=20.0)
     assert w is not None
-    assert w.start_s == pytest.approx(4.0, abs=1.0)
-    assert w.end_s == pytest.approx(26.0, abs=1.5)
-    assert w.start_frame == 100
+    assert w.start_s == pytest.approx(10.0, abs=5.0)
+    assert w.end_s == pytest.approx(50.0, abs=5.0)
+    assert w.start_frame % 25 == 0
 
 
-def test_film_window_none_when_all_menu(make_video):
-    path, _ = make_video(n=0, segments=[(200, False)])
+def test_film_window_none_when_nothing_moves(make_video):
+    path, _ = make_video(n=0, segments=[(500, False, "frozen")])
     with FileSource(path) as src:
-        assert filmwindow.find(src, step_s=1.0, min_duration_s=2.0) is None
+        assert filmwindow.find(src, step_s=1.0, window_s=5.0, min_duration_s=5.0) is None
 
 
 def test_film_root_separates_big_files_from_the_data_root(tmp_path, monkeypatch):

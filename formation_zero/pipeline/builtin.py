@@ -19,7 +19,7 @@ def probe_stage(ctx: StageContext) -> None:
     write_sidecar(probe(_src(ctx)))
 
 
-@stage("filmwindow", per="game", config_keys=("source_name", "filmwindow_step_s", "filmwindow_min_s"))
+@stage("filmwindow", per="game", config_keys=("source_name", "filmwindow_step_s", "filmwindow_window_s", "filmwindow_min_s"))
 def filmwindow_stage(ctx: StageContext) -> None:
     """Find the coaches-film window inside the source recording; write it beside the source."""
     import json
@@ -29,7 +29,8 @@ def filmwindow_stage(ctx: StageContext) -> None:
 
     src = _src(ctx)
     with FileSource(src) as source:
-        w = find(source, step_s=float(ctx.config.get("filmwindow_step_s", 2.0)),
+        w = find(source, step_s=float(ctx.config.get("filmwindow_step_s", 1.0)),
+                 window_s=float(ctx.config.get("filmwindow_window_s", 30.0)),
                  min_duration_s=float(ctx.config.get("filmwindow_min_s", 60.0)))
     out = src.with_name(src.name + ".filmwindow.json")
     out.write_text(json.dumps(None if w is None else w.__dict__, indent=1))

@@ -82,15 +82,15 @@ def test_filmwindow_then_proxy_encodes_only_the_window(tmp_path, make_video, mon
 
     monkeypatch.setenv("FZ_FILM_ROOT", str(tmp_path / "ssd"))
     paths = GamePaths(tmp_path / "data", 2025, 20, "LA", "CHI").ensure_dirs()
-    # 4 s menu, 16 s film, 4 s menu at 25 fps.
-    video, _ = make_video(n=0, segments=[(100, False), (400, True), (100, False)])
+    # 10 s menu, 40 s film, 10 s frozen at 25 fps.
+    video, _ = make_video(n=0, segments=[(250, False), (1000, True), (250, False, "frozen")])
     (paths.source_dir / "film.mp4").symlink_to(video)
-    runner = Runner(paths, {"filmwindow_step_s": 1.0, "filmwindow_min_s": 10.0, "proxy_height": 48})
+    runner = Runner(paths, {"filmwindow_step_s": 1.0, "filmwindow_window_s": 5.0, "filmwindow_min_s": 20.0, "proxy_height": 48})
     assert [r.action for r in runner.run("filmwindow")] == ["ran"]
     w = json.loads((paths.source_dir / "film.mp4.filmwindow.json").read_text())
-    assert w is not None and w["start_frame"] == 100
+    assert w is not None and 125 <= w["start_frame"] <= 375
     assert [r.action for r in runner.run("proxy")] == ["ran"]
     with FileSource(paths.proxy_path()) as src:
-        assert src.height == 48 and 380 <= src.frames <= 450     # the window, not the 600-frame file
+        assert src.height == 48 and 800 <= src.frames <= 1150    # the window, not the 1500-frame file
     meta = json.loads((paths.proxy_path().with_name(paths.proxy_path().name + ".json")).read_text())
-    assert meta["first_frame"] == 100
+    assert 125 <= meta["first_frame"] <= 375
