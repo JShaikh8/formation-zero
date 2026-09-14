@@ -635,9 +635,9 @@
     $('#chat-form').addEventListener('submit', (e) => { e.preventDefault(); const v = $('#chat-input').value.trim(); if (v) { $('#chat-input').value = ''; ask(v); } });
   }
   const INSIGHT = {
-    '2025_wk20_LA-CHI_p001': 'The play fake pulled both inside linebackers and the strong safety a step toward the line. Moore ran his shallow cross into the space they vacated, caught it on the move, and with the corner on his side bailing to a deep third there was nobody underneath. The 34 yards were mostly after the catch.',
-    '2025_wk20_LA-CHI_p019': 'Duo off the right side: the right tackle and tight end doubled the edge, the right guard sealed the 3-technique, and the back read the linebacker and pressed the C gap. Man coverage outside meant the corners were occupied by receivers; nobody was free to fill.',
-    '2025_wk20_LA-CHI_p062': 'The jet motion took the nickel with it, which told Stafford it was man coverage before the snap. Higbee ran a corner against a corner trailing inside; with the single high safety held in the middle by the dig, the throw went to the sideline where only the receiver could get it.',
+    '2025_wk20_LA-CHI_p002': 'The play fake pulled both inside linebackers and the strong safety a step toward the line. Moore ran his shallow cross into the space they vacated, caught it on the move, and with the corner on his side bailing to a deep third there was nobody underneath. The 34 yards were mostly after the catch.',
+    '2025_wk20_LA-CHI_p020': 'Duo off the right side: the right tackle and tight end doubled the edge, the right guard sealed the 3-technique, and the back read the linebacker and pressed the C gap. Man coverage outside meant the corners were occupied by receivers; nobody was free to fill.',
+    '2025_wk20_LA-CHI_p073': 'The jet motion took the nickel with it, which told Stafford it was man coverage before the snap. Higbee ran a corner against a corner trailing inside; with the single high safety held in the middle by the dig, the throw went to the sideline where only the receiver could get it.',
   };
   function answer(q) {
     const r = record(); const p = state.play; const s = q.toLowerCase();

@@ -3,7 +3,7 @@
 This is the **labels + alignment backbone** of the whole system:
   - down, distance, line-of-scrimmage (`yardline_100`) for every play,
   - personnel / formation (from participation data) as ground truth,
-  - a `play_index` over scrimmage plays to align segmented film clips against (Nth film play
+  - a `play_index` over filmable plays (kicks and kneels included) to align segmented film clips against (Nth film play
     -> Nth scrimmage play), since clean coaches film has no on-screen clock to match on.
 
 The LOS yard line is what later anchors field registration to a known landmark.
@@ -19,7 +19,7 @@ import argparse
 from formation_zero.ids import game_key, nflverse_game_id, play_uid
 
 # Plays that typically appear in offensive All-22 coaches film, in order.
-SCRIMMAGE_PLAY_TYPES = {"pass", "run", "qb_kneel", "qb_spike"}
+from formation_zero.data.playtypes import FILMABLE_PLAY_TYPES, SCRIMMAGE_PLAY_TYPES  # noqa: E402
 
 # Tidy output columns (subset of what's available is kept gracefully).
 _BASE_COLS = [
@@ -70,22 +70,9 @@ def pull_game_pbp(season: int, week: int, away: str, home: str,
 
     tidy.insert(0, "game_key", game_key(season, week, away, home))
     tidy["is_scrimmage"] = tidy["play_type"].isin(SCRIMMAGE_PLAY_TYPES)
+    tidy["is_filmable"] = tidy["play_type"].isin(FILMABLE_PLAY_TYPES)
 
-    # play_index increments only on scrimmage plays; play_uid derived from it.
-    gk = tidy["game_key"].iloc[0]
-    idx = 0
-    play_index: list[int | None] = []
-    uids: list[str | None] = []
-    for is_scrim in tidy["is_scrimmage"]:
-        if is_scrim:
-            idx += 1
-            play_index.append(idx)
-            uids.append(play_uid(gk, idx))
-        else:
-            play_index.append(None)
-            uids.append(None)
-    tidy.insert(1, "play_uid", uids)
-    tidy.insert(2, "play_index", play_index)
+    tidy = assign_play_index(tidy, gk)
 
     return tidy
 
@@ -125,6 +112,34 @@ def write_game_pbp(season: int, week: int, away: str, home: str, out: str = "dat
         print("  note: no personnel/formation columns for this season; down/distance/LOS still present.")
     return str(paths.pbp_path)
 
+
+
+def assign_play_index(tidy, gk: str):
+    """Number every FILMABLE play in order (kicks and kneels included) and derive play_uid.
+
+    The film index pairs the Nth film play with the Nth filmable row, so the two must count the
+    same things. Administrative rows keep a null index and no uid. Idempotent: re-running on a
+    table that already has the columns recomputes them.
+    """
+    if "is_filmable" not in tidy.columns:
+        tidy["is_filmable"] = tidy["play_type"].isin(FILMABLE_PLAY_TYPES)
+    idx = 0
+    play_index: list = []
+    uids: list = []
+    for filmable in tidy["is_filmable"]:
+        if bool(filmable):
+            idx += 1
+            play_index.append(idx)
+            uids.append(play_uid(gk, idx))
+        else:
+            play_index.append(None)
+            uids.append(None)
+    for col in ("play_uid", "play_index"):
+        if col in tidy.columns:
+            tidy = tidy.drop(columns=[col])
+    tidy.insert(1, "play_uid", uids)
+    tidy.insert(2, "play_index", play_index)
+    return tidy
 
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description="Pull one game's play-by-play from nflverse.")

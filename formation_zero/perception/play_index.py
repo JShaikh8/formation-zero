@@ -44,10 +44,8 @@ from formation_zero.perception.shots import Shot
 
 VIEWS = ("SIDELINE", "ENDZONE")
 
-# Play types that put a snap or a kick on film. Timeouts, the two-minute warning and dead-ball
-# penalties produce no clip, so they are not part of the ordered join. Kneels and spikes are
-# snaps and are filmed: adding them made the free play list match the demo film exactly (184).
-FILMABLE_PLAY_TYPES = ("pass", "run", "punt", "field_goal", "extra_point", "kickoff", "qb_kneel", "qb_spike")
+# Play types that put a snap or a kick on film: shared with the puller so both count the same.
+from formation_zero.data.playtypes import FILMABLE_PLAY_TYPES  # noqa: E402
 
 # Probability that two adjacent shots share a view. Ground truth says this is near zero; a small
 # non-zero value keeps a genuine repeat from being impossible rather than merely unlikely.
