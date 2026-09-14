@@ -4,21 +4,6 @@
   "plain": "Baby steps, updated as they happen. Each line is one concrete thing being done right now; done lines stay for the day so you can see the trail.",
   "steps": [
     {
-      "text": "Verified the NFL API port live: real game detail, rosters, labels merged by play id; milestone 1 closed",
-      "status": "done",
-      "at": "2026-09-13 16:40"
-    },
-    {
-      "text": "Film on an external SSD: configurable film root, mount guard, fz-film add",
-      "status": "done",
-      "at": "2026-09-14 10:20"
-    },
-    {
-      "text": "First real probe: both renditions 244,505 frames, frame-aligned",
-      "status": "done",
-      "at": "2026-09-14 10:30"
-    },
-    {
       "text": "Film-window detector rewritten around motion and brightness; matches the hand-found answer on the snow game",
       "status": "done",
       "at": "2026-09-14 12:10"
@@ -34,21 +19,23 @@
       "at": "2026-09-14 15:20"
     },
     {
-      "text": "Milestone 2, first task: contact-sheet review of takes and a tiny learned angle classifier",
-      "status": "todo"
+      "text": "Contact-sheet tool built; 42 takes labelled; layout classifier trained (86% leave-one-out)",
+      "status": "done",
+      "at": "2026-09-14 20:10"
     },
     {
-      "text": "Spike-based cut detection (a cut is a spike against its neighbours, not an absolute level)",
-      "status": "todo"
+      "text": "Spike-based cut detection: 286 takes against 282 implied by the play list (was 406)",
+      "status": "done",
+      "at": "2026-09-14 20:40"
+    },
+    {
+      "text": "Pairing takes to plays on the clear game: blocked on sequence defects (missed cuts, fragments, pregame prefix); next is sequence alignment",
+      "status": "active",
+      "at": "2026-09-14 22:30"
     },
     {
       "text": "Milestone 2: measure SAM 3 throughput on the M4",
       "status": "todo"
-    },
-    {
-      "text": "Milestone 2: camera-angle classifier from contact-sheet labels (GRD-93)",
-      "status": "active",
-      "at": "2026-09-14 03:08"
     }
   ]
 }

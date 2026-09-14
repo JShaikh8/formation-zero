@@ -86,7 +86,7 @@ def export_stage(ctx: StageContext) -> None:
     export_jsonl(ctx.paths.plays_dir, ctx.paths.export_path, ctx.paths.game_key)
 
 
-@stage("shots", per="game", config_keys=("source_name", "shots_cut_threshold"))
+@stage("shots", per="game", config_keys=("source_name", "shots_cut_threshold", "shots_cut_mode"))
 def shots_stage(ctx: StageContext) -> None:
     """Cut the film window into camera takes, on the proxy; writes derived/shots/<game>.parquet."""
     import json
@@ -99,7 +99,8 @@ def shots_stage(ctx: StageContext) -> None:
     fps = video_fps(proxy)
     # The proxy holds only the film window, so scan all of it; report times in SOURCE seconds.
     offset_s = meta.get("first_frame", 0) / fps
-    shots = scan(proxy, 0.0, meta["frames"] / fps, cut_threshold=float(ctx.config.get("shots_cut_threshold", 15.0)))
+    shots = scan(proxy, 0.0, meta["frames"] / fps, cut_threshold=float(ctx.config.get("shots_cut_threshold", 15.0)),
+                 mode=str(ctx.config.get("shots_cut_mode", "spike")))
     table = to_frame(shots, ctx.paths.game_key, fps)
     for col in ("start_s", "end_s"):
         table[col] = (table[col] + offset_s).round(3)

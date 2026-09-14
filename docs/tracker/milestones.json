@@ -239,13 +239,14 @@
         {
           "key": "GRD-93",
           "title": "Camera-angle classifier: contact-sheet review of takes, tiny model on downscaled frames, alternation prior; validate by play count on both games",
-          "status": "todo",
-          "note": "The hand-tuned tilt feature did not transfer between games (2026-09-14)."
+          "status": "active",
+          "note": "Classifier trained (86% LOO from 42 sheet labels). Pairing blocked on sequence defects; next: align takes to the S/E pattern with insertions and deletions (sequence alignment)."
         },
         {
           "key": "GRD-94",
           "title": "Spike-based cut detection: a cut is a spike against its neighbours, not an absolute threshold",
-          "status": "todo"
+          "status": "done",
+          "note": "Done 2026-09-14: a cut is a spike against its neighbours' median (ratio 2.5, floor 8). Clear game: 286 takes vs 282 implied."
         },
         {
           "key": "GRD-28",

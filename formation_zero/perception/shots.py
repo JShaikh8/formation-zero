@@ -67,6 +67,7 @@ class Shot:
     duration: float
     tilt: float | None    # dominant edge-line orientation, 0-90 deg; None if too few edges
     samples: int          # frames sampled inside this shot
+    cut_diff: float | None = None   # luma difference at this shot's opening cut (None for the first)
 
     @property
     def end(self) -> float:
@@ -94,10 +95,32 @@ def line_tilt(gray: np.ndarray) -> float:
     return abs(float(np.degrees(mean)))
 
 
+SPIKE_RATIO = 2.5        # a cut is a difference this many times its neighbours' median...
+SPIKE_MIN = 8.0          # ...and at least this large in absolute terms
+SPIKE_NEIGHBOURS = 4     # samples on each side that define "neighbours"
+
+
+def is_cut(differences, *, mode: str = "absolute", cut_threshold: float = CUT_THRESHOLD,
+           spike_ratio: float = SPIKE_RATIO, spike_min: float = SPIKE_MIN, neighbours: int = SPIKE_NEIGHBOURS):
+    """Boolean per sample. `absolute`: difference above a per-source threshold. `spike`: difference
+    is an isolated jump against the median of its neighbours, which is what a cut is and a pan
+    is not; this transfers between recordings whose difference levels differ."""
+    d = np.asarray(differences, dtype=float)
+    if mode == "absolute":
+        return d > cut_threshold
+    out = np.zeros(len(d), dtype=bool)
+    for i in range(1, len(d)):
+        nb = np.concatenate([d[max(0, i - neighbours):i], d[i + 1:i + 1 + neighbours]])
+        base = float(np.median(nb)) if nb.size else 0.0
+        out[i] = d[i] >= spike_min and d[i] >= spike_ratio * max(base, 1.0)
+    return out
+
+
 def group(samples: list[tuple[float, float, float]], *,
           cut_threshold: float = CUT_THRESHOLD,
           min_duration: float = MIN_DURATION,
-          step: float = SAMPLE_STEP) -> list[Shot]:
+          step: float = SAMPLE_STEP,
+          mode: str = "absolute") -> list[Shot]:
     """Group `(time, difference, tilt)` samples into shots, splitting where difference spikes.
 
     Each shot's tilt is the median over its middle half. The opening and closing samples of a
@@ -107,11 +130,14 @@ def group(samples: list[tuple[float, float, float]], *,
     if not samples:
         return []
 
+    cuts = is_cut([s[1] for s in samples], mode=mode, cut_threshold=cut_threshold)
     runs: list[list[tuple[float, float]]] = []
+    run_cut: list[float | None] = [None]
     current: list[tuple[float, float]] = []
-    for time, difference, tilt in samples:
-        if difference > cut_threshold and current:
+    for (time, difference, tilt), cut in zip(samples, cuts):
+        if cut and current:
             runs.append(current)
+            run_cut.append(float(difference))
             current = []
         current.append((time, tilt))
     runs.append(current)
@@ -120,8 +146,9 @@ def group(samples: list[tuple[float, float, float]], *,
         Shot(start=run[0][0],
              duration=run[-1][0] - run[0][0] + step,
              tilt=_median_tilt(run),
-             samples=len(run))
-        for run in runs
+             samples=len(run),
+             cut_diff=run_cut[i])
+        for i, run in enumerate(runs)
     ]
     return _absorb_fragments(shots, min_duration)
 
@@ -143,7 +170,8 @@ def _absorb_fragments(shots: list[Shot], min_duration: float) -> list[Shot]:
             kept[-1] = Shot(start=previous.start,
                             duration=shot.end - previous.start,
                             tilt=previous.tilt,
-                            samples=previous.samples + shot.samples)
+                            samples=previous.samples + shot.samples,
+                            cut_diff=previous.cut_diff)
         else:
             kept.append(shot)
     return kept
@@ -187,10 +215,11 @@ def sample(path, start: float, end: float, step: float = SAMPLE_STEP):
 def scan(path, start: float, end: float, *,
          step: float = SAMPLE_STEP,
          cut_threshold: float = CUT_THRESHOLD,
-         min_duration: float = MIN_DURATION) -> list[Shot]:
+         min_duration: float = MIN_DURATION,
+         mode: str = "absolute") -> list[Shot]:
     """Decode a film window and return its shots."""
     return group(list(sample(path, start, end, step)),
-                 cut_threshold=cut_threshold, min_duration=min_duration, step=step)
+                 cut_threshold=cut_threshold, min_duration=min_duration, step=step, mode=mode)
 
 
 def to_frame(shots: list[Shot], game_key: str, fps: float):
@@ -211,6 +240,7 @@ def to_frame(shots: list[Shot], game_key: str, fps: float):
         "end_frame": int(round(shot.end * fps)),
         "tilt": shot.tilt,
         "samples": shot.samples,
+        "cut_diff": shot.cut_diff,
     } for index, shot in enumerate(shots)])
 
 
@@ -257,7 +287,7 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
-__all__ = ["Shot", "line_tilt", "group", "sample", "scan", "to_frame", "video_fps",
+__all__ = ["Shot", "line_tilt", "group", "is_cut", "sample", "scan", "to_frame", "video_fps",
            "CUT_THRESHOLD", "MIN_DURATION", "SAMPLE_STEP"]
 
 
