@@ -5,6 +5,8 @@ decide `is_scrimmage`, which sets `play_index` — the key that aligns film clip
 off-by-one here misaligns every clip after it.
 """
 
+import pandas as pd
+
 from formation_zero.data import stats_pbp
 from formation_zero.data.stats_pbp import classify_play, infer_play_type, parse_yardline
 
@@ -169,7 +171,9 @@ def test_play_index_counts_only_scrimmage_plays():
     # pandas stores the gaps as NaN in a numeric column, as formation_zero.data.pbp does.
     assert tidy["play_index"].isna().tolist() == [True, False, True, False]
     assert tidy["play_index"].dropna().tolist() == [1, 2]
-    assert list(tidy["play_uid"]) == [None, "2025_wk20_LA-CHI_p001", None, "2025_wk20_LA-CHI_p002"]
+    # pandas 3 spells a missing string as NaN rather than None; only presence matters here.
+    uids = [None if pd.isna(u) else u for u in tidy["play_uid"]]
+    assert uids == [None, "2025_wk20_LA-CHI_p001", None, "2025_wk20_LA-CHI_p002"]
 
 
 def test_normalize_converts_yardlines_and_possession():

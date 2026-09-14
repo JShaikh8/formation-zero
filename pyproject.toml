@@ -42,6 +42,10 @@ fz-pull-pbp = "formation_zero.data.pbp:main"
 fz-stats = "formation_zero.data.statsapi:main"
 fz-chat = "formation_zero.chat.cli:main"
 fz-shots = "formation_zero.perception.shots:main"
+fz-probe = "formation_zero.ingest.probe:main"
+fz-proxy = "formation_zero.ingest.proxy:main"
+fz-filmwindow = "formation_zero.ingest.filmwindow:main"
+fz-clips = "formation_zero.ingest.clips:main"
 
 [build-system]
 requires = ["setuptools>=68"]

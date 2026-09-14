@@ -43,6 +43,23 @@ class GamePaths:
         return self.raw_dir / angle
 
     @property
+    def proxy_dir(self) -> Path:
+        return self.raw_dir / "proxy"
+
+    def proxy_path(self, source_name: str = "film.mp4") -> Path:
+        """540p frame-aligned rendition of a source file — see `formation_zero.ingest.proxy`."""
+        return self.proxy_dir / (Path(source_name).stem + ".540p.mp4")
+
+    def clip_path(self, angle: str, play_index: int) -> Path:
+        """One play from one angle — see `formation_zero.ingest.clips`."""
+        return self.angle_dir(angle) / f"p{play_index:03d}.mp4"
+
+    @property
+    def clips_manifest_path(self) -> Path:
+        """Clip frame 0 -> source frame, per clip."""
+        return self.root / "derived" / "shots" / f"{self.game_key}.clips.parquet"
+
+    @property
     def pbp_path(self) -> Path:
         return self.root / "pbp" / f"{self.game_key}.parquet"
 
@@ -78,7 +95,7 @@ class GamePaths:
         return self.root / "plays.parquet"
 
     def ensure_dirs(self) -> "GamePaths":
-        for d in (self.source_dir, self.angle_dir("sideline"), self.angle_dir("endzone"),
+        for d in (self.source_dir, self.proxy_dir, self.angle_dir("sideline"), self.angle_dir("endzone"),
                   self.pbp_path.parent, self.shots_dir, self.tracking_dir, self.labels_dir):
             d.mkdir(parents=True, exist_ok=True)
         return self
