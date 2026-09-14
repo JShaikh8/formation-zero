@@ -36,6 +36,7 @@ dev = [
     "pytest>=8",
     "ruff>=0.4",
     "polars>=1.0",         # fast loads for large Big Data Bowl tables
+    "pillow>=10",          # contact sheets and review images
 ]
 
 [project.scripts]

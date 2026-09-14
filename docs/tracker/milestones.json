@@ -218,7 +218,7 @@
           "key": "GRD-83",
           "title": "Find the film window automatically inside a screen recording (no typed start and end)",
           "status": "done",
-          "note": "Done on synthetic video: fieldness score, longest high run with gaps; real film check pending."
+          "note": "Done on real film 2026-09-14: motion-and-brightness rule finds the film within 30 s of the hand-found span on the snow game, and in 30 s on the clear game. Colour was abandoned: snow."
         },
         {
           "key": "GRD-84",
@@ -236,6 +236,17 @@
       "progress": 0,
       "proof": "A detector trained from zero hand-drawn boxes, and the review sheet took under 30 minutes.",
       "stories": [
+        {
+          "key": "GRD-93",
+          "title": "Camera-angle classifier: contact-sheet review of takes, tiny model on downscaled frames, alternation prior; validate by play count on both games",
+          "status": "todo",
+          "note": "The hand-tuned tilt feature did not transfer between games (2026-09-14)."
+        },
+        {
+          "key": "GRD-94",
+          "title": "Spike-based cut detection: a cut is a spike against its neighbours, not an absolute threshold",
+          "status": "todo"
+        },
         {
           "key": "GRD-28",
           "title": "Frame sampler stratified by angle, phase, and half of the film",

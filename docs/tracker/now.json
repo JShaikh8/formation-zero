@@ -4,21 +4,6 @@
   "plain": "Baby steps, updated as they happen. Each line is one concrete thing being done right now; done lines stay for the day so you can see the trail.",
   "steps": [
     {
-      "text": "Milestone 1: NFL API client port (token client, game detail, rosters, teams, stat types)",
-      "status": "done",
-      "at": "2026-09-13 23:06"
-    },
-    {
-      "text": "Milestone 1: play record schema v1, official-only records for every play, fz-export",
-      "status": "done",
-      "at": "2026-09-13 23:07"
-    },
-    {
-      "text": "Milestone 1: artifact manifests and the stage runner with skip-if-unchanged",
-      "status": "done",
-      "at": "2026-09-13 23:10"
-    },
-    {
       "text": "Verified the NFL API port live: real game detail, rosters, labels merged by play id; milestone 1 closed",
       "status": "done",
       "at": "2026-09-13 16:40"
@@ -34,12 +19,26 @@
       "at": "2026-09-14 10:30"
     },
     {
-      "text": "First real film-window scan on the 163-minute recording (checking against the hand-found 2677–8452 s)",
-      "status": "active",
-      "at": "2026-09-14 10:35"
+      "text": "Film-window detector rewritten around motion and brightness; matches the hand-found answer on the snow game",
+      "status": "done",
+      "at": "2026-09-14 12:10"
     },
     {
-      "text": "Proxy of the film window, then shots and clips on real film",
+      "text": "49ers–Rams (clear game) registered, probed, film window found, proxy built, official plays pulled, 406 takes found",
+      "status": "done",
+      "at": "2026-09-14 14:30"
+    },
+    {
+      "text": "Camera-angle labelling does not transfer between games with the hand-tuned feature; two replacements failed",
+      "status": "done",
+      "at": "2026-09-14 15:20"
+    },
+    {
+      "text": "Milestone 2, first task: contact-sheet review of takes and a tiny learned angle classifier",
+      "status": "todo"
+    },
+    {
+      "text": "Spike-based cut detection (a cut is a spike against its neighbours, not an absolute level)",
       "status": "todo"
     },
     {

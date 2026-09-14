@@ -7,7 +7,7 @@
     "repo": "https://github.com/JShaikh8/formation-zero",
     "owner": "Jalal Shaikh"
   },
-  "updated": "2026-09-13",
+  "updated": "2026-09-14",
   "phase": {
     "milestone": "M2",
     "name": "Label bootstrap",
@@ -30,20 +30,20 @@
     ]
   },
   "next_up": [
-    "Put a clear-weather game's film on disk and run probe, proxy, film window, shots and clips end to end.",
-    "Milestone 2: measure SAM 3 throughput on the M4 (the number the plan assumes).",
-    "Milestone 2: frame sampler and the SAM 3 teacher pass on a few hundred frames."
+    "Milestone 2, first task: label camera angles from contact sheets and train the tiny classifier; validate by play count on both games.",
+    "Spike-based cut detection so the take count lands near two per play on any recording.",
+    "Measure SAM 3 throughput on the M4."
   ],
   "numbers": [
     {
       "label": "Tests passing",
-      "value": "209",
-      "note": "run 2026-09-13"
+      "value": "213",
+      "note": "run 2026-09-14"
     },
     {
-      "label": "Play records written",
-      "value": "184",
-      "note": "demo game, official data, schema v1"
+      "label": "Games with film on disk",
+      "value": "2",
+      "note": "Bears–Rams (snow), 49ers–Rams (clear)"
     },
     {
       "label": "Days worked",
