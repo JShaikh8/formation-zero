@@ -101,7 +101,7 @@ window.FZ = {
   ]
  },
  "milestones": {
-  "key_scheme": "Epics are milestones M0 to M9 (plus F0, the summer foundation). Stories are GRD-### and map one-to-one to Jira issues. Statuses: done, active, todo, parked.",
+  "key_scheme": "Epics are milestones M0 to M10 (plus F0, the summer foundation). Stories are GRD-### and map one-to-one to Jira issues. Statuses: done, active, todo, parked.",
   "milestones": [
    {
     "id": "F0",
@@ -314,6 +314,16 @@ window.FZ = {
      {
       "key": "GRD-65",
       "title": "fz export: a whole game as JSONL for hand delivery",
+      "status": "todo"
+     },
+     {
+      "key": "GRD-83",
+      "title": "Find the film window automatically inside a screen recording (no typed start and end)",
+      "status": "todo"
+     },
+     {
+      "key": "GRD-84",
+      "title": "Frame source interface with file and stream implementations",
       "status": "todo"
      }
     ]
@@ -629,6 +639,56 @@ window.FZ = {
      {
       "key": "GRD-81",
       "title": "Corrections endpoint and the flagged-review queue",
+      "status": "todo"
+     },
+     {
+      "key": "GRD-85",
+      "title": "Write side: create game from schedule, register film, check screen, analyze job, progress events",
+      "status": "todo"
+     },
+     {
+      "key": "GRD-86",
+      "title": "Film room: New game, drop film, check screen, one-button Analyze, per-play progress",
+      "status": "todo"
+     }
+    ]
+   },
+   {
+    "id": "M10",
+    "title": "Live pass",
+    "plain": "Process plays as they happen from a single camera, seconds after the whistle, with fast models and honest confidence. Then, when the full two-angle film arrives, a post pass upgrades every play in place without touching anything a person corrected.",
+    "status": "todo",
+    "progress": 0,
+    "proof": "A game processed from a single-angle recording played back in real time, each play landing within forty seconds of its whistle, and the record upgrading when the post pass runs afterward.",
+    "stories": [
+     {
+      "key": "GRD-87",
+      "title": "Play boundaries from snap and whistle detection on a stream (no camera cuts)",
+      "status": "todo"
+     },
+     {
+      "key": "GRD-88",
+      "title": "Single-angle fusion mode with per-axis uncertainty",
+      "status": "todo"
+     },
+     {
+      "key": "GRD-89",
+      "title": "Incremental join to live official play-by-play (playStartTime), same count check",
+      "status": "todo"
+     },
+     {
+      "key": "GRD-90",
+      "title": "Two-pass record semantics: pass tag per field, post replaces live, corrections untouched, incremental API pulls",
+      "status": "todo"
+     },
+     {
+      "key": "GRD-91",
+      "title": "Latency budget measured and shown per play",
+      "status": "todo"
+     },
+     {
+      "key": "GRD-92",
+      "title": "Feasibility spike: broadcast feed (pans, zooms, replays, graphics)",
       "status": "todo"
      }
     ]
@@ -1509,8 +1569,8 @@ window.FZ = {
     "tracker",
     "process"
    ],
-   "sessions": 2,
-   "html": "<h2>Session 1 — Where we are, and whether it is real<\/h2>\n<ul><li>Recap after two days away. Everything committed and pushed; the Render site is live and redeploys on every push.<\/li><li>Owner's questions: is the plan good, is it achievable with this stack, can the film room's output really come from video alone? Answers written up in the chat and in the decision log's spirit: yes with named risks; field registration is the one that decides it.<\/li><li>Fact from the owner: All-22 film shows no painted first-down or scrimmage lines. Registration now anchors on the painted yard numbers plus the official line of scrimmage, two independent anchors that must agree.<\/li><li>New process: a \"Right now\" block on the Now page, fed by a small file and a one-line command that logs a step and pushes it, so the site moves in baby steps during a session rather than at the end of one.<\/li><\/ul>\n<h2>Session 2 — Teaching it where it is wrong<\/h2>\n<ul><li>Owner's question: when the model is wrong, will there be an edit mode to correct it, and was that planned for? It was not, explicitly. Designed now: corrections as first-class, versioned hand labels with the machine value kept beside them; correctable at label, identity, event, position and whole-play level; a \"this is wrong\" flag when the fix is unknown; corrections feed evaluation, retraining and rule changes; a re-run never touches a reviewed play. Blueprint section 9.5, decision D-021, three new stories. The editing UI waits for real output.<\/li><\/ul>",
+   "sessions": 3,
+   "html": "<h2>Session 1 — Where we are, and whether it is real<\/h2>\n<ul><li>Recap after two days away. Everything committed and pushed; the Render site is live and redeploys on every push.<\/li><li>Owner's questions: is the plan good, is it achievable with this stack, can the film room's output really come from video alone? Answers written up in the chat and in the decision log's spirit: yes with named risks; field registration is the one that decides it.<\/li><li>Fact from the owner: All-22 film shows no painted first-down or scrimmage lines. Registration now anchors on the painted yard numbers plus the official line of scrimmage, two independent anchors that must agree.<\/li><li>New process: a \"Right now\" block on the Now page, fed by a small file and a one-line command that logs a step and pushes it, so the site moves in baby steps during a session rather than at the end of one.<\/li><\/ul>\n<h2>Session 2 — Teaching it where it is wrong<\/h2>\n<ul><li>Owner's question: when the model is wrong, will there be an edit mode to correct it, and was that planned for? It was not, explicitly. Designed now: corrections as first-class, versioned hand labels with the machine value kept beside them; correctable at label, identity, event, position and whole-play level; a \"this is wrong\" flag when the fix is unknown; corrections feed evaluation, retraining and rule changes; a re-run never touches a reviewed play. Blueprint section 9.5, decision D-021, three new stories. The editing UI waits for real output.<\/li><\/ul>\n<h2>Session 3 — Getting film in, and going live<\/h2>\n<ul><li>Owner's questions: can I just drop a file into a game and press a button, and what if we want to go live one day, maybe with only one camera? Designed both now. Ingestion: new game from the schedule, drop film, an automatic film window, a check screen that compares the play count to the official list before anything expensive runs, one Analyze button, plays filling in as they finish. Live: a live pass from a single angle seconds after the whistle, then a post pass that upgrades the record field by field when the full film arrives. Three interfaces are decided today so nothing gets reworked: file-or-stream sources, play boundaries from the play itself rather than camera cuts, and fusion that accepts one angle or two. Blueprint section 11, decision D-022, milestone 10, stories GRD-83 to GRD-92.<\/li><\/ul>",
    "file": "docs/journal/2026-09-13.md"
   }
  ]
