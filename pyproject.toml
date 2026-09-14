@@ -14,6 +14,7 @@ dependencies = [
     "pyarrow>=14",         # parquet I/O
     "duckdb>=0.10",        # analytical store over parquet
     "numpy>=1.24",
+    "jsonschema>=4.20",   # validates play records against the v1 contract
 ]
 
 [project.optional-dependencies]
@@ -47,6 +48,8 @@ fz-proxy = "formation_zero.ingest.proxy:main"
 fz-filmwindow = "formation_zero.ingest.filmwindow:main"
 fz-clips = "formation_zero.ingest.clips:main"
 fz-nfl = "formation_zero.data.nflapi.cli:main"
+fz-records = "formation_zero.data.records:main_records"
+fz-export = "formation_zero.data.records:main_export"
 
 [build-system]
 requires = ["setuptools>=68"]
@@ -54,6 +57,9 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 include = ["formation_zero*"]
+
+[tool.setuptools.package-data]
+"formation_zero.data.schemas" = ["*.json"]
 
 [tool.ruff]
 line-length = 100

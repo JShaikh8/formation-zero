@@ -94,6 +94,18 @@ class GamePaths:
     def plays_index_path(self) -> Path:
         return self.root / "plays.parquet"
 
+    @property
+    def plays_dir(self) -> Path:
+        """One play record per play — see `formation_zero.data.records`."""
+        return self.root / "derived" / "plays"
+
+    def play_record_path(self, play_uid: str) -> Path:
+        return self.plays_dir / f"{play_uid}.json"
+
+    @property
+    def export_path(self) -> Path:
+        return self.root / "derived" / "exports" / f"{self.game_key}.jsonl"
+
     def ensure_dirs(self) -> "GamePaths":
         for d in (self.source_dir, self.proxy_dir, self.angle_dir("sideline"), self.angle_dir("endzone"),
                   self.pbp_path.parent, self.shots_dir, self.tracking_dir, self.labels_dir):

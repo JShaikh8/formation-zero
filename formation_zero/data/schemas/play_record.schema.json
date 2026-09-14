@@ -1,0 +1,2149 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "https://formation-zero.onrender.com/schema/play-record-1.0.json",
+ "title": "Formation Zero play record",
+ "type": "object",
+ "required": [
+  "schema_version",
+  "play_uid",
+  "game",
+  "situation",
+  "official",
+  "review",
+  "generated"
+ ],
+ "additionalProperties": true,
+ "properties": {
+  "schema_version": {
+   "type": "string",
+   "pattern": "^1\\.\\d+$"
+  },
+  "play_uid": {
+   "type": "string",
+   "pattern": "^\\d{4}_wk\\d{2}_[A-Z]{2,3}-[A-Z]{2,3}_p\\d{3}$"
+  },
+  "demo": {
+   "type": "boolean"
+  },
+  "demo_note": {
+   "type": [
+    "string",
+    "null"
+   ]
+  },
+  "game": {
+   "type": "object",
+   "properties": {
+    "game_key": {
+     "type": "string"
+    },
+    "season": {
+     "type": "integer"
+    },
+    "week": {
+     "type": "integer"
+    },
+    "away": {
+     "type": "string"
+    },
+    "home": {
+     "type": "string"
+    },
+    "nfl_game_id": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "nfl_play_id": {
+     "type": [
+      "integer",
+      "null"
+     ]
+    },
+    "gsis_id": {
+     "type": [
+      "string",
+      "null"
+     ]
+    }
+   },
+   "additionalProperties": true,
+   "required": [
+    "game_key",
+    "season",
+    "week",
+    "away",
+    "home"
+   ]
+  },
+  "situation": {
+   "type": "object",
+   "properties": {
+    "quarter": {
+     "type": [
+      "integer",
+      "null"
+     ]
+    },
+    "clock": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "down": {
+     "type": [
+      "integer",
+      "null"
+     ]
+    },
+    "distance": {
+     "type": [
+      "integer",
+      "null"
+     ]
+    },
+    "possession": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "yardline_100": {
+     "type": [
+      "integer",
+      "null"
+     ]
+    },
+    "yrdln": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "los_x": {
+     "type": [
+      "number",
+      "null"
+     ]
+    },
+    "first_down_x": {
+     "type": [
+      "number",
+      "null"
+     ]
+    },
+    "direction_of_attack": {
+     "type": [
+      "string",
+      "null"
+     ],
+     "enum": [
+      "left",
+      "right",
+      null
+     ]
+    },
+    "hash": {
+     "type": [
+      "string",
+      "null"
+     ],
+     "enum": [
+      "L",
+      "M",
+      "R",
+      null
+     ]
+    },
+    "score": {
+     "type": [
+      "object",
+      "null"
+     ],
+     "properties": {
+      "away": {
+       "type": [
+        "integer",
+        "null"
+       ]
+      },
+      "home": {
+       "type": [
+        "integer",
+        "null"
+       ]
+      }
+     },
+     "additionalProperties": true
+    }
+   },
+   "additionalProperties": true
+  },
+  "official": {
+   "type": "object",
+   "properties": {
+    "play_type": {
+     "type": [
+      "string",
+      "null"
+     ],
+     "enum": [
+      "pass",
+      "run",
+      "punt",
+      "field_goal",
+      "extra_point",
+      "kickoff",
+      "qb_kneel",
+      "qb_spike",
+      "no_play",
+      null
+     ]
+    },
+    "description": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "yards_gained": {
+     "type": [
+      "integer",
+      "null"
+     ]
+    },
+    "first_down": {
+     "type": [
+      "boolean",
+      "null"
+     ]
+    },
+    "touchdown": {
+     "type": [
+      "boolean",
+      "null"
+     ]
+    },
+    "turnover": {
+     "type": [
+      "boolean",
+      "null"
+     ]
+    },
+    "players_involved": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "gsis_id": {
+        "type": [
+         "string",
+         "null"
+        ]
+       },
+       "jersey": {
+        "type": [
+         "string",
+         "null"
+        ]
+       },
+       "team": {
+        "type": [
+         "string",
+         "null"
+        ]
+       },
+       "role": {
+        "type": [
+         "string",
+         "null"
+        ]
+       },
+       "name": {
+        "type": [
+         "string",
+         "null"
+        ]
+       }
+      },
+      "additionalProperties": true
+     }
+    },
+    "labels": {
+     "type": [
+      "object",
+      "null"
+     ],
+     "properties": {
+      "offense_formation": {
+       "type": [
+        "string",
+        "null"
+       ]
+      },
+      "offense_personnel": {
+       "type": [
+        "string",
+        "null"
+       ]
+      },
+      "defense_personnel": {
+       "type": [
+        "string",
+        "null"
+       ]
+      },
+      "source": {
+       "type": [
+        "string",
+        "null"
+       ],
+       "enum": [
+        "official",
+        "nflverse",
+        "cv",
+        "hosted_model",
+        "human",
+        null
+       ]
+      }
+     },
+     "additionalProperties": true
+    }
+   },
+   "additionalProperties": true
+  },
+  "film": {
+   "type": [
+    "object",
+    "null"
+   ],
+   "properties": {
+    "fps": {
+     "type": [
+      "number",
+      "null"
+     ]
+    },
+    "snap_frame": {
+     "type": [
+      "integer",
+      "null"
+     ]
+    },
+    "whistle_frame": {
+     "type": [
+      "integer",
+      "null"
+     ]
+    },
+    "sideline": {
+     "type": [
+      "object",
+      "null"
+     ],
+     "properties": {
+      "clip": {
+       "type": [
+        "string",
+        "null"
+       ]
+      },
+      "frames": {
+       "type": [
+        "integer",
+        "null"
+       ]
+      },
+      "url": {
+       "type": [
+        "string",
+        "null"
+       ]
+      }
+     },
+     "additionalProperties": true
+    },
+    "endzone": {
+     "type": [
+      "object",
+      "null"
+     ],
+     "properties": {
+      "clip": {
+       "type": [
+        "string",
+        "null"
+       ]
+      },
+      "frames": {
+       "type": [
+        "integer",
+        "null"
+       ]
+      },
+      "url": {
+       "type": [
+        "string",
+        "null"
+       ]
+      }
+     },
+     "additionalProperties": true
+    },
+    "phases": {
+     "type": [
+      "object",
+      "null"
+     ],
+     "properties": {
+      "pre_snap": {
+       "type": "array",
+       "items": {
+        "type": "integer"
+       },
+       "minItems": 2,
+       "maxItems": 2
+      },
+      "live": {
+       "type": "array",
+       "items": {
+        "type": "integer"
+       },
+       "minItems": 2,
+       "maxItems": 2
+      },
+      "post_snap": {
+       "type": "array",
+       "items": {
+        "type": "integer"
+       },
+       "minItems": 2,
+       "maxItems": 2
+      }
+     },
+     "additionalProperties": true
+    }
+   },
+   "additionalProperties": true
+  },
+  "personnel": {
+   "type": [
+    "object",
+    "null"
+   ],
+   "properties": {
+    "offense": {
+     "type": "object",
+     "properties": {
+      "grouping": {
+       "type": [
+        "string",
+        "null"
+       ]
+      },
+      "rb": {
+       "type": [
+        "integer",
+        "null"
+       ]
+      },
+      "te": {
+       "type": [
+        "integer",
+        "null"
+       ]
+      },
+      "wr": {
+       "type": [
+        "integer",
+        "null"
+       ]
+      },
+      "source": {
+       "type": [
+        "string",
+        "null"
+       ],
+       "enum": [
+        "official",
+        "nflverse",
+        "cv",
+        "hosted_model",
+        "human",
+        null
+       ]
+      },
+      "confidence": {
+       "type": [
+        "number",
+        "null"
+       ]
+      },
+      "pass": {
+       "type": [
+        "string",
+        "null"
+       ],
+       "enum": [
+        "official",
+        "live",
+        "post",
+        null
+       ]
+      },
+      "machine": {
+       "type": [
+        "object",
+        "null"
+       ],
+       "properties": {
+        "value": {},
+        "source": {
+         "type": [
+          "string",
+          "null"
+         ],
+         "enum": [
+          "official",
+          "nflverse",
+          "cv",
+          "hosted_model",
+          "human",
+          null
+         ]
+        },
+        "confidence": {
+         "type": [
+          "number",
+          "null"
+         ]
+        }
+       },
+       "additionalProperties": true
+      }
+     },
+     "additionalProperties": true
+    },
+    "defense": {
+     "type": "object",
+     "properties": {
+      "package": {
+       "type": [
+        "string",
+        "null"
+       ]
+      },
+      "dl": {
+       "type": [
+        "integer",
+        "null"
+       ]
+      },
+      "lb": {
+       "type": [
+        "integer",
+        "null"
+       ]
+      },
+      "db": {
+       "type": [
+        "integer",
+        "null"
+       ]
+      },
+      "source": {
+       "type": [
+        "string",
+        "null"
+       ],
+       "enum": [
+        "official",
+        "nflverse",
+        "cv",
+        "hosted_model",
+        "human",
+        null
+       ]
+      },
+      "confidence": {
+       "type": [
+        "number",
+        "null"
+       ]
+      },
+      "pass": {
+       "type": [
+        "string",
+        "null"
+       ],
+       "enum": [
+        "official",
+        "live",
+        "post",
+        null
+       ]
+      },
+      "machine": {
+       "type": [
+        "object",
+        "null"
+       ],
+       "properties": {
+        "value": {},
+        "source": {
+         "type": [
+          "string",
+          "null"
+         ],
+         "enum": [
+          "official",
+          "nflverse",
+          "cv",
+          "hosted_model",
+          "human",
+          null
+         ]
+        },
+        "confidence": {
+         "type": [
+          "number",
+          "null"
+         ]
+        }
+       },
+       "additionalProperties": true
+      }
+     },
+     "additionalProperties": true
+    }
+   },
+   "additionalProperties": true
+  },
+  "pre_snap": {
+   "type": [
+    "object",
+    "null"
+   ],
+   "properties": {
+    "formation_initial": {
+     "type": "object",
+     "properties": {
+      "frame": {
+       "type": [
+        "integer",
+        "null"
+       ]
+      },
+      "name": {
+       "type": [
+        "string",
+        "null"
+       ]
+      },
+      "strength": {
+       "type": [
+        "string",
+        "null"
+       ],
+       "enum": [
+        "left",
+        "right",
+        "balanced",
+        null
+       ]
+      },
+      "qb": {
+       "type": [
+        "string",
+        "null"
+       ],
+       "enum": [
+        "under_center",
+        "shotgun",
+        "pistol",
+        null
+       ]
+      },
+      "backfield": {
+       "type": [
+        "string",
+        "null"
+       ]
+      },
+      "source": {
+       "type": [
+        "string",
+        "null"
+       ],
+       "enum": [
+        "official",
+        "nflverse",
+        "cv",
+        "hosted_model",
+        "human",
+        null
+       ]
+      },
+      "confidence": {
+       "type": [
+        "number",
+        "null"
+       ]
+      },
+      "pass": {
+       "type": [
+        "string",
+        "null"
+       ],
+       "enum": [
+        "official",
+        "live",
+        "post",
+        null
+       ]
+      },
+      "machine": {
+       "type": [
+        "object",
+        "null"
+       ],
+       "properties": {
+        "value": {},
+        "source": {
+         "type": [
+          "string",
+          "null"
+         ],
+         "enum": [
+          "official",
+          "nflverse",
+          "cv",
+          "hosted_model",
+          "human",
+          null
+         ]
+        },
+        "confidence": {
+         "type": [
+          "number",
+          "null"
+         ]
+        }
+       },
+       "additionalProperties": true
+      }
+     },
+     "additionalProperties": true
+    },
+    "shifts": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "track_id": {},
+       "from_slot": {
+        "type": [
+         "string",
+         "null"
+        ]
+       },
+       "to_slot": {
+        "type": [
+         "string",
+         "null"
+        ]
+       },
+       "start_frame": {
+        "type": [
+         "integer",
+         "null"
+        ]
+       },
+       "end_frame": {
+        "type": [
+         "integer",
+         "null"
+        ]
+       }
+      },
+      "additionalProperties": true
+     }
+    },
+    "motions": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "track_id": {},
+       "type": {
+        "type": "string",
+        "enum": [
+         "jet",
+         "orbit",
+         "across",
+         "short",
+         "return",
+         "shift_only"
+        ]
+       },
+       "direction": {
+        "type": [
+         "string",
+         "null"
+        ],
+        "enum": [
+         "left",
+         "right",
+         null
+        ]
+       },
+       "start_frame": {
+        "type": [
+         "integer",
+         "null"
+        ]
+       },
+       "end_frame": {
+        "type": [
+         "integer",
+         "null"
+        ]
+       },
+       "at_snap": {
+        "type": [
+         "string",
+         "null"
+        ],
+        "enum": [
+         "in_motion",
+         "set",
+         null
+        ]
+       },
+       "speed_at_snap_yds_s": {
+        "type": [
+         "number",
+         "null"
+        ]
+       }
+      },
+      "additionalProperties": true
+     }
+    },
+    "formation_at_snap": {
+     "type": "object",
+     "properties": {
+      "frame": {
+       "type": [
+        "integer",
+        "null"
+       ]
+      },
+      "name": {
+       "type": [
+        "string",
+        "null"
+       ]
+      },
+      "strength": {
+       "type": [
+        "string",
+        "null"
+       ],
+       "enum": [
+        "left",
+        "right",
+        "balanced",
+        null
+       ]
+      },
+      "qb": {
+       "type": [
+        "string",
+        "null"
+       ],
+       "enum": [
+        "under_center",
+        "shotgun",
+        "pistol",
+        null
+       ]
+      },
+      "backfield": {
+       "type": [
+        "string",
+        "null"
+       ]
+      },
+      "source": {
+       "type": [
+        "string",
+        "null"
+       ],
+       "enum": [
+        "official",
+        "nflverse",
+        "cv",
+        "hosted_model",
+        "human",
+        null
+       ]
+      },
+      "confidence": {
+       "type": [
+        "number",
+        "null"
+       ]
+      },
+      "pass": {
+       "type": [
+        "string",
+        "null"
+       ],
+       "enum": [
+        "official",
+        "live",
+        "post",
+        null
+       ]
+      },
+      "machine": {
+       "type": [
+        "object",
+        "null"
+       ],
+       "properties": {
+        "value": {},
+        "source": {
+         "type": [
+          "string",
+          "null"
+         ],
+         "enum": [
+          "official",
+          "nflverse",
+          "cv",
+          "hosted_model",
+          "human",
+          null
+         ]
+        },
+        "confidence": {
+         "type": [
+          "number",
+          "null"
+         ]
+        }
+       },
+       "additionalProperties": true
+      }
+     },
+     "additionalProperties": true
+    },
+    "defense": {
+     "type": "object",
+     "properties": {
+      "front": {
+       "type": [
+        "string",
+        "null"
+       ],
+       "enum": [
+        "over",
+        "under",
+        "bear",
+        "odd",
+        "even",
+        "wide_9",
+        null
+       ]
+      },
+      "shell": {
+       "type": [
+        "string",
+        "null"
+       ],
+       "enum": [
+        "0-high",
+        "1-high",
+        "2-high",
+        null
+       ]
+      },
+      "box_count": {
+       "type": [
+        "integer",
+        "null"
+       ]
+      },
+      "safeties_depth_yds": {
+       "type": [
+        "array",
+        "null"
+       ],
+       "items": {
+        "type": "number"
+       }
+      },
+      "press_corners": {
+       "type": [
+        "array",
+        "null"
+       ],
+       "items": {
+        "type": "boolean"
+       }
+      },
+      "source": {
+       "type": [
+        "string",
+        "null"
+       ],
+       "enum": [
+        "official",
+        "nflverse",
+        "cv",
+        "hosted_model",
+        "human",
+        null
+       ]
+      },
+      "confidence": {
+       "type": [
+        "number",
+        "null"
+       ]
+      },
+      "pass": {
+       "type": [
+        "string",
+        "null"
+       ],
+       "enum": [
+        "official",
+        "live",
+        "post",
+        null
+       ]
+      },
+      "machine": {
+       "type": [
+        "object",
+        "null"
+       ],
+       "properties": {
+        "value": {},
+        "source": {
+         "type": [
+          "string",
+          "null"
+         ],
+         "enum": [
+          "official",
+          "nflverse",
+          "cv",
+          "hosted_model",
+          "human",
+          null
+         ]
+        },
+        "confidence": {
+         "type": [
+          "number",
+          "null"
+         ]
+        }
+       },
+       "additionalProperties": true
+      }
+     },
+     "additionalProperties": true
+    }
+   },
+   "additionalProperties": true
+  },
+  "at_snap": {
+   "type": [
+    "object",
+    "null"
+   ],
+   "properties": {
+    "frame": {
+     "type": [
+      "integer",
+      "null"
+     ]
+    },
+    "ball": {
+     "type": [
+      "object",
+      "null"
+     ],
+     "properties": {
+      "x": {
+       "type": [
+        "number",
+        "null"
+       ]
+      },
+      "y": {
+       "type": [
+        "number",
+        "null"
+       ]
+      }
+     },
+     "additionalProperties": true
+    },
+    "in_motion": {
+     "type": "array"
+    }
+   },
+   "additionalProperties": true
+  },
+  "live": {
+   "type": [
+    "object",
+    "null"
+   ],
+   "properties": {
+    "play_family": {
+     "type": [
+      "string",
+      "null"
+     ],
+     "enum": [
+      "dropback",
+      "play_action",
+      "rpo",
+      "screen",
+      "run",
+      "scramble",
+      "trick",
+      "kick",
+      null
+     ]
+    },
+    "play_action": {
+     "type": [
+      "boolean",
+      "null"
+     ]
+    },
+    "rpo": {
+     "type": [
+      "boolean",
+      "null"
+     ]
+    },
+    "qb": {
+     "type": [
+      "object",
+      "null"
+     ],
+     "properties": {
+      "track_id": {},
+      "drop": {
+       "type": [
+        "string",
+        "null"
+       ],
+       "enum": [
+        "1-step",
+        "3-step",
+        "5-step",
+        "7-step",
+        "rollout_left",
+        "rollout_right",
+        "none",
+        null
+       ]
+      },
+      "time_to_throw_s": {
+       "type": [
+        "number",
+        "null"
+       ]
+      },
+      "pocket": {
+       "type": [
+        "string",
+        "null"
+       ]
+      },
+      "scramble": {
+       "type": [
+        "boolean",
+        "null"
+       ]
+      },
+      "pressure": {
+       "type": [
+        "object",
+        "null"
+       ],
+       "properties": {
+        "nearest_rusher_min_yds": {
+         "type": [
+          "number",
+          "null"
+         ]
+        },
+        "at_frame": {
+         "type": [
+          "integer",
+          "null"
+         ]
+        },
+        "time_to_pressure_s": {
+         "type": [
+          "number",
+          "null"
+         ]
+        },
+        "rushers_within_3yds_at_throw": {
+         "type": [
+          "integer",
+          "null"
+         ]
+        }
+       },
+       "additionalProperties": true
+      }
+     },
+     "additionalProperties": true
+    },
+    "routes": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "track_id": {},
+       "route": {
+        "type": "string",
+        "enum": [
+         "flat",
+         "slant",
+         "comeback",
+         "curl",
+         "out",
+         "dig",
+         "corner",
+         "post",
+         "go",
+         "seam",
+         "wheel",
+         "screen",
+         "swing",
+         "angle",
+         "whip",
+         "stick",
+         "hitch",
+         "cross",
+         "block"
+        ]
+       },
+       "tree": {
+        "type": [
+         "integer",
+         "null"
+        ]
+       },
+       "break_frame": {
+        "type": [
+         "integer",
+         "null"
+        ]
+       },
+       "depth_at_break_yds": {
+        "type": [
+         "number",
+         "null"
+        ]
+       },
+       "break_direction": {
+        "type": [
+         "string",
+         "null"
+        ],
+        "enum": [
+         "left",
+         "right",
+         null
+        ]
+       },
+       "targeted": {
+        "type": [
+         "boolean",
+         "null"
+        ]
+       },
+       "catch_frame": {
+        "type": [
+         "integer",
+         "null"
+        ]
+       },
+       "source": {
+        "type": [
+         "string",
+         "null"
+        ],
+        "enum": [
+         "official",
+         "nflverse",
+         "cv",
+         "hosted_model",
+         "human",
+         null
+        ]
+       },
+       "confidence": {
+        "type": [
+         "number",
+         "null"
+        ]
+       },
+       "pass": {
+        "type": [
+         "string",
+         "null"
+        ],
+        "enum": [
+         "official",
+         "live",
+         "post",
+         null
+        ]
+       },
+       "machine": {
+        "type": [
+         "object",
+         "null"
+        ],
+        "properties": {
+         "value": {},
+         "source": {
+          "type": [
+           "string",
+           "null"
+          ],
+          "enum": [
+           "official",
+           "nflverse",
+           "cv",
+           "hosted_model",
+           "human",
+           null
+          ]
+         },
+         "confidence": {
+          "type": [
+           "number",
+           "null"
+          ]
+         }
+        },
+        "additionalProperties": true
+       }
+      },
+      "additionalProperties": true
+     }
+    },
+    "run": {
+     "type": [
+      "object",
+      "null"
+     ],
+     "properties": {
+      "ball_carrier": {},
+      "gap": {
+       "type": [
+        "string",
+        "null"
+       ],
+       "enum": [
+        "A-left",
+        "A-right",
+        "B-left",
+        "B-right",
+        "C-left",
+        "C-right",
+        "D-left",
+        "D-right",
+        null
+       ]
+      },
+      "scheme": {
+       "type": [
+        "string",
+        "null"
+       ],
+       "enum": [
+        "inside_zone",
+        "outside_zone",
+        "power",
+        "counter",
+        "duo",
+        "draw",
+        "trap",
+        "sweep",
+        "qb_design",
+        null
+       ]
+      },
+      "handoff_frame": {
+       "type": [
+        "integer",
+        "null"
+       ]
+      },
+      "source": {
+       "type": [
+        "string",
+        "null"
+       ],
+       "enum": [
+        "official",
+        "nflverse",
+        "cv",
+        "hosted_model",
+        "human",
+        null
+       ]
+      },
+      "confidence": {
+       "type": [
+        "number",
+        "null"
+       ]
+      },
+      "pass": {
+       "type": [
+        "string",
+        "null"
+       ],
+       "enum": [
+        "official",
+        "live",
+        "post",
+        null
+       ]
+      },
+      "machine": {
+       "type": [
+        "object",
+        "null"
+       ],
+       "properties": {
+        "value": {},
+        "source": {
+         "type": [
+          "string",
+          "null"
+         ],
+         "enum": [
+          "official",
+          "nflverse",
+          "cv",
+          "hosted_model",
+          "human",
+          null
+         ]
+        },
+        "confidence": {
+         "type": [
+          "number",
+          "null"
+         ]
+        }
+       },
+       "additionalProperties": true
+      }
+     },
+     "additionalProperties": true
+    },
+    "blocks": {
+     "type": "array"
+    },
+    "defense": {
+     "type": [
+      "object",
+      "null"
+     ],
+     "properties": {
+      "coverage": {
+       "type": "object",
+       "properties": {
+        "family": {
+         "type": [
+          "string",
+          "null"
+         ],
+         "enum": [
+          "cover_0",
+          "cover_1",
+          "cover_2",
+          "cover_2_man",
+          "cover_3",
+          "cover_4",
+          "cover_6",
+          "unknown",
+          null
+         ]
+        },
+        "man_zone": {
+         "type": [
+          "string",
+          "null"
+         ],
+         "enum": [
+          "man",
+          "zone",
+          null
+         ]
+        },
+        "rotation": {
+         "type": [
+          "string",
+          "null"
+         ]
+        },
+        "source": {
+         "type": [
+          "string",
+          "null"
+         ],
+         "enum": [
+          "official",
+          "nflverse",
+          "cv",
+          "hosted_model",
+          "human",
+          null
+         ]
+        },
+        "confidence": {
+         "type": [
+          "number",
+          "null"
+         ]
+        },
+        "pass": {
+         "type": [
+          "string",
+          "null"
+         ],
+         "enum": [
+          "official",
+          "live",
+          "post",
+          null
+         ]
+        },
+        "machine": {
+         "type": [
+          "object",
+          "null"
+         ],
+         "properties": {
+          "value": {},
+          "source": {
+           "type": [
+            "string",
+            "null"
+           ],
+           "enum": [
+            "official",
+            "nflverse",
+            "cv",
+            "hosted_model",
+            "human",
+            null
+           ]
+          },
+          "confidence": {
+           "type": [
+            "number",
+            "null"
+           ]
+          }
+         },
+         "additionalProperties": true
+        }
+       },
+       "additionalProperties": true
+      },
+      "pass_rush": {
+       "type": "array"
+      },
+      "blitz": {
+       "type": [
+        "boolean",
+        "null"
+       ]
+      }
+     },
+     "additionalProperties": true
+    },
+    "ball": {
+     "type": [
+      "object",
+      "null"
+     ],
+     "properties": {
+      "release_frame": {
+       "type": [
+        "integer",
+        "null"
+       ]
+      },
+      "arrival_frame": {
+       "type": [
+        "integer",
+        "null"
+       ]
+      },
+      "air_yards": {
+       "type": [
+        "number",
+        "null"
+       ]
+      },
+      "outcome": {
+       "type": [
+        "string",
+        "null"
+       ]
+      },
+      "flight": {
+       "type": [
+        "string",
+        "null"
+       ]
+      }
+     },
+     "additionalProperties": true
+    },
+    "events": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "frame": {
+        "type": "integer"
+       },
+       "type": {
+        "type": "string",
+        "enum": [
+         "snap",
+         "handoff",
+         "play_fake",
+         "pass_forward",
+         "pass_outcome_caught",
+         "pass_outcome_incomplete",
+         "pass_outcome_interception",
+         "first_contact",
+         "tackle",
+         "out_of_bounds",
+         "touchdown",
+         "fumble",
+         "qb_sack",
+         "qb_scramble",
+         "lateral",
+         "whistle"
+        ]
+       },
+       "track_id": {},
+       "by": {
+        "type": "array"
+       }
+      },
+      "additionalProperties": true,
+      "required": [
+       "frame",
+       "type"
+      ]
+     }
+    }
+   },
+   "additionalProperties": true
+  },
+  "post_snap": {
+   "type": [
+    "object",
+    "null"
+   ],
+   "properties": {
+    "result": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "yards_gained": {
+     "type": [
+      "integer",
+      "null"
+     ]
+    },
+    "yards_after_catch": {
+     "type": [
+      "integer",
+      "null"
+     ]
+    },
+    "ball_spot": {
+     "type": [
+      "object",
+      "null"
+     ],
+     "properties": {
+      "x": {
+       "type": [
+        "number",
+        "null"
+       ]
+      },
+      "y": {
+       "type": [
+        "number",
+        "null"
+       ]
+      }
+     },
+     "additionalProperties": true
+    },
+    "first_down": {
+     "type": [
+      "boolean",
+      "null"
+     ]
+    },
+    "tackle": {
+     "type": [
+      "object",
+      "null"
+     ],
+     "properties": {
+      "frame": {
+       "type": [
+        "integer",
+        "null"
+       ]
+      },
+      "x": {
+       "type": [
+        "number",
+        "null"
+       ]
+      },
+      "y": {
+       "type": [
+        "number",
+        "null"
+       ]
+      },
+      "by": {
+       "type": "array"
+      }
+     },
+     "additionalProperties": true
+    },
+    "out_of_bounds": {
+     "type": [
+      "boolean",
+      "null"
+     ]
+    },
+    "penalty": {},
+    "end_frame": {
+     "type": [
+      "integer",
+      "null"
+     ]
+    }
+   },
+   "additionalProperties": true
+  },
+  "players": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "properties": {
+     "track_id": {},
+     "team": {
+      "type": [
+       "string",
+       "null"
+      ]
+     },
+     "side": {
+      "type": [
+       "string",
+       "null"
+      ],
+      "enum": [
+       "offense",
+       "defense",
+       "official",
+       null
+      ]
+     },
+     "gsis_id": {
+      "type": [
+       "string",
+       "null"
+      ]
+     },
+     "jersey": {
+      "type": [
+       "string",
+       "null"
+      ]
+     },
+     "name": {
+      "type": [
+       "string",
+       "null"
+      ]
+     },
+     "position_roster": {
+      "type": [
+       "string",
+       "null"
+      ]
+     },
+     "role": {
+      "type": [
+       "string",
+       "null"
+      ],
+      "enum": [
+       "QB",
+       "RB",
+       "FB",
+       "WR",
+       "TE",
+       "LT",
+       "LG",
+       "C",
+       "RG",
+       "RT",
+       "EDGE",
+       "DT",
+       "NT",
+       "LB",
+       "CB",
+       "NB",
+       "S",
+       "K",
+       "P",
+       "LS",
+       "OFFICIAL",
+       null
+      ]
+     },
+     "technique": {
+      "type": [
+       "string",
+       "null"
+      ],
+      "enum": [
+       "0",
+       "1",
+       "2i",
+       "2",
+       "3",
+       "4i",
+       "4",
+       "5",
+       "7",
+       "9",
+       "wide_9",
+       null
+      ]
+     },
+     "stance": {
+      "type": [
+       "string",
+       "null"
+      ],
+      "enum": [
+       "2pt",
+       "3pt",
+       "4pt",
+       null
+      ]
+     },
+     "alignment_pre_snap": {},
+     "alignment_at_snap": {},
+     "direction_at_snap_deg": {
+      "type": [
+       "number",
+       "null"
+      ]
+     },
+     "orientation_at_snap_deg": {
+      "type": [
+       "number",
+       "null"
+      ]
+     },
+     "summary": {},
+     "metrics": {},
+     "source": {
+      "type": [
+       "string",
+       "null"
+      ],
+      "enum": [
+       "official",
+       "nflverse",
+       "cv",
+       "hosted_model",
+       "human",
+       null
+      ]
+     },
+     "confidence": {
+      "type": [
+       "number",
+       "null"
+      ]
+     },
+     "pass": {
+      "type": [
+       "string",
+       "null"
+      ],
+      "enum": [
+       "official",
+       "live",
+       "post",
+       null
+      ]
+     },
+     "machine": {
+      "type": [
+       "object",
+       "null"
+      ],
+      "properties": {
+       "value": {},
+       "source": {
+        "type": [
+         "string",
+         "null"
+        ],
+        "enum": [
+         "official",
+         "nflverse",
+         "cv",
+         "hosted_model",
+         "human",
+         null
+        ]
+       },
+       "confidence": {
+        "type": [
+         "number",
+         "null"
+        ]
+       }
+      },
+      "additionalProperties": true
+     }
+    },
+    "additionalProperties": true
+   }
+  },
+  "tracking": {
+   "type": [
+    "object",
+    "null"
+   ],
+   "properties": {
+    "parquet": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "fps": {
+     "type": [
+      "number",
+      "null"
+     ]
+    },
+    "frames": {
+     "type": [
+      "integer",
+      "null"
+     ]
+    },
+    "snap_frame": {
+     "type": [
+      "integer",
+      "null"
+     ]
+    },
+    "ids": {
+     "type": "array"
+    },
+    "columns": {
+     "type": "array"
+    },
+    "xy": {},
+    "ball": {},
+    "note": {
+     "type": [
+      "string",
+      "null"
+     ]
+    }
+   },
+   "additionalProperties": true
+  },
+  "quality": {
+   "type": [
+    "object",
+    "null"
+   ],
+   "properties": {
+    "registration_error_px": {
+     "type": [
+      "number",
+      "null"
+     ]
+    },
+    "tracks_fragmented": {
+     "type": [
+      "integer",
+      "null"
+     ]
+    },
+    "identity_unresolved": {
+     "type": [
+      "integer",
+      "null"
+     ]
+    },
+    "router": {
+     "type": "array"
+    },
+    "overall_confidence": {
+     "type": [
+      "number",
+      "null"
+     ]
+    },
+    "note": {
+     "type": [
+      "string",
+      "null"
+     ]
+    }
+   },
+   "additionalProperties": true
+  },
+  "review": {
+   "type": "object",
+   "properties": {
+    "status": {
+     "type": "string",
+     "enum": [
+      "unreviewed",
+      "reviewed",
+      "corrected",
+      "flagged"
+     ]
+    },
+    "by": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "at": {
+     "type": [
+      "string",
+      "null"
+     ]
+    }
+   },
+   "additionalProperties": true,
+   "required": [
+    "status"
+   ]
+  },
+  "corrections": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "properties": {
+     "path": {
+      "type": "string"
+     },
+     "machine_value": {},
+     "human_value": {},
+     "by": {
+      "type": [
+       "string",
+       "null"
+      ]
+     },
+     "at": {
+      "type": [
+       "string",
+       "null"
+      ]
+     },
+     "note": {
+      "type": [
+       "string",
+       "null"
+      ]
+     }
+    },
+    "additionalProperties": true,
+    "required": [
+     "path"
+    ]
+   }
+  },
+  "generated": {
+   "type": "object",
+   "properties": {
+    "pipeline_version": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "at": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "pass": {
+     "type": [
+      "string",
+      "null"
+     ],
+     "enum": [
+      "official",
+      "live",
+      "post",
+      null
+     ]
+    }
+   },
+   "additionalProperties": true
+  }
+ }
+}
