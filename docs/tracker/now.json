@@ -60,6 +60,11 @@
       "text": "Milestone 1: play record schema v1, official-only records for every play, fz-export",
       "status": "done",
       "at": "2026-09-13 23:07"
+    },
+    {
+      "text": "Milestone 1: artifact manifests and the stage runner with skip-if-unchanged",
+      "status": "active",
+      "at": "2026-09-13 23:07"
     }
   ]
 }
