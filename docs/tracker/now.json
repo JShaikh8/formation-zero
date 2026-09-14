@@ -35,7 +35,8 @@
     },
     {
       "text": "Milestone 1: install uv and Python 3.12",
-      "status": "todo"
+      "status": "active",
+      "at": "2026-09-13 22:56"
     },
     {
       "text": "Milestone 1: probe and proxy renditions",
