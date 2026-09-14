@@ -94,3 +94,24 @@ def test_filmwindow_then_proxy_encodes_only_the_window(tmp_path, make_video, mon
         assert src.height == 48 and 800 <= src.frames <= 1150    # the window, not the 1500-frame file
     meta = json.loads((paths.proxy_path().with_name(paths.proxy_path().name + ".json")).read_text())
     assert 125 <= meta["first_frame"] <= 375
+
+
+def test_shots_stage_reports_source_seconds(tmp_path, make_video, monkeypatch):
+    import json
+
+    import pandas as pd
+
+    import formation_zero.pipeline.builtin  # noqa: F401
+
+    monkeypatch.setenv("FZ_FILM_ROOT", str(tmp_path / "ssd"))
+    paths = GamePaths(tmp_path / "data", 2025, 20, "LA", "CHI").ensure_dirs()
+    # 10 s menu, then 40 s of film made of four 10 s takes (hard cuts between them), 10 s frozen.
+    video, _ = make_video(n=0, segments=[(250, False), (250, True, "film"), (250, True, "film2"), (250, True, "film"), (250, True, "film2"), (250, False, "frozen")])
+    (paths.source_dir / "film.mp4").symlink_to(video)
+    runner = Runner(paths, {"filmwindow_step_s": 1.0, "filmwindow_window_s": 5.0, "filmwindow_min_s": 15.0, "proxy_height": 48})
+    runner.run("filmwindow"); runner.run("proxy")
+    assert [r.action for r in runner.run("shots")] == ["ran"]
+    shots = pd.read_parquet(paths.shots_path)
+    meta = json.loads((paths.proxy_path().with_name(paths.proxy_path().name + ".json")).read_text())
+    assert shots.start_s.min() >= meta["first_frame"] / 25 - 0.5      # source seconds, not proxy seconds
+    assert len(shots) >= 4                                            # four takes

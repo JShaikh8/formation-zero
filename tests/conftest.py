@@ -19,9 +19,12 @@ def synthetic_frames(n: int, width: int = 160, height: int = 96, *, green: bool 
     base_menu = np.full((height, width, 3), 40, dtype=np.uint8)
     for i in range(n):
         k = seed_index + i
-        if kind == "film":
+        if kind in ("film", "film2"):
             img = np.zeros((height, width, 3), dtype=np.uint8)
-            img[..., 0] = 90; img[..., 1] = 160; img[..., 2] = 90
+            if kind == "film":
+                img[..., 0] = 90; img[..., 1] = 160; img[..., 2] = 90
+            else:                                   # a different take: same brightness band, other colours
+                img[..., 0] = 150; img[..., 1] = 120; img[..., 2] = 70
             for x in range(0, width, 20):
                 img[:, x:x + 2, :] = 235
             x0 = (k * 7) % max(1, width - 12); y0 = (k * 3) % max(1, height - 12)
