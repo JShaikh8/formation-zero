@@ -113,6 +113,11 @@ window.FZ = {
     "text": "Milestone 1: frame source interface, video probe, proxy rendition, per-play clips, film-window detection",
     "status": "done",
     "at": "2026-09-13 23:00"
+   },
+   {
+    "text": "Milestone 1: NFL API client port (token client, game detail, rosters, teams, stat types)",
+    "status": "active",
+    "at": "2026-09-13 23:00"
    }
   ]
  },
