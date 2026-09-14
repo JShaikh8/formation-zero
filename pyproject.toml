@@ -46,6 +46,7 @@ fz-probe = "formation_zero.ingest.probe:main"
 fz-proxy = "formation_zero.ingest.proxy:main"
 fz-filmwindow = "formation_zero.ingest.filmwindow:main"
 fz-clips = "formation_zero.ingest.clips:main"
+fz-nfl = "formation_zero.data.nflapi.cli:main"
 
 [build-system]
 requires = ["setuptools>=68"]
