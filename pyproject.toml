@@ -3,7 +3,7 @@ name = "formation_zero"
 version = "0.1.0"
 description = "NFL All-22 coaches-film breakdown: CV perception + football intelligence + chat"
 readme = "README.md"
-requires-python = ">=3.9"   # Apple system Python for now; bump to 3.11+ when available
+requires-python = ">=3.11"  # uv-managed CPython 3.12 (decision D-012)
 
 # Core deps needed for the Week-0 / Phase-0 work (PBP + field model + storage).
 # Heavier CV deps (ultralytics, supervision, scenedetect, paddleocr) are added in
@@ -17,8 +17,12 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+video = [
+    "av>=12",              # bundles ffmpeg — decoding/probing/encoding without a system install
+    "numpy>=1.24",
+]
 cv = [
-    "av>=12",              # bundles ffmpeg — decoding/probing without a system install
+    "av>=12",
     "opencv-python>=4.9",
     "supervision>=0.20",   # sv.Detections / InferenceSlicer / ByteTrack wiring
     "ultralytics>=8.2",    # YOLO11 (AGPL — prototype only; swap to RF-DETR before distribution)
@@ -48,4 +52,4 @@ include = ["formation_zero*"]
 
 [tool.ruff]
 line-length = 100
-target-version = "py310"
+target-version = "py312"
