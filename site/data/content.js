@@ -90,8 +90,8 @@ window.FZ = {
    },
    {
     "text": "Designing the correction loop: how the owner fixes what the model gets wrong, and how that feeds back",
-    "status": "active",
-    "at": "2026-09-13 22:42"
+    "status": "done",
+    "at": "2026-09-13 22:43"
    }
   ]
  },
