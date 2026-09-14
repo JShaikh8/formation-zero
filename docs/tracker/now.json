@@ -35,8 +35,8 @@
     },
     {
       "text": "Milestone 1: install uv and Python 3.12",
-      "status": "active",
-      "at": "2026-09-13 22:56"
+      "status": "done",
+      "at": "2026-09-13 22:57"
     },
     {
       "text": "Milestone 1: probe and proxy renditions",
@@ -45,6 +45,11 @@
     {
       "text": "Milestone 1: NFL API client port",
       "status": "todo"
+    },
+    {
+      "text": "Milestone 1: frame source interface, video probe, proxy rendition, per-play clips, film-window detection",
+      "status": "active",
+      "at": "2026-09-13 22:57"
     }
   ]
 }
