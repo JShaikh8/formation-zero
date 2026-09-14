@@ -118,6 +118,11 @@ window.FZ = {
     "text": "Milestone 1: NFL API client port (token client, game detail, rosters, teams, stat types)",
     "status": "done",
     "at": "2026-09-13 23:06"
+   },
+   {
+    "text": "Milestone 1: play record schema v1, official-only records for every play, fz-export",
+    "status": "active",
+    "at": "2026-09-13 23:06"
    }
   ]
  },
