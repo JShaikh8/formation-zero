@@ -50,6 +50,7 @@ fz-clips = "formation_zero.ingest.clips:main"
 fz-nfl = "formation_zero.data.nflapi.cli:main"
 fz-records = "formation_zero.data.records:main_records"
 fz-export = "formation_zero.data.records:main_export"
+fz-run = "formation_zero.pipeline.runner:main"
 
 [build-system]
 requires = ["setuptools>=68"]
