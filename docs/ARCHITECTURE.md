@@ -630,9 +630,11 @@ The field is a known drawing, so the labels can be generated rather than annotat
 1. On each sampled frame, classical line detection (Hough over the edge map `shots.py` already
    computes) finds the family of parallel yard lines and the hash-mark rows. The NFL API's
    `yardLine` for that play says which absolute yard line is at the line of scrimmage, and the
-   first-down line follows from `yardsRemaining`. If the film carries painted LOS and
-   first-down graphics, as the `shots.py` notes suggest, those two lines are the strongest
-   anchors on the screen and are found by colour.
+   first-down line follows from `yardsRemaining`. Confirmed 2026-09-13: All-22 film carries
+   **no** painted scrimmage or first-down graphics, so the absolute anchor is the painted yard
+   numbers (10, 20, 30, 40, 50), which are legible at 1080p and read by the keypoint model or a
+   small digit classifier, cross-checked against the official line of scrimmage. Two independent
+   anchors, one from the picture and one from the data, and they must agree.
 2. From those lines plus the sidelines, an initial homography is solved with RANSAC on the
    easy frames (wide, stable, well-lit). Reprojection error decides "easy".
 3. `labelling/field_selftrain.py` projects the full landmark grid from

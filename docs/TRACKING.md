@@ -7,6 +7,7 @@ repository. There is no database and no CMS. Edit a file, rebuild, commit, push;
 
 | File | What it drives | Format |
 |---|---|---|
+| `docs/tracker/now.json` | The "Right now" block on the Now page: current focus and baby steps with done / active / todo | JSON, written by `scripts/step.py` |
 | `docs/tracker/status.json` | The "Now" page: phase, plain-English summary, next up, key numbers, project name and links | JSON |
 | `docs/tracker/milestones.json` | The "Plan" page and the Drive graphic. Epics (F0, M0 to M8) with `progress` 0 to 100 and stories with Jira-style keys `GRD-###` | JSON |
 | `docs/tracker/tech.json` | The "Tech" page. Groups of tools with a status from the legend | JSON |
@@ -25,6 +26,18 @@ make assets        # regenerate the gallery SVGs from real data (needs the proje
 
 `site/build.py` writes `site/data/content.js`. That file is committed, so Render needs no build
 step: the static site is the `site/` folder as-is. `render.yaml` at the repo root declares it.
+
+Rhythm **during** a work session (baby steps, so the site moves while work happens):
+
+```bash
+python3 scripts/step.py "Porting the NFL API token client"   # starts a step, pushes
+python3 scripts/step.py --done                                 # finishes it, pushes
+python3 scripts/step.py --focus "Milestone 1: ingestion"       # new headline
+python3 scripts/step.py --clear                                # new day: drop done steps
+```
+
+Each call edits `docs/tracker/now.json`, rebuilds, commits and pushes; Render redeploys in about
+a minute, and the "Right now" block on the Now page shows the step.
 
 Rhythm at the end of a work session:
 

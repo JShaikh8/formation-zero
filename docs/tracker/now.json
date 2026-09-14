@@ -1,0 +1,12 @@
+{
+  "focus": "Round three of the film room, then milestone 1",
+  "since": "2026-09-13",
+  "plain": "Baby steps, updated as they happen. Each line is one concrete thing being done right now; done lines stay for the day so you can see the trail.",
+  "steps": [
+    { "text": "Confirmed the Render site is live and serving the latest build", "status": "done", "at": "2026-09-13 09:40" },
+    { "text": "Recorded that All-22 film has no painted first-down or scrimmage lines: field registration anchors on yard numbers and the official line of scrimmage instead", "status": "done", "at": "2026-09-13 09:45" },
+    { "text": "Added this 'Right now' block and a one-line command that logs a step and pushes it", "status": "done", "at": "2026-09-13 09:55" },
+    { "text": "Film room round three: mobile layout pass", "status": "todo" },
+    { "text": "Milestone 1: install uv and Python 3.12", "status": "todo" }
+  ]
+}

@@ -93,6 +93,10 @@
         <h1>${esc(st.phase.name)}</h1>
         <p class="lede">${esc(st.phase.plain)}</p>
       </div>
+      ${FZ.now ? `<div class="now-block">
+        <div class="now-head"><span class="eyebrow">Right now · since ${esc(FZ.now.since)}</span><h2>${esc(FZ.now.focus)}</h2><p class="muted">${esc(FZ.now.plain || '')}</p></div>
+        <ol class="steps-live">${FZ.now.steps.map((s) => `<li class="${esc(s.status)}"><span class="mark" aria-hidden="true"></span><span class="txt">${esc(s.text)}</span>${s.at ? `<span class="at">${esc(s.at)}</span>` : ''}</li>`).join('')}</ol>
+      </div>` : ''}
       <div class="drive">
         <div class="drive-head">
           <div><span class="eyebrow">The drive</span> &nbsp;<span class="mono">${yards} of 100 yards · ${esc(current.id)} ${esc(current.title)}</span></div>

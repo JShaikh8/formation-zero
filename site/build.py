@@ -252,6 +252,7 @@ def build_content() -> dict:
     return {
         "built": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
         "status": read_json("status.json"),
+        "now": read_json("now.json") if (DOCS / "tracker" / "now.json").exists() else None,
         "milestones": read_json("milestones.json"),
         "tech": read_json("tech.json"),
         "costs": read_json("costs.json"),

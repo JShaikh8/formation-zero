@@ -295,3 +295,18 @@ tr.rec td { background: color-mix(in srgb, var(--first) 18%, transparent); }
   .tab { animation: rise 240ms ease-out; }
   @keyframes rise { from { opacity: 0.001; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 }
+
+/* ---- right now (baby steps) ------------------------------------------------- */
+.now-block { background: var(--paper-2); border: 1px solid var(--rule); border-left: 4px solid var(--los); border-radius: var(--radius); padding: 16px 18px; margin-bottom: 20px; display: grid; gap: 12px; }
+.now-block h2 { font-size: 1.6rem; margin-top: 4px; }
+.now-block .muted { font-size: 0.9rem; max-width: 66ch; }
+.steps-live { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.steps-live li { display: grid; grid-template-columns: 18px 1fr auto; gap: 10px; align-items: baseline; font-size: 0.95rem; }
+.steps-live .mark { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--muted); align-self: center; }
+.steps-live li.done .mark { background: var(--good); border-color: var(--good); }
+.steps-live li.done .txt { color: var(--muted); }
+.steps-live li.active .mark { background: var(--first); border-color: var(--first); box-shadow: 0 0 0 3px color-mix(in srgb, var(--first) 30%, transparent); }
+.steps-live li.active .txt { font-weight: 600; }
+.steps-live li.todo .txt { color: var(--ink-2); }
+.steps-live .at { font-family: var(--mono); font-size: 0.7rem; color: var(--muted); white-space: nowrap; }
+@media (max-width: 600px) { .steps-live li { grid-template-columns: 18px 1fr; } .steps-live .at { grid-column: 2; } }
