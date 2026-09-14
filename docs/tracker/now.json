@@ -4,46 +4,6 @@
   "plain": "Baby steps, updated as they happen. Each line is one concrete thing being done right now; done lines stay for the day so you can see the trail.",
   "steps": [
     {
-      "text": "Confirmed the Render site is live and serving the latest build",
-      "status": "done",
-      "at": "2026-09-13 09:40"
-    },
-    {
-      "text": "Recorded that All-22 film has no painted first-down or scrimmage lines: field registration anchors on yard numbers and the official line of scrimmage instead",
-      "status": "done",
-      "at": "2026-09-13 09:45"
-    },
-    {
-      "text": "Added this 'Right now' block and a one-line command that logs a step and pushes it",
-      "status": "done",
-      "at": "2026-09-13 09:55"
-    },
-    {
-      "text": "Designing the correction loop: how the owner fixes what the model gets wrong, and how that feeds back",
-      "status": "done",
-      "at": "2026-09-13 22:43"
-    },
-    {
-      "text": "Designing ingestion (drop a file, press Analyze) and the live pass / post pass model",
-      "status": "done",
-      "at": "2026-09-13 22:45"
-    },
-    {
-      "text": "Closed milestone 0: planning done, open items moved to where they belong",
-      "status": "done",
-      "at": "2026-09-13 11:30"
-    },
-    {
-      "text": "Milestone 1: install uv and Python 3.12",
-      "status": "done",
-      "at": "2026-09-13 22:57"
-    },
-    {
-      "text": "Milestone 1: frame source interface, video probe, proxy rendition, per-play clips, film-window detection",
-      "status": "done",
-      "at": "2026-09-13 23:00"
-    },
-    {
       "text": "Milestone 1: NFL API client port (token client, game detail, rosters, teams, stat types)",
       "status": "done",
       "at": "2026-09-13 23:06"
@@ -64,17 +24,27 @@
       "at": "2026-09-13 16:40"
     },
     {
+      "text": "Film on an external SSD: configurable film root, mount guard, fz-film add",
+      "status": "done",
+      "at": "2026-09-14 10:20"
+    },
+    {
+      "text": "First real probe: both renditions 244,505 frames, frame-aligned",
+      "status": "done",
+      "at": "2026-09-14 10:30"
+    },
+    {
+      "text": "First real film-window scan on the 163-minute recording (checking against the hand-found 2677–8452 s)",
+      "status": "active",
+      "at": "2026-09-14 10:35"
+    },
+    {
+      "text": "Proxy of the film window, then shots and clips on real film",
+      "status": "todo"
+    },
+    {
       "text": "Milestone 2: measure SAM 3 throughput on the M4",
       "status": "todo"
-    },
-    {
-      "text": "Milestone 2: frame sampler and teacher pass",
-      "status": "todo"
-    },
-    {
-      "text": "Film on an external SSD: configurable film root, mount guard, fz-film add",
-      "status": "active",
-      "at": "2026-09-14 02:33"
     }
   ]
 }

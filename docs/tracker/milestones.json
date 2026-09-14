@@ -164,7 +164,7 @@
           "key": "GRD-22",
           "title": "Probe and proxy: video metadata sidecar and a 540p frame-aligned rendition",
           "status": "done",
-          "note": "Done: fz-probe writes a sidecar; fz-proxy makes a 540p frame-aligned rendition with a keyframe every second."
+          "note": "Done; first real run 2026-09-14: the demo recording probes at 244,505 frames, 25 fps, 163 min in both the 576p and 1080p renditions, so they are frame-aligned. Keyframe every 6.7 s in the source; the proxy puts one every second."
         },
         {
           "key": "GRD-23",
