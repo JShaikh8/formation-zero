@@ -1042,3 +1042,91 @@ than one client.
 The record exists from milestone 1 with the official sections filled, so a client can integrate
 early. The API itself is milestone 9. Until then, `fz export --game <key>` writes the same JSONL
 to disk for hand delivery.
+
+---
+
+## 11. Getting film in, and running live
+
+Added 2026-09-13 at the owner's request, before it is needed.
+
+### 11.1 Drop a file, press Analyze
+
+The user-facing flow, in the film room:
+
+1. **New game.** Pick season, week and the two teams. The NFL API schedule fills in the slug,
+   kickoff, venue and final score, and the official play list is pulled at once. The game
+   appears with every play in the "official data only" state immediately.
+2. **Add film.** Drop one continuous All-22 file, or separate sideline and end-zone files, or
+   a folder of per-play clips. The app probes each file (fps, frames, keyframes) and, for a
+   continuous recording, finds the film window itself: the stretch that is coaches film rather
+   than menus or pregame. Cut detection and the play index then run, and a **check screen**
+   shows the play count against the official list, the first and last play thumbnails, and any
+   mismatch, before anything expensive starts. A count mismatch stops here with a reason.
+3. **Analyze.** One button. A job is created with one task per play per stage. Plays fill in
+   as they finish, in the same film room, with a per-play state: queued, running, done, flagged.
+   Progress is a bar per game and a badge per play. Closing the browser does not stop the job;
+   reopening shows where it is.
+4. **Review.** Corrections (section 9.5) from the moment the first play lands.
+
+Behind it, nothing new in kind: the stage runner (section 1.4) already has per-play tasks and
+skip-if-unchanged manifests; the API (section 10) grows a small write side. The film itself
+never leaves the machine it was dropped on. On the public site there is no upload at all.
+
+| Method and path | What it does |
+|---|---|
+| `POST /v1/games` | Create a game from season, week, teams; pulls schedule and play-by-play. |
+| `POST /v1/games/{game_key}/film` | Register film files or clips; probe; find the film window; build the play index; return the check screen data. |
+| `POST /v1/games/{game_key}/analyze` | Start the job. Body: which stages, which plays (default all unreviewed), budget cap. |
+| `GET /v1/jobs/{job_id}` and `GET /v1/jobs/{job_id}/events` (server-sent events) | Progress: per-play, per-stage state; failures with reasons. |
+
+Where it runs: the laptop first, as one local process serving both the API and the film room.
+A server with a job queue later, same code, when there is more than one machine or user.
+
+### 11.2 Live: a live pass, then a post pass
+
+"Live" means processing plays as they happen from a feed that is not All-22: typically a
+single fixed sideline angle, or a broadcast. The design principle is that the play record is
+already built in layers, so live is a lighter, earlier layer of the same record, not a
+different product.
+
+**Two passes on one record.**
+
+- **Live pass.** Runs per play, seconds after the whistle, from whatever angle exists. Fast
+  student detector only, light tracking, single-angle registration, no teacher model and no
+  hosted routing (or a tight budget). It fills what a single angle can support with honest
+  confidence: snap frame, personnel counts, formation at the snap, motion, ball carrier and
+  rough result, separation and pursuit from one angle, events. Every field written by this pass
+  carries `pass: "live"` beside its source and confidence.
+- **Post pass.** Runs when the full All-22 arrives (hours after the game) or when the game is
+  over: both angles, fusion, teacher-quality labels, the router for hard plays, identity. It
+  replaces live-pass values field by field, records the live value under `machine`, and never
+  touches a field a human corrected. Fields carry `pass: "post"`. Clients see the record upgrade
+  in place; the API's `since` parameter makes the upgrade an incremental pull.
+
+**What has to be true of the pipeline for this to work, designed in now.**
+
+1. **Sources are file or stream.** Ingestion has one interface with two implementations: a file
+   with a known length, and a stream with no end. Everything downstream consumes frames and does
+   not know which it came from.
+2. **Play boundaries come from the play, not the cut.** On a stream there are no camera cuts to
+   segment by. Snap and whistle detection (milestone 4) run continuously and open and close plays
+   themselves. On a file, cut detection is a shortcut that feeds the same interface.
+3. **Single-angle is a first-class mode.** Fusion (section 1.3, step 9) takes one or two angles.
+   With one, it passes that angle's estimate through with its own uncertainty: a sideline camera
+   resolves depth well and lateral position worse, and the confidence says so.
+4. **Official play-by-play arrives live too.** The NFL API game detail updates during a game
+   with `playStartTime` on each play (the owner's other project already reads it). The ordered
+   join runs incrementally: each detected play is matched to the newest unmatched official play,
+   with the same count check as a safety net.
+5. **A latency budget per play.** Roughly forty seconds pass between snaps. The live pass must
+   finish a fifteen-second clip inside that, which the student detector does on a GPU and only
+   just on the laptop. The budget is measured and shown, never assumed.
+6. **Broadcast is a separate, harder problem.** A broadcast feed pans, zooms, cuts to replays and
+   overlays graphics. Shot detection and per-frame registration exist; the rest (graphics
+   masking, players leaving the frame, replay rejection) is a feasibility spike before it is a
+   milestone. A fixed single sideline camera is close to what we build anyway.
+
+**Build order.** Nothing here comes before milestone 5. The live pass is milestone 10, after the
+API, because it is the API plus two-pass semantics plus a stream source. Its proof: a game
+processed from a single-angle recording played back in real time, with the record upgrading
+when the two-angle post pass runs afterward.

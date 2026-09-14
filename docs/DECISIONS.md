@@ -323,3 +323,27 @@ on re-run, invisible to evaluation.
 
 **Gained / lost.** Gained a path from "the model is wrong here" to "the model learned." Cost: two
 blocks in the schema and an append-only log, both trivial now.
+
+## D-022 — Live is a lighter, earlier layer of the same record: live pass, then post pass
+- date: 2026-09-13
+- status: accepted
+- tags: product, architecture, live
+
+**Decision.** Support live processing as a two-pass model on one play record: a live pass that
+runs per play from a single angle with fast models and honest confidence, and a post pass that
+replaces its values field by field when the full All-22 arrives, never touching human
+corrections. To make that possible without rework, three things are designed in now: sources
+are file or stream behind one interface; play boundaries come from snap and whistle detection,
+not camera cuts; and fusion accepts one angle or two. Blueprint section 11.
+
+**Why.** The owner asked how uploading works and whether live could ever work, before either
+was needed. The play record is already populated in layers (official first, vision later), so
+live is the same idea with one more layer. Deciding it now costs a few interfaces; deciding it
+after milestone 5 would reopen ingestion, segmentation and fusion.
+
+**Alternatives.** A separate live product with its own output. Rejected: two schemas, two
+viewers, and clients would have to reconcile them.
+
+**Gained / lost.** Gained a path to live without a second system. Cost: a stream source and
+incremental play matching that a file-only pipeline would not need, and an honest note that a
+broadcast feed is a separate feasibility spike.

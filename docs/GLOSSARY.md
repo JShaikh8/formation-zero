@@ -119,3 +119,9 @@ A human fix to something the system got wrong: a formation label, a jersey numbe
 
 ### Reviewed
 A play a person has looked at in the film room. Reviewed plays show a check; corrected plays a pencil; flagged plays a warning. The counter of reviewed plays per game is the honest measure of how much of the output has been checked.
+
+### Live pass and post pass
+Two passes over the same play record. The live pass runs seconds after the whistle from a single camera with fast models and fills what one angle can support, with confidence that says so. The post pass runs when the full two-angle film arrives and upgrades the record field by field, never touching a human correction.
+
+### Film window
+The stretch of a screen recording that is actually coaches film, as opposed to menus or pregame content. Found automatically when film is added, so nobody has to type start and end times.
