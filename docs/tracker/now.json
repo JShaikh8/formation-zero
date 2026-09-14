@@ -53,8 +53,8 @@
     },
     {
       "text": "Milestone 1: NFL API client port (token client, game detail, rosters, teams, stat types)",
-      "status": "active",
-      "at": "2026-09-13 23:00"
+      "status": "done",
+      "at": "2026-09-13 23:06"
     }
   ]
 }
