@@ -9,9 +9,9 @@
   },
   "updated": "2026-09-13",
   "phase": {
-    "milestone": "M1",
-    "name": "Ingestion and the NFL API",
-    "plain": "Planning is closed. The first build milestone gets the film and the official data into a shape the vision code can eat: a modern Python runtime, a cheaper copy of the video, one clip per play per angle, a Python client for the NFL's own API, and version 1 of the play record schema so clients can integrate before any vision runs."
+    "milestone": "M2",
+    "name": "Label bootstrap",
+    "plain": "Milestone 1 is closed: the film and the official data go in, and every play comes out as a record. Milestone 2 makes the training data without drawing boxes by hand: a big slow model labels sampled frames, you approve contact sheets one keystroke at a time, and a small fast model learns from it. Its first number is how fast that big model runs on this laptop, because the whole plan leans on it."
   },
   "what_it_is": [
     "Every NFL game is filmed from two high angles that show all 22 players at once. Coaches call it All-22. It is the film they actually study.",
@@ -30,14 +30,14 @@
     ]
   },
   "next_up": [
-    "Get the NFL API credentials onto this machine and test the port against a real payload (the last milestone 1 item).",
-    "Run probe, proxy and film-window detection on the real demo film once it is on disk.",
-    "Milestone 2: measure SAM 3 throughput on the M4, then the labelling teacher."
+    "Put a clear-weather game's film on disk and run probe, proxy, film window, shots and clips end to end.",
+    "Milestone 2: measure SAM 3 throughput on the M4 (the number the plan assumes).",
+    "Milestone 2: frame sampler and the SAM 3 teacher pass on a few hundred frames."
   ],
   "numbers": [
     {
       "label": "Tests passing",
-      "value": "201",
+      "value": "209",
       "note": "run 2026-09-13"
     },
     {

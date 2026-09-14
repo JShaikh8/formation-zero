@@ -1,5 +1,5 @@
 {
-  "focus": "Milestone 1: ingestion and the NFL API",
+  "focus": "Milestone 2: label bootstrap",
   "since": "2026-09-13",
   "plain": "Baby steps, updated as they happen. Each line is one concrete thing being done right now; done lines stay for the day so you can see the trail.",
   "steps": [
@@ -59,7 +59,16 @@
       "at": "2026-09-13 23:10"
     },
     {
-      "text": "Milestone 1 is one item from done: the NFL API credentials on this machine",
+      "text": "Verified the NFL API port live: real game detail, rosters, labels merged by play id; milestone 1 closed",
+      "status": "done",
+      "at": "2026-09-13 16:40"
+    },
+    {
+      "text": "Milestone 2: measure SAM 3 throughput on the M4",
+      "status": "todo"
+    },
+    {
+      "text": "Milestone 2: frame sampler and teacher pass",
       "status": "todo"
     }
   ]

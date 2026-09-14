@@ -144,15 +144,15 @@
       "id": "M1",
       "title": "Ingestion and the NFL API",
       "plain": "Get the film and the official data into a shape the vision code can eat: a cheaper copy of the video, one clip per play per angle, and a Python client for the NFL's own API.",
-      "status": "active",
-      "progress": 92,
-      "proof": "Every play of the demo game exists as two clips, joined to the NFL API's play id. Re-running does nothing if nothing changed.",
+      "status": "done",
+      "progress": 100,
+      "proof": "Closed 2026-09-13: every play of the demo game exists as a record from official data (NFL API backbone, free labels merged by play id); ingestion, proxy, clips and film-window detection tested on synthetic video; fz-run skips unchanged work. 209 tests.",
       "stories": [
         {
           "key": "GRD-20",
           "title": "NFL API credentials available on the build machine",
-          "status": "todo",
-          "note": "Moved from M0; needed for the NFL API port."
+          "status": "done",
+          "note": "Credentials in the git-ignored .env since 2026-09-13; live pull verified on Rams-Bears."
         },
         {
           "key": "GRD-21",
@@ -182,13 +182,13 @@
           "key": "GRD-25",
           "title": "NFL API port: token client, game detail, rosters, teams, stat types",
           "status": "done",
-          "note": "Done offline: token discipline, game detail, rosters, teams, stat types, fz-nfl. Live payloads untested until credentials are local (GRD-20)."
+          "note": "Verified live 2026-09-13: token exchange, weekly slate, game detail (218 rows, 184 filmable = film), rosters (90 and 83 players). Playoff week mapping confirmed (week 20 = POST 2)."
         },
         {
           "key": "GRD-26",
           "title": "Play index rebuilt on NFL API plays (join by playId)",
           "status": "done",
-          "note": "Done: kicks, punts and kneels are numbered; the free play list now matches the film at exactly 184."
+          "note": "Done: every free-data play id exists in the NFL payload, so labels merge by exact play id, not position. 184 = 184."
         },
         {
           "key": "GRD-27",
@@ -232,7 +232,7 @@
       "id": "M2",
       "title": "Label bootstrap",
       "plain": "Make the training data without drawing boxes by hand. A big slow model labels sampled frames; a human approves contact sheets with one key per image; a small fast model learns from it.",
-      "status": "todo",
+      "status": "active",
       "progress": 0,
       "proof": "A detector trained from zero hand-drawn boxes, and the review sheet took under 30 minutes.",
       "stories": [
