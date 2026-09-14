@@ -98,7 +98,7 @@ def adapt_roster(payload) -> dict:
         if not forms:
             continue
         players.append({"gsis_id": gsis, "person_id": _first(p, PERSON_KEYS) or _first(entry, PERSON_KEYS),
-                        "jersey": _first(p, JERSEY_KEYS) or _first(entry, JERSEY_KEYS),
+                        "jersey": (_first(p, JERSEY_KEYS) or _first(entry, JERSEY_KEYS)).lstrip("0") or ("0" if (_first(p, JERSEY_KEYS) or _first(entry, JERSEY_KEYS)) else ""),
                         "position": _first(p, POSITION_KEYS) or _first(entry, POSITION_KEYS),
                         "forms": forms, "display_name": display or f"{common or first} {last}".strip()})
     pag = payload.get("pagination") if isinstance(payload, dict) else None

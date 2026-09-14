@@ -20,6 +20,27 @@ from formation_zero.ids import game_key as make_game_key
 from formation_zero.ids import play_uid as make_play_uid
 
 _YARDLINE_RE = re.compile(r"^\s*([A-Za-z]{2,3})\s*(\d{1,2})\s*$")
+
+# The NFL spells a few clubs differently from the free data (and our game keys). Canonical = ours.
+TEAM_ALIASES = {"LAR": "LA", "WSH": "WAS", "JAC": "JAX", "ARZ": "ARI", "BLT": "BAL", "CLV": "CLE", "HST": "HOU"}
+
+# Bookkeeping rows the drive chart carries that are not plays.
+ADMIN_PLAY_TYPES = {"GAME_START", "END_QUARTER", "END_HALF", "END_GAME", "TIMEOUT", "TWO_MINUTE_WARNING", "COMMENT"}
+
+
+def normalize_jersey(v) -> str | None:
+    """'04' -> '4'; '0' stays '0'. The feed zero-pads; jerseys and rosters do not."""
+    if v is None:
+        return None
+    t = str(v).strip().lstrip("0")
+    return t or "0"
+
+
+def canonical_team(abbr: str | None) -> str | None:
+    if not abbr:
+        return None
+    a = abbr.upper()
+    return TEAM_ALIASES.get(a, a)
 _CLOCK_RE = re.compile(r"^\((\d{1,2}:\d{2})\)\s*")
 
 FILMABLE = ("pass", "run", "punt", "field_goal", "extra_point", "kickoff", "qb_kneel", "qb_spike")
@@ -35,8 +56,8 @@ def yardline_100(yardline: str | None, posteam: str | None) -> int | None:
     m = _YARDLINE_RE.match(s)
     if not m:
         return None
-    side, n = m.group(1).upper(), int(m.group(2))
-    if posteam and side == posteam.upper():
+    side, n = canonical_team(m.group(1)), int(m.group(2))
+    if posteam and side == canonical_team(posteam):
         return 100 - n
     return n
 
@@ -45,7 +66,7 @@ def classify(play_type: str | None, desc: str) -> str | None:
     """NFL playType + description -> nflverse-style play_type. None for administrative rows."""
     d = (desc or "").lower()
     t = (play_type or "").upper()
-    if st.is_admin_play(desc, play_type):
+    if t in ADMIN_PLAY_TYPES or st.is_admin_play(desc, play_type):
         return None
     if "no play" in d and "penalty" in d:
         return "no_play"
@@ -71,14 +92,14 @@ def classify(play_type: str | None, desc: str) -> str | None:
         return "run"
     if t == "PENALTY" or "penalty" in d:
         return "no_play"
-    return "run" if d else None
+    return None          # unknown: never invent a filmable play
 
 
 def adapt_game_detail(payload: dict, *, season: int, week: int) -> dict:
     """-> {'game': {...}, 'plays': [row, ...]} with rows in our tidy schema plus `players`."""
     home, away = payload.get("homeTeam") or {}, payload.get("awayTeam") or {}
-    home_abbr = abbreviation_from_logo(home.get("currentLogo")) or (home.get("abbreviation") or "").upper()
-    away_abbr = abbreviation_from_logo(away.get("currentLogo")) or (away.get("abbreviation") or "").upper()
+    home_abbr = canonical_team(abbreviation_from_logo(home.get("currentLogo")) or home.get("abbreviation"))
+    away_abbr = canonical_team(abbreviation_from_logo(away.get("currentLogo")) or away.get("abbreviation"))
     team_by_id = {home.get("id"): home_abbr, away.get("id"): away_abbr}
     gk = make_game_key(season, week, away_abbr, home_abbr)
     chart = payload.get("driveChart") or {}
@@ -111,14 +132,15 @@ def adapt_game_detail(payload: dict, *, season: int, week: int) -> dict:
             role = st.ROLE_BY_CODE.get(code)
             if role:
                 players.append({"gsis_id": s.get("gsisPlayerId"), "name": s.get("gsisPlayerName"),
-                                "jersey": str(s.get("gsisPlayerJerseyNumber")) if s.get("gsisPlayerJerseyNumber") is not None else None,
+                                "jersey": normalize_jersey(s.get("gsisPlayerJerseyNumber")),
                                 "team": team_by_id.get(s.get("teamId")), "role": role, "stat_type": code,
                                 "yards": s.get("yards")})
         rows.append({
             "game_key": gk, "play_uid": make_play_uid(gk, index) if filmable else None,
             "play_index": index if filmable else None, "nfl_play_id": p.get("playId"),
             "drive_id": p.get("driveSequence"), "qtr": p.get("quarter"), "time": clock,
-            "down": p.get("down"), "ydstogo": p.get("yardsRemaining"), "yrdln": p.get("yardLine"),
+            "down": p.get("down") or None, "ydstogo": (p.get("yardsRemaining") if p.get("down") else None),
+            "yrdln": p.get("yardLine"),
             "yardline_100": yardline_100(p.get("yardLine"), posteam),
             "posteam": posteam, "defteam": defteam, "play_type": ptype, "nfl_play_type": p.get("playType"),
             "desc": desc, "yards_gained": p.get("yardsGained"), "touchdown": bool(p.get("playScored")) and "touchdown" in desc.lower(),
@@ -137,4 +159,4 @@ def to_frame(adapted: dict):
     return pd.DataFrame(adapted["plays"])
 
 
-__all__ = ["adapt_game_detail", "classify", "yardline_100", "to_frame", "FILMABLE"]
+__all__ = ["adapt_game_detail", "classify", "yardline_100", "canonical_team", "normalize_jersey", "to_frame", "FILMABLE", "ADMIN_PLAY_TYPES", "TEAM_ALIASES"]

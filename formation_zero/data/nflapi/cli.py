@@ -65,10 +65,25 @@ def main(argv: list[str] | None = None) -> int:
         gk = game_key(a.season, a.week, a.away, a.home)
         detail = api.game_detail(slug, cache_key=gk)
         adapted = adapt_game_detail(detail, season=a.season, week=a.week)
-        df = to_frame(adapted)
+        df = to_frame(adapted).drop(columns=["players"])
         out = Path(a.out) / "pbp" / f"{gk}.parquet"
         out.parent.mkdir(parents=True, exist_ok=True)
-        df.drop(columns=["players"]).to_parquet(out, index=False)
+        # Labels from the free data, if a nflverse table exists for this game: exact join by play id.
+        sources = out.parent / "sources"
+        nv_path = sources / f"{gk}.nflverse.parquet"
+        if not nv_path.exists() and out.exists():
+            import pandas as pd
+            existing = pd.read_parquet(out)
+            if "offense_formation" in existing.columns and "nfl_play_type" not in existing.columns:
+                sources.mkdir(parents=True, exist_ok=True)
+                existing.to_parquet(nv_path, index=False)      # keep the free table as a source
+        if nv_path.exists():
+            import pandas as pd
+            from formation_zero.data.nflapi.merge import merge_labels
+            df = merge_labels(df, pd.read_parquet(nv_path))
+            print(f"merged nflverse labels from {nv_path.name}: {int(df['labels_source'].notna().sum())} plays labelled")
+        df.to_parquet(out, index=False)
+        (out.with_suffix(".game.json")).write_text(json.dumps(adapted["game"], indent=1))
         (out.with_suffix(".players.json")).write_text(json.dumps(
             {r["play_uid"]: r["players"] for r in adapted["plays"] if r["play_uid"]}, indent=1))
         print(f"Wrote {out}: {len(df)} rows, {int(df['play_index'].notna().sum())} filmable plays, "

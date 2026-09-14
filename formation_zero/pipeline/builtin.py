@@ -50,13 +50,12 @@ def records_stage(ctx: StageContext) -> None:
 
     import pandas as pd
 
-    from formation_zero.data.records import build_records, write_records
-    from formation_zero.ids import parse_game_key
+    from formation_zero.data.records import _game_from_key, build_records, write_records
 
     pbp = pd.read_parquet(ctx.paths.pbp_path)
     players_path = ctx.paths.pbp_path.with_suffix(".players.json")
     players = json.loads(players_path.read_text()) if players_path.exists() else {}
-    game = {"game_key": ctx.paths.game_key, **parse_game_key(ctx.paths.game_key)}
+    game = _game_from_key(ctx.paths.game_key, ctx.paths.pbp_path)
     write_records(build_records(pbp, game, players), ctx.paths.plays_dir)
 
 

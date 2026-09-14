@@ -134,9 +134,14 @@ def export_jsonl(plays_dir: Path, out: Path, game_key: str) -> int:
     return n
 
 
-def _game_from_key(game_key: str, pbp_players_path: Path | None) -> dict:
-    g = parse_game_key(game_key)
-    return {"game_key": game_key, **g}
+def _game_from_key(game_key: str, pbp_path: Path | None) -> dict:
+    """Game metadata: the NFL API's game.json beside the play table when present, else the key."""
+    g = {"game_key": game_key, **parse_game_key(game_key)}
+    if pbp_path is not None:
+        meta = pbp_path.with_suffix(".game.json")
+        if meta.exists():
+            g.update({k: v for k, v in json.loads(meta.read_text()).items() if k in ("nfl_game_id", "gsis_id", "slug", "venue", "kickoff")})
+    return g
 
 
 def main_records(argv: list[str] | None = None) -> int:
@@ -156,7 +161,7 @@ def main_records(argv: list[str] | None = None) -> int:
     pbp = pd.read_parquet(paths.pbp_path)
     players_path = paths.pbp_path.with_suffix(".players.json")
     players = json.loads(players_path.read_text()) if players_path.exists() else {}
-    game = _game_from_key(paths.game_key, players_path)
+    game = _game_from_key(paths.game_key, paths.pbp_path)
     n = write_records(build_records(pbp, game, players), paths.plays_dir)
     print(f"{n} play records -> {paths.plays_dir}")
     return 0

@@ -9,7 +9,8 @@ import pytest
 from formation_zero.data.nflapi import stat_types as st
 from formation_zero.data.nflapi.client import FRESH_TOKEN_S, NflApi, NotConfigured
 from formation_zero.data.nflapi.config import NflApiConfig
-from formation_zero.data.nflapi.game_detail import adapt_game_detail, classify, yardline_100
+from formation_zero.data.nflapi.game_detail import adapt_game_detail, canonical_team, classify, normalize_jersey, yardline_100
+from formation_zero.data.nflapi.merge import merge_labels
 from formation_zero.data.nflapi.rosters import adapt_roster, jersey_map, name_forms
 from formation_zero.data.nflapi.teams import abbreviation_from_logo, adapt_teams
 
@@ -152,6 +153,7 @@ def test_adapt_game_detail_builds_our_schema():
     assert rows[1]["yardline_100"] == 63 and rows[3]["yardline_100"] == 29
     assert rows[1]["time"] == "14:53" and rows[1]["desc"].startswith("18-C.Williams")
     roles = {(p["jersey"], p["role"]) for p in rows[1]["players"]}
+    assert normalize_jersey("04") == "4" and normalize_jersey("0") == "0" and normalize_jersey(None) is None
     assert roles == {("18", "passer"), ("2", "receiver"), ("25", "tackler")}
     assert rows[1]["players"][0]["team"] == "CHI" and rows[1]["is_scrimmage"] and not rows[0]["is_scrimmage"]
 
@@ -172,3 +174,34 @@ def test_roster_adapter_finds_players_inside_the_roster_object():
     assert name_forms("Marquise", "Hollywood", "Brown", "") == ["Marquise Brown", "M.Brown", "Hollywood Brown", "H.Brown"]
     assert r["players"][1]["display_name"] == "DJ Moore"
     assert set(jersey_map(r)) == {"5", "2"}
+
+
+@pytest.mark.parametrize("ptype,desc", [("GAME_START", "GAME"), ("END_QUARTER", "END QUARTER 1"), ("END_GAME", "END GAME"),
+                                        ("TIMEOUT", "Timeout #2 by CHI at 01:52."), ("UNKNOWN_THING", "")])
+def test_bookkeeping_rows_are_never_filmable(ptype, desc):
+    assert classify(ptype, desc) is None
+
+
+def test_team_aliases_keep_the_rams_on_the_right_side_of_the_field():
+    assert canonical_team("LAR") == "LA" and canonical_team("chi") == "CHI"
+    assert yardline_100("LAR 15", "LA") == 85        # Rams' own 15 with the Rams in possession
+    assert yardline_100("LAR 29", "CHI") == 29
+
+
+def test_kicks_carry_no_down_or_distance():
+    out = adapt_game_detail(GAME, season=2025, week=20)
+    kick = out["plays"][0]
+    assert kick["play_type"] == "kickoff" and kick["down"] is None and kick["ydstogo"] is None
+
+
+def test_merge_labels_joins_by_play_id_and_prefers_numbered_descriptions():
+    import pandas as pd
+    api = pd.DataFrame([{"nfl_play_id": 56, "desc": "C.Williams pass short right to D.Moore for 34 yards.", "play_type": "pass"},
+                        {"nfl_play_id": 90, "desc": "D.Swift right guard for 6 yards.", "play_type": "run"}])
+    nv = pd.DataFrame([{"play_id": 56.0, "desc": "(14:53) 18-C.Williams pass short right to 2-D.Moore for 34 yards.",
+                        "offense_formation": "UNDER CENTER", "offense_personnel": "1 RB, 2 TE, 2 WR", "epa": 2.05},
+                       {"play_id": None, "desc": "Timeout", "offense_formation": None, "offense_personnel": None, "epa": None}])
+    out = merge_labels(api, nv)
+    assert out.loc[0, "offense_formation"] == "UNDER CENTER" and out.loc[0, "desc"].startswith("(14:53) 18-")
+    assert out.loc[0, "desc_nfl"].startswith("C.Williams") and out.loc[0, "labels_source"] == "nflverse"
+    assert pd.isna(out.loc[1, "offense_formation"]) and out.loc[1, "desc"].startswith("D.Swift") and pd.isna(out.loc[1, "labels_source"])
