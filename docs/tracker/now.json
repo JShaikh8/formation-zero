@@ -30,6 +30,11 @@
       "text": "Designing the correction loop: how the owner fixes what the model gets wrong, and how that feeds back",
       "status": "done",
       "at": "2026-09-13 22:43"
+    },
+    {
+      "text": "Designing ingestion (drop a file, press Analyze) and the live pass / post pass model",
+      "status": "active",
+      "at": "2026-09-13 22:45"
     }
   ]
 }
