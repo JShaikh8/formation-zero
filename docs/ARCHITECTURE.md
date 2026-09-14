@@ -941,6 +941,63 @@ snap in the record.
 
 ---
 
+## 9.5 The correction loop: teaching the system where it is wrong
+
+Added 2026-09-13 at the owner's request, before it is needed, so nothing has to be retrofitted.
+
+### Principles
+
+- **Corrections are first-class data.** A human fix is the highest-value label the system will
+  ever get. It is stored, versioned, attributed, and never overwritten by a re-run.
+- **The machine value is kept.** Overriding a field records the machine's value beside the
+  human's, so accuracy can be measured and the model can learn from the difference.
+- **Correct once, apply everywhere it is true.** A jersey fix on a track fixes every frame of
+  that track. A swap of two track ids from frame N applies to every later frame. A formation
+  fix applies to that play only.
+- **"This is wrong" is enough.** A reviewer who cannot say what is right can still flag a
+  field or a frame with a note. Flags queue for a second look and count against accuracy.
+
+### What is correctable, and how
+
+| Granularity | Examples | How the reviewer does it |
+|---|---|---|
+| Labels | formation, personnel, coverage family, route, motion type, role, technique, play family | Click the field in the Play or Players tab, pick from the closed vocabulary |
+| Identity | jersey number, name, team, official vs player | Click a player, edit; applies to the whole track |
+| Events | snap frame, throw, catch, first contact, tackle, whistle | Scrub to the frame, click "this is the snap" (or drag the event marker on the timeline) |
+| Positions | a player a few yards off, a lost track, two tracks swapped | Bird's-eye edit mode: drag a marker at a keyframe (the path is re-interpolated between reviewed keyframes); "swap ids from here"; "extend track to here" |
+| Whole play | film-to-play mismatch, unusable clip | Flag the play with a reason; it leaves the ordered join and the count check re-runs |
+
+### Where corrections live
+
+- `data/groundtruth/corrections/<play_uid>.jsonl`: append-only log, one line per edit:
+  `{path, machine_value, human_value, by, at, note}`. Versioned like every other hand label.
+- The play record gains two blocks: `review` (`status`: unreviewed / reviewed / corrected /
+  flagged, `by`, `at`) and `corrections` (the applied edits). An overridden field carries
+  `source: "human"`, `confidence: 1.0`, and `machine: {value, source, confidence}`.
+- The API (section 10) gets `POST /v1/plays/{play_uid}/corrections` and
+  `GET /v1/reviews?status=flagged`; until the API exists, the film room writes the JSONL file
+  directly when run locally.
+
+### How corrections feed back
+
+1. **Evaluation.** Every corrected field is a ground-truth point. The tracker's accuracy numbers
+   per field (formation, coverage, identity, positions within one yard) are computed from
+   exactly these, and they are the honest measure of progress after milestone 4.
+2. **Training.** Identity and position corrections become training labels for the jersey
+   classifier and the detector; formation and route corrections train the classifiers that
+   replace the first heuristics. Retraining is a scheduled job, never automatic on a single edit.
+3. **Rules.** A heuristic that is corrected the same way repeatedly (a coverage rule, a motion
+   threshold) is a rule change, made in code and recorded as a decision, not a per-play patch.
+4. **Propagation.** After a retrain, unreviewed plays are re-run; reviewed and corrected plays
+   are never touched by a re-run.
+
+### In the film room
+
+An **Edit** toggle on any play. Reviewed plays show a check in the play list; corrected ones
+show a pencil; flagged ones a warning. Counters in the game header: "38 of 158 plays reviewed."
+Clicking any source chip shows the machine value next to the human one. The demo does not need
+this yet; it is scheduled as a film-room round once real output exists to correct.
+
 ## 10. The API: getting play records to clients
 
 Read-only, JSON, over the same DuckDB the chat uses. Built with FastAPI and served from the
@@ -960,6 +1017,8 @@ laptop first, a small VM later. Clients never touch Parquet unless they ask for 
 | `GET /v1/players/{gsis_id}/plays?season=` | Every play a player appears in, with their per-play summary (route, alignment, technique). |
 | `GET /v1/export/games/{game_key}.jsonl` | Bulk: one record per line, the whole game. `?since=` for incremental pulls. |
 | `GET /v1/export/games/{game_key}.parquet` | Bulk tracking for a game. |
+| `POST /v1/plays/{play_uid}/corrections` | Append a human correction (section 9.5); returns the updated record. |
+| `GET /v1/reviews?status=flagged` | Plays and fields waiting for a second look. |
 
 Errors are JSON with a stable `code`. Every response carries `schema_version` and
 `pipeline_version`. Authentication is an API key header from the first release, so a client

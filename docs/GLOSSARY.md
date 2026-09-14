@@ -113,3 +113,9 @@ For every defender, the distance to whoever has the ball, frame by frame: how cl
 
 ### Pressure
 How close the nearest pass rusher got to the quarterback during the dropback, and how long after the snap the first one arrived.
+
+### Correction
+A human fix to something the system got wrong: a formation label, a jersey number, a player's position on a frame, the snap frame. Stored beside the machine's answer, never overwritten by a re-run, and used to measure accuracy and to retrain.
+
+### Reviewed
+A play a person has looked at in the film room. Reviewed plays show a check; corrected plays a pencil; flagged plays a warning. The counter of reviewed plays per game is the honest measure of how much of the output has been checked.

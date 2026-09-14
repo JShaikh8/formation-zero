@@ -301,3 +301,25 @@ Rejected: the football reading is the product; clients should not have to rebuil
 
 **Gained / lost.** Gained a stable deliverable and a place for every future feature to land.
 Cost: a schema to maintain and version, and one more milestone.
+
+## D-021 — Corrections are first-class: the human fix is the best label we will ever get
+- date: 2026-09-13
+- status: accepted
+- tags: product, data, labelling, process
+
+**Decision.** Design the correction loop now, before any vision output exists: every field of a
+play record can be corrected in the film room, corrections are stored as versioned hand labels
+with the machine's value kept beside them, they feed evaluation and retraining, and a re-run
+never overwrites a reviewed play. Schema, storage and API endpoints are specified in the
+blueprint (section 9.5); the editing UI is built once there is real output to correct.
+
+**Why.** The owner asked whether there would be a way to teach the system where it is wrong,
+and asked before it was needed. Bolting corrections on later means every stage would have to be
+reopened to respect them; designing them in means every stage writes fields that can be
+overridden from day one.
+
+**Alternatives.** Corrections as ad-hoc edits to the output files. Rejected: unattributed, lost
+on re-run, invisible to evaluation.
+
+**Gained / lost.** Gained a path from "the model is wrong here" to "the model learned." Cost: two
+blocks in the schema and an append-only log, both trivial now.

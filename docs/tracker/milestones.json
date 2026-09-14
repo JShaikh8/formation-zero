@@ -40,6 +40,7 @@
         { "key": "GRD-77", "title": "Film room demo: hand-made example of the finished product (home, game, play list, four cameras, play record, chat, JSON)", "status": "done", "note": "Three real plays fully authored; every other play shows official data only." },
         { "key": "GRD-78", "title": "Demo review: perfect the film room UX with the owner", "status": "active", "note": "Round two shipped 2026-09-11: separation, closeness, pursuit, pressure; Film view with split; chase camera; alignment card; confidence chips; search and filters; share a moment." },
         { "key": "GRD-79", "title": "Film room: mobile layout pass", "status": "todo" },
+        { "key": "GRD-82", "title": "Film room edit mode: fix labels, identity, events and positions; review states and counters (built once real output exists)", "status": "todo", "note": "Designed 2026-09-13, blueprint 9.5, decision D-021." },
         { "key": "GRD-18", "title": "Push to GitHub and connect the Render static site", "status": "done", "note": "Live at formation-zero.onrender.com since 2026-09-12; redeploys on every push." },
         { "key": "GRD-19", "title": "Confirm whether the film carries painted LOS / first-down graphics", "status": "done", "note": "It does not. Registration anchors on the painted yard numbers plus the official line of scrimmage." },
         { "key": "GRD-20", "title": "NFL API credentials available on the build machine", "status": "todo" }
@@ -129,6 +130,7 @@
         { "key": "GRD-47", "title": "Defense: coverage family, man or zone, rotation, pass rush paths, blitz", "status": "todo" },
         { "key": "GRD-69", "title": "Events timeline and post-snap: first contact, tackle, spot, yards after catch, out of bounds", "status": "todo" },
         { "key": "GRD-70", "title": "Play record assembler: fill every section with source and confidence, validate, write JSON", "status": "todo" },
+        { "key": "GRD-80", "title": "Assembler respects corrections: apply the JSONL log, keep the machine value, never re-run a reviewed play", "status": "todo" },
         { "key": "GRD-49", "title": "Validate every module on Big Data Bowl tracking data first", "status": "todo" }
       ]
     },
@@ -187,7 +189,8 @@
         { "key": "GRD-73", "title": "Tracking endpoint: per-frame JSON or Parquet stream, by phase", "status": "todo" },
         { "key": "GRD-74", "title": "Player endpoint: every play a player appears in with their per-play summary", "status": "todo" },
         { "key": "GRD-75", "title": "Bulk export endpoints (JSONL, Parquet) with incremental pulls", "status": "todo" },
-        { "key": "GRD-76", "title": "API keys, versioned responses, stable error codes, client docs", "status": "todo" }
+        { "key": "GRD-76", "title": "API keys, versioned responses, stable error codes, client docs", "status": "todo" },
+        { "key": "GRD-81", "title": "Corrections endpoint and the flagged-review queue", "status": "todo" }
       ]
     }
   ]
