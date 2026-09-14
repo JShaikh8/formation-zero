@@ -19,28 +19,46 @@ def probe_stage(ctx: StageContext) -> None:
     write_sidecar(probe(_src(ctx)))
 
 
-@stage("proxy", per="game", config_keys=("source_name", "proxy_height"))
-def proxy_stage(ctx: StageContext) -> None:
-    """540p frame-aligned rendition of the source film."""
-    from formation_zero.ingest.proxy import make_proxy
-
-    make_proxy(_src(ctx), ctx.paths.proxy_path(ctx.config.get("source_name", "film.mp4")),
-               height=int(ctx.config.get("proxy_height", 540)))
-
-
-@stage("filmwindow", per="game", config_keys=("source_name", "filmwindow_step_s"))
+@stage("filmwindow", per="game", config_keys=("source_name", "filmwindow_step_s", "filmwindow_min_s"))
 def filmwindow_stage(ctx: StageContext) -> None:
-    """Find the coaches-film window inside the recording and write it beside the proxy."""
+    """Find the coaches-film window inside the source recording; write it beside the source."""
     import json
 
     from formation_zero.ingest.filmwindow import find
     from formation_zero.ingest.sources import FileSource
 
-    proxy = ctx.paths.proxy_path(ctx.config.get("source_name", "film.mp4"))
-    with FileSource(proxy) as src:
-        w = find(src, step_s=float(ctx.config.get("filmwindow_step_s", 2.0)))
-    out = proxy.with_suffix(".filmwindow.json")
+    src = _src(ctx)
+    with FileSource(src) as source:
+        w = find(source, step_s=float(ctx.config.get("filmwindow_step_s", 2.0)),
+                 min_duration_s=float(ctx.config.get("filmwindow_min_s", 60.0)))
+    out = src.with_name(src.name + ".filmwindow.json")
     out.write_text(json.dumps(None if w is None else w.__dict__, indent=1))
+
+
+def _window(ctx: StageContext) -> tuple[int, int | None]:
+    """Frame bounds of the film window if it has been found, else the whole file."""
+    import json
+
+    src = _src(ctx)
+    wf = src.with_name(src.name + ".filmwindow.json")
+    if wf.exists():
+        w = json.loads(wf.read_text())
+        if w:
+            return int(w["start_frame"]), int(w["end_frame"])
+    return 0, None
+
+
+@stage("proxy", per="game", config_keys=("source_name", "proxy_height"))
+def proxy_stage(ctx: StageContext) -> None:
+    """540p frame-aligned rendition of the film window (or the whole file if no window is known)."""
+    import json
+
+    from formation_zero.ingest.proxy import make_proxy
+
+    start, end = _window(ctx)
+    dst = ctx.paths.proxy_path(ctx.config.get("source_name", "film.mp4"))
+    r = make_proxy(_src(ctx), dst, height=int(ctx.config.get("proxy_height", 540)), start=start, end=end)
+    dst.with_name(dst.name + ".json").write_text(json.dumps(r, indent=1))
 
 
 @stage("records", inputs=("pbp/{game_key}.parquet",), outputs=(), per="game")
