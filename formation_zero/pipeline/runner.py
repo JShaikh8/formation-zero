@@ -88,7 +88,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if not all([a.season, a.week, a.away, a.home]):
         ap.error("--season, --week, --away and --home are required")
-    paths = GamePaths(a.data_root, a.season, a.week, a.away, a.home).ensure_dirs()
+    paths = GamePaths(a.data_root, a.season, a.week, a.away, a.home).ensure_dirs(film=False)
     config = json.loads(Path(a.config).read_text()) if a.config else {}
     runner = Runner(paths, config)
     plays = []

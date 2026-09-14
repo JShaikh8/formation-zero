@@ -112,3 +112,29 @@ def test_film_window_none_when_all_menu(make_video):
     path, _ = make_video(n=0, segments=[(200, False)])
     with FileSource(path) as src:
         assert filmwindow.find(src, step_s=1.0, min_duration_s=2.0) is None
+
+
+def test_film_root_separates_big_files_from_the_data_root(tmp_path, monkeypatch):
+    from formation_zero.data.layout import GamePaths
+    from formation_zero.ingest import register
+
+    monkeypatch.setenv("FZ_FILM_ROOT", str(tmp_path / "ssd"))
+    paths = GamePaths(tmp_path / "data", 2025, 20, "LA", "CHI")
+    assert paths.raw_dir == tmp_path / "ssd" / "2025" / "wk20" / "LA_at_CHI"
+    assert paths.pbp_path.parent == tmp_path / "data" / "pbp"
+    video = tmp_path / "download.mp4"; video.write_bytes(b"x")
+    dst = register.add(paths, video)
+    assert dst.is_symlink() and dst.resolve() == video.resolve()
+    assert paths.source_dir.parent == paths.raw_dir
+
+
+def test_unmounted_volume_is_refused(tmp_path):
+    from formation_zero.data.layout import FilmRootNotMounted, GamePaths
+    import pytest as _pytest
+
+    paths = GamePaths(tmp_path / "data", 2025, 20, "LA", "CHI", film_root="/Volumes/NoSuchDrive_fz/formation-zero")
+    assert not paths.film_root_available()
+    with _pytest.raises(FilmRootNotMounted):
+        paths.ensure_dirs(film=True)
+    paths.ensure_dirs(film=False)          # small things still work without the drive
+    assert paths.pbp_path.parent.exists()

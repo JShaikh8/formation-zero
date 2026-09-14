@@ -157,7 +157,7 @@ def main_records(argv: list[str] | None = None) -> int:
     ap.add_argument("--away", required=True); ap.add_argument("--home", required=True)
     ap.add_argument("--data-root", default="data")
     a = ap.parse_args(argv)
-    paths = GamePaths(a.data_root, a.season, a.week, a.away, a.home).ensure_dirs()
+    paths = GamePaths(a.data_root, a.season, a.week, a.away, a.home).ensure_dirs(film=False)
     pbp = pd.read_parquet(paths.pbp_path)
     players_path = paths.pbp_path.with_suffix(".players.json")
     players = json.loads(players_path.read_text()) if players_path.exists() else {}
