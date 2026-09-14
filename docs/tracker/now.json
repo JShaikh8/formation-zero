@@ -44,6 +44,11 @@
     {
       "text": "Milestone 2: measure SAM 3 throughput on the M4",
       "status": "todo"
+    },
+    {
+      "text": "Milestone 2: camera-angle classifier from contact-sheet labels (GRD-93)",
+      "status": "active",
+      "at": "2026-09-14 03:08"
     }
   ]
 }
