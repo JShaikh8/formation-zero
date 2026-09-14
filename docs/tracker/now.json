@@ -1,5 +1,5 @@
 {
-  "focus": "Round three of the film room, then milestone 1",
+  "focus": "Milestone 1: ingestion and the NFL API",
   "since": "2026-09-13",
   "plain": "Baby steps, updated as they happen. Each line is one concrete thing being done right now; done lines stay for the day so you can see the trail.",
   "steps": [
@@ -19,14 +19,6 @@
       "at": "2026-09-13 09:55"
     },
     {
-      "text": "Film room round three: mobile layout pass",
-      "status": "todo"
-    },
-    {
-      "text": "Milestone 1: install uv and Python 3.12",
-      "status": "todo"
-    },
-    {
       "text": "Designing the correction loop: how the owner fixes what the model gets wrong, and how that feeds back",
       "status": "done",
       "at": "2026-09-13 22:43"
@@ -35,6 +27,23 @@
       "text": "Designing ingestion (drop a file, press Analyze) and the live pass / post pass model",
       "status": "done",
       "at": "2026-09-13 22:45"
+    },
+    {
+      "text": "Closed milestone 0: planning done, open items moved to where they belong",
+      "status": "done",
+      "at": "2026-09-13 11:30"
+    },
+    {
+      "text": "Milestone 1: install uv and Python 3.12",
+      "status": "todo"
+    },
+    {
+      "text": "Milestone 1: probe and proxy renditions",
+      "status": "todo"
+    },
+    {
+      "text": "Milestone 1: NFL API client port",
+      "status": "todo"
     }
   ]
 }

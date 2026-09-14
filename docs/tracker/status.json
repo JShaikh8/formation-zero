@@ -9,9 +9,9 @@
   },
   "updated": "2026-09-13",
   "phase": {
-    "milestone": "M0",
-    "name": "Research, planning and decisions",
-    "plain": "We are not writing the vision code yet. We are deciding what to build, in what order, with which tools, and writing that down so the build has a map. The foundation from earlier this summer (play-by-play data, the field model, cutting the film into plays, a chat interface over the data) is done and tested."
+    "milestone": "M1",
+    "name": "Ingestion and the NFL API",
+    "plain": "Planning is closed. The first build milestone gets the film and the official data into a shape the vision code can eat: a modern Python runtime, a cheaper copy of the video, one clip per play per angle, a Python client for the NFL's own API, and version 1 of the play record schema so clients can integrate before any vision runs."
   },
   "what_it_is": [
     "Every NFL game is filmed from two high angles that show all 22 players at once. Coaches call it All-22. It is the film they actually study.",
@@ -30,14 +30,31 @@
     ]
   },
   "next_up": [
-    "Film room round three: mobile layout pass, then the owner's review notes.",
-    "Get the NFL API credentials onto the build machine so play-by-play pulls work locally.",
-    "Milestone 1: upgrade the Python runtime, cut the film into per-play clips, port the NFL API client, and publish version 1 of the play record schema (the JSON every play will be delivered as)."
+    "Install uv and Python 3.12 and move the project off system Python 3.9 (first step of milestone 1).",
+    "Get the NFL API credentials onto the build machine so the port can be tested against real payloads.",
+    "Probe and proxy: video metadata sidecar and a 540p frame-aligned rendition.",
+    "Publish version 1 of the play record schema and emit a record for every play from official data alone."
   ],
   "numbers": [
-    { "label": "Tests passing", "value": "158", "note": "run 2026-09-10" },
-    { "label": "Plays indexed on film", "value": "184", "note": "demo game, exact match to play-by-play" },
-    { "label": "Days worked", "value": "5", "note": "since 2026-06-24" },
-    { "label": "Hosted model spend", "value": "$0", "note": "nothing billed yet" }
+    {
+      "label": "Tests passing",
+      "value": "158",
+      "note": "run 2026-09-10"
+    },
+    {
+      "label": "Plays indexed on film",
+      "value": "184",
+      "note": "demo game, exact match to play-by-play"
+    },
+    {
+      "label": "Days worked",
+      "value": "5",
+      "note": "since 2026-06-24"
+    },
+    {
+      "label": "Hosted model spend",
+      "value": "$0",
+      "note": "nothing billed yet"
+    }
   ]
 }

@@ -66,9 +66,9 @@
       "id": "M0",
       "title": "Research, planning, decisions",
       "plain": "Decide what to build and in what order. Write the blueprint. Pick the tools. Set up this tracker so everyone can follow along.",
-      "status": "active",
-      "progress": 88,
-      "proof": "The architecture document exists, the tracker site exists, and every open decision has a written answer.",
+      "status": "done",
+      "progress": 100,
+      "proof": "Closed 2026-09-13: blueprint, play record contract, correction loop, ingestion and live design, tracker, film room demo, every open decision answered.",
       "stories": [
         {
           "key": "GRD-11",
@@ -123,19 +123,8 @@
         {
           "key": "GRD-78",
           "title": "Demo review: perfect the film room UX with the owner",
-          "status": "active",
-          "note": "Round two shipped 2026-09-11: separation, closeness, pursuit, pressure; Film view with split; chase camera; alignment card; confidence chips; search and filters; share a moment."
-        },
-        {
-          "key": "GRD-79",
-          "title": "Film room: mobile layout pass",
-          "status": "todo"
-        },
-        {
-          "key": "GRD-82",
-          "title": "Film room edit mode: fix labels, identity, events and positions; review states and counters (built once real output exists)",
-          "status": "todo",
-          "note": "Designed 2026-09-13, blueprint 9.5, decision D-021."
+          "status": "done",
+          "note": "Owner reviewed rounds one and two and signed off 2026-09-13. Further rounds happen as needs arise."
         },
         {
           "key": "GRD-18",
@@ -148,11 +137,6 @@
           "title": "Confirm whether the film carries painted LOS / first-down graphics",
           "status": "done",
           "note": "It does not. Registration anchors on the painted yard numbers plus the official line of scrimmage."
-        },
-        {
-          "key": "GRD-20",
-          "title": "NFL API credentials available on the build machine",
-          "status": "todo"
         }
       ]
     },
@@ -160,10 +144,16 @@
       "id": "M1",
       "title": "Ingestion and the NFL API",
       "plain": "Get the film and the official data into a shape the vision code can eat: a cheaper copy of the video, one clip per play per angle, and a Python client for the NFL's own API.",
-      "status": "todo",
+      "status": "active",
       "progress": 0,
       "proof": "Every play of the demo game exists as two clips, joined to the NFL API's play id. Re-running does nothing if nothing changed.",
       "stories": [
+        {
+          "key": "GRD-20",
+          "title": "NFL API credentials available on the build machine",
+          "status": "todo",
+          "note": "Moved from M0; needed for the NFL API port."
+        },
         {
           "key": "GRD-21",
           "title": "Install uv and Python 3.12; move the project off system Python 3.9",
@@ -479,6 +469,18 @@
       "progress": 0,
       "proof": "A free-camera replay of one full drive.",
       "stories": [
+        {
+          "key": "GRD-79",
+          "title": "Film room: mobile layout pass",
+          "status": "todo",
+          "note": "Moved from M0 on close-out; rides with the film room."
+        },
+        {
+          "key": "GRD-82",
+          "title": "Film room edit mode: fix labels, identity, events and positions; review states and counters (built once real output exists)",
+          "status": "todo",
+          "note": "Designed 2026-09-13, blueprint 9.5, decision D-021."
+        },
         {
           "key": "GRD-59",
           "title": "SAM 3D Body on keyframes",
