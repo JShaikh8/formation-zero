@@ -95,7 +95,7 @@ window.FZ = {
    },
    {
     "text": "Designing ingestion (drop a file, press Analyze) and the live pass / post pass model",
-    "status": "active",
+    "status": "done",
     "at": "2026-09-13 22:45"
    }
   ]
