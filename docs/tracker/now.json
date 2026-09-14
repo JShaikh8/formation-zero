@@ -39,14 +39,6 @@
       "at": "2026-09-13 22:57"
     },
     {
-      "text": "Milestone 1: probe and proxy renditions",
-      "status": "todo"
-    },
-    {
-      "text": "Milestone 1: NFL API client port",
-      "status": "todo"
-    },
-    {
       "text": "Milestone 1: frame source interface, video probe, proxy rendition, per-play clips, film-window detection",
       "status": "done",
       "at": "2026-09-13 23:00"
@@ -63,8 +55,12 @@
     },
     {
       "text": "Milestone 1: artifact manifests and the stage runner with skip-if-unchanged",
-      "status": "active",
-      "at": "2026-09-13 23:07"
+      "status": "done",
+      "at": "2026-09-13 23:10"
+    },
+    {
+      "text": "Milestone 1 is one item from done: the NFL API credentials on this machine",
+      "status": "todo"
     }
   ]
 }

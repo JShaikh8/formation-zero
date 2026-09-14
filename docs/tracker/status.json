@@ -30,25 +30,24 @@
     ]
   },
   "next_up": [
-    "Install uv and Python 3.12 and move the project off system Python 3.9 (first step of milestone 1).",
-    "Get the NFL API credentials onto the build machine so the port can be tested against real payloads.",
-    "Probe and proxy: video metadata sidecar and a 540p frame-aligned rendition.",
-    "Publish version 1 of the play record schema and emit a record for every play from official data alone."
+    "Get the NFL API credentials onto this machine and test the port against a real payload (the last milestone 1 item).",
+    "Run probe, proxy and film-window detection on the real demo film once it is on disk.",
+    "Milestone 2: measure SAM 3 throughput on the M4, then the labelling teacher."
   ],
   "numbers": [
     {
       "label": "Tests passing",
-      "value": "158",
-      "note": "run 2026-09-10"
+      "value": "201",
+      "note": "run 2026-09-13"
     },
     {
-      "label": "Plays indexed on film",
+      "label": "Play records written",
       "value": "184",
-      "note": "demo game, exact match to play-by-play"
+      "note": "demo game, official data, schema v1"
     },
     {
       "label": "Days worked",
-      "value": "5",
+      "value": "6",
       "note": "since 2026-06-24"
     },
     {
