@@ -268,7 +268,8 @@
         {
           "key": "GRD-30",
           "title": "Review contact sheets: one-key approve / reject / flag, saved as JSON",
-          "status": "todo"
+          "status": "active",
+          "note": "Built 2026-10-30: labelling/review.py (fz-review build / import). A self-contained HTML page beside the extracted frames, least confident first, k/d/f/u keys, decisions exported as JSON and imported to groundtruth/<game>.detections.json. Waits on the teacher's first boxes for a real run in a browser."
         },
         {
           "key": "GRD-31",
