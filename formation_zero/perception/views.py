@@ -106,7 +106,7 @@ def take_thumbnails(proxy_path, shots, first_frame: int = 0) -> np.ndarray:
     return np.array(out)
 
 
-__all__ = ["VIEWS", "thumbnail", "layout_features", "ViewModel", "emissions_from_proba", "label_views_viterbi", "take_thumbnails", "pair_by_count", "per_frame_features", "split_missed_cuts"]
+__all__ = ["VIEWS", "thumbnail", "layout_features", "ViewModel", "emissions_from_proba", "label_views_viterbi", "take_thumbnails", "pair_by_count", "per_frame_features", "split_missed_cuts", "dense_samples", "area_mean", "orientation_features"]
 
 
 def pair_by_count(shots, p_sideline, n_plays: int, *, p_same: float = 0.10):
@@ -248,3 +248,71 @@ def repair_sequence(proxy_path, shots, model, first_frame: int = 0, *, window: i
             shots[j - 1:j + 1] = [Shot(a.start, b.end - a.start, a.tilt, a.samples + b.samples, a.cut_diff)]
             log[-1]["action"] = f"merged boundary before take {j} (jump {b.cut_diff})"
     return shots, log
+
+
+DENSE_STEP = 10            # proxy frames between dense samples: 0.4 s at 25 fps, as in shots.py
+DIFF_SIZE = (64, 36)       # luma difference resolution, as in shots.py
+ORIENT_SIZE = (160, 90)    # edge-orientation resolution
+ORIENT_BINS = 18           # 10-degree bins over 0-180
+
+
+def dense_samples(proxy_path, first_frame: int = 0, step: int = DENSE_STEP):
+    """A layout thumbnail and a luma change every `step` frames across the whole proxy.
+
+    One sequential decode. This is the evidence the take aligner scores against: a camera-angle
+    reading every 0.4 s rather than one per take, so a take holding both angles shows up as a
+    change of reading inside it. Returns `(frames, diffs, thumbs, orient)`: source frame numbers,
+    mean absolute luma change since the previous sample, uint8 thumbnails of shape (n, 18, 32, 3),
+    and edge-orientation histograms of shape (n, 2 * ORIENT_BINS) (see `orientation_features`).
+    """
+    from formation_zero.ingest.sources import FileSource
+
+    frames, diffs, thumbs, orient = [], [], [], []
+    previous = None
+    with FileSource(proxy_path) as src:
+        for fr in src.iter_frames(0, None, step=step):
+            small = area_mean(fr.image, *DIFF_SIZE).mean(axis=2)
+            diffs.append(float(np.abs(small - previous).mean()) if previous is not None else 0.0)
+            previous = small
+            frames.append(fr.index + first_frame)
+            thumbs.append(area_mean(fr.image, *THUMB).round().astype(np.uint8))
+            orient.append(orientation_features(area_mean(fr.image, *ORIENT_SIZE).mean(axis=2)))
+    return (np.array(frames), np.array(diffs, dtype=np.float32), np.array(thumbs),
+            np.array(orient, dtype=np.float32))
+
+
+def orientation_features(gray: np.ndarray, bins: int = ORIENT_BINS) -> np.ndarray:
+    """Magnitude-weighted histogram of edge-line orientation, for the top and bottom halves.
+
+    The two cameras differ in geometry before anything else: from behind the end zone the yard
+    lines run across the frame and the goalposts stand upright; from the sideline the yard lines
+    rake diagonally. Colour layout misses that when paint dominates (a red end zone fooled it on
+    the clear game), and a single mean angle misses it when snow hides the lines. A histogram per
+    half keeps both. Each half sums to 1.
+    """
+    gy, gx = np.gradient(gray.astype(np.float32))
+    mag = np.hypot(gx, gy)
+    ang = (np.degrees(np.arctan2(gy, gx)) + 90.0) % 180.0       # line orientation, 0 = horizontal
+    out = []
+    h = gray.shape[0] // 2
+    for rows in (slice(0, h), slice(h, None)):
+        hist, _ = np.histogram(ang[rows], bins=bins, range=(0.0, 180.0), weights=mag[rows])
+        out.append(hist / max(float(hist.sum()), 1e-6))
+    return np.concatenate(out).astype(np.float32)
+
+
+def area_mean(image: np.ndarray, width: int, height: int) -> np.ndarray:
+    """Downscale by averaging whole blocks of pixels (float, 0-255).
+
+    Picking single pixels instead aliases: on a snowy field it made the frame-to-frame change
+    jumpy everywhere and buried a real cut under its neighbours. The 960x540 proxy divides
+    exactly into the sizes used here; anything else falls back to averaging nearest rows/columns.
+    """
+    h, w = image.shape[:2]
+    img = image.astype(np.float32)
+    if h % height == 0 and w % width == 0:
+        return img.reshape(height, h // height, width, w // width, -1).mean(axis=(1, 3))
+    ys = (np.arange(height + 1) * h / height).astype(int)
+    xs = (np.arange(width + 1) * w / width).astype(int)
+    return np.array([[img[ys[i]:ys[i + 1], xs[j]:xs[j + 1]].mean(axis=(0, 1)) for j in range(width)]
+                     for i in range(height)])

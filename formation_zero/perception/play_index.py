@@ -45,7 +45,7 @@ from formation_zero.perception.shots import Shot
 VIEWS = ("SIDELINE", "ENDZONE")
 
 # Play types that put a snap or a kick on film: shared with the puller so both count the same.
-from formation_zero.data.playtypes import FILMABLE_PLAY_TYPES  # noqa: E402
+from formation_zero.data.playtypes import FILMABLE_PLAY_TYPES, maybe_on_film, on_film
 
 # Probability that two adjacent shots share a view. Ground truth says this is near zero; a small
 # non-zero value keeps a genuine repeat from being impossible rather than merely unlikely.
@@ -163,8 +163,24 @@ def pair_plays(shots: list[Shot], views: list[str]) -> list[Play]:
 
 
 def filmable(pbp):
-    """The play-by-play rows that put something on film, in order."""
+    """The counted plays (each has a play_uid), in order."""
     return pbp[pbp["play_type"].isin(FILMABLE_PLAY_TYPES)].reset_index(drop=True)
+
+
+def on_film_rows(pbp):
+    """Every row whose play is on film, in order: the counted plays plus nullified snaps."""
+    return pbp[[on_film(t, d) for t, d in zip(pbp["play_type"], pbp["desc"])]].reset_index(drop=True)
+
+
+def film_rows(pbp):
+    """Every row whose play is or may be on film, in order, with `film_optional` set on the maybes.
+
+    The maybes are pre-snap fouls (see `maybe_on_film`); the aligner decides from the film itself.
+    """
+    keep = [on_film(t, d) or maybe_on_film(t, d) for t, d in zip(pbp["play_type"], pbp["desc"])]
+    rows = pbp[keep].reset_index(drop=True)
+    rows["film_optional"] = [maybe_on_film(t, d) for t, d in zip(rows["play_type"], rows["desc"])]
+    return rows
 
 
 def join(plays: list[Play], pbp, fps: float):
@@ -176,10 +192,10 @@ def join(plays: list[Play], pbp, fps: float):
     """
     import pandas as pd
 
-    rows = filmable(pbp)
+    rows = on_film_rows(pbp)
     if len(plays) != len(rows):
         raise ValueError(
-            f"{len(plays)} plays on film but {len(rows)} filmable rows in play-by-play. "
+            f"{len(plays)} plays on film but {len(rows)} on-film rows in play-by-play. "
             "The ordered join is only valid when these agree; check shot detection and "
             "view labelling before using the index.")
 
@@ -189,6 +205,7 @@ def join(plays: list[Play], pbp, fps: float):
         "play_index": rows.iloc[p.index]["play_index"],
         "film_play_index": p.index,
         "play_type": rows.iloc[p.index]["play_type"],
+        "nullified": rows.iloc[p.index]["play_type"] == "no_play",
         "desc": rows.iloc[p.index]["desc"],
         "start_s": round(p.start, 3),
         "end_s": round(p.end, 3),
@@ -271,8 +288,22 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
-__all__ = ["Play", "VIEWS", "FILMABLE_PLAY_TYPES", "P_SAME_VIEW", "kde_logpdf", "label_views",
-           "merge_same_view", "pair_plays", "filmable", "join", "emissions_from", "build"]
+__all__ = [
+    "FILMABLE_PLAY_TYPES",
+    "P_SAME_VIEW",
+    "VIEWS",
+    "Play",
+    "build",
+    "emissions_from",
+    "film_rows",
+    "filmable",
+    "join",
+    "kde_logpdf",
+    "label_views",
+    "merge_same_view",
+    "on_film_rows",
+    "pair_plays",
+]
 
 
 if __name__ == "__main__":

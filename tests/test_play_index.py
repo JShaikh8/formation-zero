@@ -7,13 +7,21 @@ assuming which angle leads, and the join refuses to produce a table at all when 
 play list disagree on how many plays happened.
 """
 
-import numpy as np
 import pandas as pd
 import pytest
 
+from formation_zero.data.playtypes import maybe_on_film, on_film, snapped
 from formation_zero.perception.play_index import (
-    FILMABLE_PLAY_TYPES, Play, emissions_from, filmable, join, kde_logpdf, label_views,
-    merge_same_view, pair_plays,
+    FILMABLE_PLAY_TYPES,
+    emissions_from,
+    film_rows,
+    filmable,
+    join,
+    kde_logpdf,
+    label_views,
+    merge_same_view,
+    on_film_rows,
+    pair_plays,
 )
 from formation_zero.perception.shots import Shot
 
@@ -192,3 +200,48 @@ def test_join_carries_frame_numbers_for_both_angles():
     row = join(plays, pbp_frame(["pass"]), fps=25.0).iloc[0]
     assert row["sideline_start_frame"] == 0
     assert row["endzone_start_frame"] == 350
+
+
+# ---- what is on film ------------------------------------------------------------------------
+
+NULLIFIED_PASS = ("(Shotgun) M.Stafford pass incomplete short middle to P.Nacua.\n"
+                  "PENALTY on LAR-W.McClendon, Offensive Holding, 10 yards, enforced at LAR 30 - No Play.")
+FALSE_START = "PENALTY on LAR-K.Dotson, False Start, 5 yards, enforced at SF 19 - No Play."
+
+
+@pytest.mark.parametrize("desc,expected", [
+    (NULLIFIED_PASS, True),
+    (FALSE_START, False),
+    ("(4:10) (Shotgun) PENALTY on CHI-15-R.Odunze, False Start, 5 yards, enforced at CHI 35 - No Play.", False),
+    ("(4:22) 9-M.Stafford pass incomplete short right to 84-C.Parkinson. PENALTY on CHI-26-N.Wright, "
+     "Illegal Use of Hands, 5 yards, enforced at CHI 41 - No Play.", True),
+    ("", False),
+])
+def test_a_nullified_play_is_on_film_only_if_it_was_snapped(desc, expected):
+    assert snapped(desc) is expected
+    assert on_film("no_play", desc) is expected
+
+
+def test_on_film_rows_keep_nullified_snaps_but_not_presnap_fouls():
+    frame = pd.DataFrame({"play_type": ["pass", "no_play", "timeout", "no_play", "punt"],
+                          "desc": ["a pass", NULLIFIED_PASS, "Timeout", FALSE_START, "a punt"]})
+    assert list(on_film_rows(frame)["desc"]) == ["a pass", NULLIFIED_PASS, "a punt"]
+    assert list(filmable(frame)["desc"]) == ["a pass", "a punt"]      # the counted plays are unchanged
+
+
+@pytest.mark.parametrize("ptype,desc,expected", [
+    ("no_play", FALSE_START, True),          # pre-snap foul: on film in some games
+    ("qb_kneel", "M.Stafford kneels to LA 26 for -1 yards.", True),
+    ("no_play", NULLIFIED_PASS, False),      # snapped: always on film
+    ("pass", "a pass", False),
+])
+def test_presnap_fouls_and_kneels_may_or_may_not_be_on_film(ptype, desc, expected):
+    assert maybe_on_film(ptype, desc) is expected
+
+
+def test_film_rows_flag_the_optional_ones():
+    frame = pd.DataFrame({"play_type": ["pass", "no_play", "timeout", "qb_kneel"],
+                          "desc": ["a pass", FALSE_START, "Timeout", "kneels"]})
+    rows = film_rows(frame)
+    assert list(rows["desc"]) == ["a pass", FALSE_START, "kneels"]
+    assert list(rows["film_optional"]) == [False, True, True]
