@@ -10,8 +10,16 @@ indices into the teacher's detections file]}. The review page shows them already
 click restores a box the mask got wrong (`fz-review build --suggest`). Nothing is deleted.
 
 Measured on the GRD-37 sample: on clear-game kickoffs the mask takes out both benches (16 of 52
-people a frame); on the snow game it rarely has an answer, so it suggests little. Of 274 removals
-checked by eye, 20 were players on the field, all on three frames with a false boundary.
+people a frame). Of 274 removals checked by eye, 20 were players on the field, all on three frames
+with a false boundary.
+
+Checked again on the full runs (2026-10-30), and narrowed: suggestions are made on sideline-camera
+frames only, and never for more than MAX_SHARE of a frame's boxes. On 12 random clear-game frames
+with suggestions, 11 removed only sideline people (some benches stay); the twelfth, an end-zone
+frame, removed three players in the end zone. End-zone frames often take the end-zone paint for a
+boundary: 25 of 96 would have lost more than half their boxes, against 13 of 597 sideline frames
+(kickoffs, where half really are benches, sit just under the cap). The snow game is left out: on 8
+random frames, 4 had players on the field suggested away, one 13 of its 22.
 """
 
 from __future__ import annotations
@@ -20,6 +28,9 @@ import json
 import time
 
 import numpy as np
+
+ANGLES = ("sideline",)      # where the far sideline is found reliably (GRD-37: 17 of 22)
+MAX_SHARE = 0.5             # a frame that would lose more of its boxes than this gets no suggestions
 
 
 def foot_outside(boxes: list[dict], mask: np.ndarray) -> list[int]:
@@ -41,13 +52,13 @@ def suggest(paths, detections: dict, samples: dict[int, dict]) -> dict[str, list
 
     out = {}
     for k, (f, boxes) in enumerate(detections["frames"].items(), 1):
-        if not boxes:
+        if not boxes or samples[int(f)]["angle"] not in ANGLES:
             continue
         img = np.asarray(Image.open(paths.frames_dir / f"{int(f):06d}.jpg").convert("RGB"))
         mask = field_mask(img, samples[int(f)]["angle"])
         if mask is not None:
             gone = foot_outside(boxes, mask)
-            if gone:
+            if gone and len(gone) <= MAX_SHARE * len(boxes):
                 out[f] = gone
         if k % 250 == 0:
             print(f"  {k}/{len(detections['frames'])}: {len(out)} frames with suggestions", flush=True)
@@ -78,7 +89,7 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
-__all__ = ["foot_outside", "suggest"]
+__all__ = ["ANGLES", "MAX_SHARE", "foot_outside", "suggest"]
 
 
 if __name__ == "__main__":
