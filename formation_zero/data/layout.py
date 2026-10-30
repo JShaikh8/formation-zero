@@ -89,6 +89,11 @@ class GamePaths:
         return self.angle_dir(angle) / f"p{play_index:03d}.mp4"
 
     @property
+    def frames_dir(self) -> Path:
+        """Sampled source frames for labelling, named by source frame number — see `labelling.sample`."""
+        return self.raw_dir / "frames"
+
+    @property
     def clips_manifest_path(self) -> Path:
         """Clip frame 0 -> source frame, per clip."""
         return self.root / "derived" / "shots" / f"{self.game_key}.clips.parquet"
@@ -128,6 +133,11 @@ class GamePaths:
     @property
     def labels_dir(self) -> Path:
         return self.root / "derived" / "labels"
+
+    @property
+    def samples_path(self) -> Path:
+        """Frames picked for the teacher to label — see `formation_zero.labelling.sample`."""
+        return self.labels_dir / f"{self.game_key}.samples.json"
 
     @property
     def plays_index_path(self) -> Path:
