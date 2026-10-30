@@ -36,6 +36,15 @@
     {
       "text": "Milestone 2: measure SAM 3 throughput on the M4",
       "status": "todo"
+    },
+    {
+      "text": "Spike GRD-95: SAM 3D Body fits All-22 players at about 1 s each; 25 of 27 crops good or rough, fitted bodies for everyone",
+      "status": "done",
+      "at": "2026-10-30 01:45"
+    },
+    {
+      "text": "Get a 1080p copy of 49ers–Rams: the drive's copy is 576p, and wide-shot players are mostly missed at that size",
+      "status": "todo"
     }
   ]
 }

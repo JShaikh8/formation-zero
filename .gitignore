@@ -32,3 +32,7 @@ venv/
 
 # OS
 .DS_Store
+
+# Spike environments (GRD-95): own venv, vendored upstream code
+.venv-sam3d/
+.vendor/

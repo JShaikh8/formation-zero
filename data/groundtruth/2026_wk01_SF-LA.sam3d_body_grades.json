@@ -1,0 +1,491 @@
+{
+ "game_key": "2026_wk01_SF-LA",
+ "scale": {
+  "g": "good",
+  "r": "rough",
+  "b": "broken",
+  "x": "not a player"
+ },
+ "grades": [
+  {
+   "id": "c01",
+   "frame": 1727,
+   "view": "SIDELINE",
+   "bbox": [
+    662.5,
+    278.0,
+    681.0,
+    328.7
+   ],
+   "height_px": 50.7,
+   "overlap": 0.045,
+   "crowded": false,
+   "grade": "good"
+  },
+  {
+   "id": "c02",
+   "frame": 45589,
+   "view": "SIDELINE",
+   "bbox": [
+    264.4,
+    209.0,
+    335.6,
+    289.5
+   ],
+   "height_px": 80.5,
+   "overlap": 0.0,
+   "crowded": false,
+   "grade": "good"
+  },
+  {
+   "id": "c03",
+   "frame": 3391,
+   "view": "SIDELINE",
+   "bbox": [
+    35.8,
+    267.2,
+    99.6,
+    364.7
+   ],
+   "height_px": 97.5,
+   "overlap": 0.0,
+   "crowded": false,
+   "grade": "good"
+  },
+  {
+   "id": "c04",
+   "frame": 48428,
+   "view": "SIDELINE",
+   "bbox": [
+    456.1,
+    257.4,
+    545.6,
+    363.9
+   ],
+   "height_px": 106.6,
+   "overlap": 0.038,
+   "crowded": false,
+   "grade": "rough"
+  },
+  {
+   "id": "c05",
+   "frame": 45589,
+   "view": "SIDELINE",
+   "bbox": [
+    929.2,
+    232.3,
+    985.7,
+    349.3
+   ],
+   "height_px": 117.0,
+   "overlap": 0.0,
+   "crowded": false,
+   "grade": "good"
+  },
+  {
+   "id": "c06",
+   "frame": 3391,
+   "view": "SIDELINE",
+   "bbox": [
+    914.5,
+    3.2,
+    968.2,
+    130.0
+   ],
+   "height_px": 126.8,
+   "overlap": 0.0,
+   "crowded": false,
+   "grade": "good"
+  },
+  {
+   "id": "c07",
+   "frame": 8195,
+   "view": "SIDELINE",
+   "bbox": [
+    829.7,
+    266.0,
+    886.0,
+    409.0
+   ],
+   "height_px": 143.0,
+   "overlap": 0.0,
+   "crowded": false,
+   "grade": "good"
+  },
+  {
+   "id": "c08",
+   "frame": 24751,
+   "view": "SIDELINE",
+   "bbox": [
+    535.0,
+    182.8,
+    610.3,
+    356.3
+   ],
+   "height_px": 173.5,
+   "overlap": 0.0,
+   "crowded": false,
+   "grade": "rough"
+  },
+  {
+   "id": "c09",
+   "frame": 24643,
+   "view": "SIDELINE",
+   "bbox": [
+    339.3,
+    249.3,
+    390.6,
+    308.5
+   ],
+   "height_px": 59.2,
+   "overlap": 0.465,
+   "crowded": true,
+   "grade": "rough"
+  },
+  {
+   "id": "c10",
+   "frame": 45589,
+   "view": "SIDELINE",
+   "bbox": [
+    635.1,
+    264.1,
+    695.3,
+    350.9
+   ],
+   "height_px": 86.9,
+   "overlap": 0.495,
+   "crowded": true,
+   "grade": "good"
+  },
+  {
+   "id": "c11",
+   "frame": 48337,
+   "view": "SIDELINE",
+   "bbox": [
+    193.3,
+    323.6,
+    249.4,
+    416.6
+   ],
+   "height_px": 93.0,
+   "overlap": 0.283,
+   "crowded": true,
+   "grade": "rough"
+  },
+  {
+   "id": "c12",
+   "frame": 3391,
+   "view": "SIDELINE",
+   "bbox": [
+    227.9,
+    217.3,
+    306.0,
+    315.9
+   ],
+   "height_px": 98.6,
+   "overlap": 0.257,
+   "crowded": true,
+   "grade": "rough"
+  },
+  {
+   "id": "c13",
+   "frame": 8195,
+   "view": "SIDELINE",
+   "bbox": [
+    98.2,
+    240.1,
+    165.6,
+    348.3
+   ],
+   "height_px": 108.2,
+   "overlap": 0.492,
+   "crowded": true,
+   "grade": "good"
+  },
+  {
+   "id": "c14",
+   "frame": 48337,
+   "view": "SIDELINE",
+   "bbox": [
+    559.9,
+    313.9,
+    603.5,
+    431.6
+   ],
+   "height_px": 117.8,
+   "overlap": 0.267,
+   "crowded": true,
+   "grade": "good"
+  },
+  {
+   "id": "c15",
+   "frame": 48337,
+   "view": "SIDELINE",
+   "bbox": [
+    587.7,
+    345.4,
+    637.2,
+    475.5
+   ],
+   "height_px": 130.1,
+   "overlap": 0.323,
+   "crowded": true,
+   "grade": "not a player"
+  },
+  {
+   "id": "c16",
+   "frame": 24751,
+   "view": "SIDELINE",
+   "bbox": [
+    298.1,
+    259.6,
+    421.6,
+    421.9
+   ],
+   "height_px": 162.3,
+   "overlap": 0.525,
+   "crowded": true,
+   "grade": "rough"
+  },
+  {
+   "id": "c17",
+   "frame": 48644,
+   "view": "ENDZONE",
+   "bbox": [
+    76.6,
+    170.1,
+    101.9,
+    213.0
+   ],
+   "height_px": 43.0,
+   "overlap": 0.0,
+   "crowded": false,
+   "grade": "rough"
+  },
+  {
+   "id": "c18",
+   "frame": 25206,
+   "view": "ENDZONE",
+   "bbox": [
+    511.9,
+    226.5,
+    532.2,
+    279.7
+   ],
+   "height_px": 53.3,
+   "overlap": 0.0,
+   "crowded": false,
+   "grade": "good"
+  },
+  {
+   "id": "c19",
+   "frame": 4577,
+   "view": "ENDZONE",
+   "bbox": [
+    264.4,
+    5.9,
+    292.7,
+    73.1
+   ],
+   "height_px": 67.2,
+   "overlap": 0.0,
+   "crowded": false,
+   "grade": "not a player"
+  },
+  {
+   "id": "c20",
+   "frame": 48644,
+   "view": "ENDZONE",
+   "bbox": [
+    205.0,
+    447.6,
+    233.5,
+    519.4
+   ],
+   "height_px": 71.8,
+   "overlap": 0.0,
+   "crowded": false,
+   "grade": "not a player"
+  },
+  {
+   "id": "c21",
+   "frame": 4577,
+   "view": "ENDZONE",
+   "bbox": [
+    566.7,
+    268.8,
+    627.3,
+    346.4
+   ],
+   "height_px": 77.6,
+   "overlap": 0.0,
+   "crowded": false,
+   "grade": "good"
+  },
+  {
+   "id": "c22",
+   "frame": 25278,
+   "view": "ENDZONE",
+   "bbox": [
+    845.9,
+    317.7,
+    888.8,
+    409.6
+   ],
+   "height_px": 91.9,
+   "overlap": 0.024,
+   "crowded": false,
+   "grade": "good"
+  },
+  {
+   "id": "c23",
+   "frame": 8515,
+   "view": "ENDZONE",
+   "bbox": [
+    366.5,
+    448.8,
+    402.2,
+    565.8
+   ],
+   "height_px": 117.0,
+   "overlap": 0.0,
+   "crowded": false,
+   "grade": "good"
+  },
+  {
+   "id": "c24",
+   "frame": 23878,
+   "view": "ENDZONE",
+   "bbox": [
+    704.6,
+    351.4,
+    768.0,
+    501.8
+   ],
+   "height_px": 150.4,
+   "overlap": 0.0,
+   "crowded": false,
+   "grade": "good"
+  },
+  {
+   "id": "c25",
+   "frame": 46630,
+   "view": "ENDZONE",
+   "bbox": [
+    516.6,
+    250.8,
+    579.7,
+    304.2
+   ],
+   "height_px": 53.3,
+   "overlap": 0.259,
+   "crowded": true,
+   "grade": "rough"
+  },
+  {
+   "id": "c26",
+   "frame": 25206,
+   "view": "ENDZONE",
+   "bbox": [
+    187.7,
+    222.2,
+    211.6,
+    278.8
+   ],
+   "height_px": 56.7,
+   "overlap": 0.283,
+   "crowded": true,
+   "grade": "good"
+  },
+  {
+   "id": "c27",
+   "frame": 46751,
+   "view": "ENDZONE",
+   "bbox": [
+    794.0,
+    235.8,
+    829.6,
+    297.2
+   ],
+   "height_px": 61.4,
+   "overlap": 0.474,
+   "crowded": true,
+   "grade": "broken"
+  },
+  {
+   "id": "c28",
+   "frame": 4577,
+   "view": "ENDZONE",
+   "bbox": [
+    437.1,
+    224.6,
+    488.6,
+    307.6
+   ],
+   "height_px": 83.0,
+   "overlap": 0.322,
+   "crowded": true,
+   "grade": "broken"
+  },
+  {
+   "id": "c29",
+   "frame": 46630,
+   "view": "ENDZONE",
+   "bbox": [
+    627.0,
+    279.5,
+    682.4,
+    365.6
+   ],
+   "height_px": 86.2,
+   "overlap": 0.542,
+   "crowded": true,
+   "grade": "rough"
+  },
+  {
+   "id": "c30",
+   "frame": 46751,
+   "view": "ENDZONE",
+   "bbox": [
+    812.7,
+    235.2,
+    850.2,
+    325.7
+   ],
+   "height_px": 90.4,
+   "overlap": 0.307,
+   "crowded": true,
+   "grade": "rough"
+  },
+  {
+   "id": "c31",
+   "frame": 25278,
+   "view": "ENDZONE",
+   "bbox": [
+    303.2,
+    288.6,
+    338.7,
+    388.5
+   ],
+   "height_px": 99.9,
+   "overlap": 0.342,
+   "crowded": true,
+   "grade": "good"
+  },
+  {
+   "id": "c32",
+   "frame": 8515,
+   "view": "ENDZONE",
+   "bbox": [
+    289.1,
+    434.6,
+    329.0,
+    560.6
+   ],
+   "height_px": 126.0,
+   "overlap": 0.288,
+   "crowded": true,
+   "grade": "not a player"
+  }
+ ]
+}
