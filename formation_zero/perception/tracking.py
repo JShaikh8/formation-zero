@@ -52,7 +52,9 @@ def track_take(source, start: int, end: int, detector: Detector, tracker: Tracke
         if len(buf) == batch:
             flush()
     flush()
-    return pd.DataFrame(rows, columns=COLUMNS)
+    from formation_zero.perception.track.bytetrack import vote_labels
+
+    return vote_labels(pd.DataFrame(rows, columns=COLUMNS))
 
 
 def fit_teams(paths, *, frames: int = TEAM_FIT_FRAMES, seed: int = 0):
@@ -153,6 +155,7 @@ def main(argv: list[str] | None = None) -> int:
 
     from formation_zero.data.layout import GamePaths
     from formation_zero.perception.detect.yolo import YoloDetector
+    from formation_zero.perception.track.bytetrack import DETECT_CONF
 
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     for k in ("--season", "--week"):
@@ -173,7 +176,7 @@ def main(argv: list[str] | None = None) -> int:
     index = pd.read_parquet(paths.play_index_path)
     plays = index[index["play_index"].astype(int).isin(_plays(a.plays))]
     teams = None if a.no_teams else fit_teams(paths)
-    run(paths, plays, YoloDetector(a.weights, imgsz=a.imgsz, device=a.device), overlay=a.overlay, teams=teams)
+    run(paths, plays, YoloDetector(a.weights, imgsz=a.imgsz, conf=DETECT_CONF, device=a.device), overlay=a.overlay, teams=teams)
     return 0
 
 

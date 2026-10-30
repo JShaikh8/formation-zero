@@ -1,8 +1,16 @@
 """ByteTrack (supervision) over per-frame detections, and the per-track summary the router reads.
 
-One tracker per label, so a referee track never takes over a player's. Association is on boxes
-alone; a player hidden for longer than `lost_s` comes back under a new id, which `summarise`
-counts as a fragment.
+Players and referees share one tracker, so a player the detector calls a referee for a few frames
+keeps his id; `vote_labels` then gives each track the label most of its boxes carry. The ball, if
+detected, has its own. A player hidden for longer than `lost_s` comes back under a new id, which
+`summarise` counts as a fragment.
+
+Settings measured on five 49ers-Rams takes (2026-10-30, round-0 student): boxes down to 0.1 kept
+for ByteTrack's second, low-score match and tracks started at 0.5 (the teacher's cut) halved the
+track count against 0.25 for both; matching at IoU 0.1 instead of 0.2 cut restarts beside a just-
+ended track by two thirds (small boxes in a moving camera); one tracker for both labels and a longer
+lost buffer changed little. BoT-SORT's camera-motion compensation (ultralytics) did no better.
+About half the remaining track starts and ends are people leaving the frame as the camera moves.
 
 supervision dropped ByteTrack in 0.30 (pyproject pins below it). Runs in the ML environment.
 """
@@ -14,47 +22,63 @@ import pandas as pd
 
 from formation_zero.perception.base import Detections
 
-LOST_S = 1.2            # how long a lost track waits to be matched again
+LOST_S = 2.5            # how long a lost track waits to be matched again
+ACTIVATION = 0.5        # boxes above this match first and may start tracks; down to DETECT_CONF match second
+MATCH = 0.9             # supervision's matching threshold is 1 - IoU: 0.9 accepts IoU of 0.1
+DETECT_CONF = 0.1       # the detector confidence a tracking run asks for
+GROUPS = {"player": "people", "referee": "people"}      # labels tracked together
 FRAGMENT_GAP_S = 2.0    # a track starting this soon after another ended, and near it, continues it
 FRAGMENT_DIST = 1.5     # "near": within this many box heights
 
 
 class ByteTracker:
-    def __init__(self, fps: float, *, activation: float = 0.25, lost_s: float = LOST_S, match: float = 0.8):
-        self.fps, self.activation, self.lost_s, self.match = fps, activation, lost_s, match
+    def __init__(self, fps: float, *, activation: float = ACTIVATION, lost_s: float = LOST_S, match: float = MATCH,
+                 groups: dict[str, str] = GROUPS):
+        self.fps, self.activation, self.lost_s, self.match, self.groups = fps, activation, lost_s, match, groups
         self.reset()
 
     def reset(self) -> None:
-        self._by_label: dict[str, object] = {}
+        self._by_group: dict[str, object] = {}
         self._ids: dict[tuple[str, int], int] = {}
 
-    def _tracker(self, label: str):
+    def _tracker(self, group: str):
         import supervision as sv
 
-        if label not in self._by_label:
-            self._by_label[label] = sv.ByteTrack(track_activation_threshold=self.activation,
+        if group not in self._by_group:
+            self._by_group[group] = sv.ByteTrack(track_activation_threshold=self.activation,
                                                  lost_track_buffer=round(self.lost_s * self.fps),
                                                  minimum_matching_threshold=self.match,
                                                  frame_rate=round(self.fps))
-        return self._by_label[label]
+        return self._by_group[group]
 
     def update(self, detections: Detections) -> Detections:
-        """Tracked boxes this frame, with ids unique across labels; boxes ByteTrack holds back are dropped."""
+        """Tracked boxes this frame, each with its detected label and an id unique across groups;
+        boxes ByteTrack holds back are dropped."""
         import supervision as sv
 
+        group_of = np.array([self.groups.get(str(x), str(x)) for x in detections.label], dtype=object)
         parts = []
-        for label in sorted({str(x) for x in detections.label} | set(self._by_label)):
-            mine = detections[detections.label == label] if len(detections) else Detections.empty()
+        for group in sorted(set(group_of) | set(self._by_group)):
+            mine = detections[group_of == group] if len(detections) else Detections.empty()
             sd = sv.Detections(xyxy=mine.xyxy.reshape(-1, 4), confidence=mine.confidence,
-                               class_id=np.zeros(len(mine), dtype=int))
-            out = self._tracker(label).update_with_detections(sd)
-            ids = np.array([self._ids.setdefault((label, int(t)), len(self._ids) + 1) for t in out.tracker_id], dtype=int)
+                               class_id=np.arange(len(mine)))          # class_id carries the row back
+            out = self._tracker(group).update_with_detections(sd)
+            ids = np.array([self._ids.setdefault((group, int(t)), len(self._ids) + 1) for t in out.tracker_id], dtype=int)
             parts.append(Detections(out.xyxy.astype(float), out.confidence.astype(float),
-                                    np.full(len(out), label, dtype=object), ids))
+                                    mine.label[out.class_id] if len(out) else np.zeros(0, dtype=object), ids))
         if not parts:
             return Detections(np.zeros((0, 4)), np.zeros(0), np.zeros(0, dtype=object), np.zeros(0, dtype=int))
         return Detections(np.concatenate([p.xyxy for p in parts]), np.concatenate([p.confidence for p in parts]),
                           np.concatenate([p.label for p in parts]), np.concatenate([p.track_id for p in parts]))
+
+
+def vote_labels(rows: pd.DataFrame) -> pd.DataFrame:
+    """Each track's boxes all take the label with the most summed confidence among them."""
+    if rows.empty:
+        return rows
+    label_of = rows.groupby(["track_id", "label"])["conf"].sum().reset_index().sort_values("conf") \
+        .drop_duplicates("track_id", keep="last").set_index("track_id")["label"]
+    return rows.assign(label=rows["track_id"].map(label_of))
 
 
 def summarise(rows: pd.DataFrame, fps: float) -> tuple[pd.DataFrame, dict]:
@@ -90,4 +114,4 @@ def summarise(rows: pd.DataFrame, fps: float) -> tuple[pd.DataFrame, dict]:
     return t, take
 
 
-__all__ = ["ByteTracker", "summarise"]
+__all__ = ["DETECT_CONF", "ByteTracker", "summarise", "vote_labels"]

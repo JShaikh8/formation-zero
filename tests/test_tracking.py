@@ -1,11 +1,11 @@
-"""Tracks from detections: the per-label ByteTrack wrapper and the per-track summary."""
+"""Tracks from detections: the ByteTrack wrapper, the per-track label vote, and the per-track summary."""
 
 import numpy as np
 import pandas as pd
 import pytest
 
 from formation_zero.perception.base import Detections
-from formation_zero.perception.track.bytetrack import summarise
+from formation_zero.perception.track.bytetrack import summarise, vote_labels
 
 
 def rows(track_id, frames, x, label="player", h=40.0, conf=0.8):
@@ -34,7 +34,7 @@ def test_detections_index_like_arrays():
     assert len(d[d.label == "referee"]) == 1 and d[d.confidence > 0.6].label.tolist() == ["player"]
 
 
-def test_tracker_keeps_ids_per_label_and_never_shares_them():
+def test_tracker_keeps_ids_and_never_shares_them():
     pytest.importorskip("supervision")
     from formation_zero.perception.track.bytetrack import ByteTracker
 
@@ -47,6 +47,23 @@ def test_tracker_keeps_ids_per_label_and_never_shares_them():
         seen.append(dict(zip(out.label, out.track_id)))
     assert seen[-1]["player"] != seen[-1]["referee"]
     assert all(s == seen[-1] for s in seen[1:])
+
+
+def test_a_player_called_a_referee_for_a_frame_keeps_his_id():
+    pytest.importorskip("supervision")
+    from formation_zero.perception.track.bytetrack import ByteTracker
+
+    t = ByteTracker(fps=25)
+    ids = []
+    for i, label in enumerate(["player"] * 4 + ["referee"] + ["player"] * 3):
+        out = t.update(Detections(np.array([[10 + i, 10, 30 + i, 60]], float), np.array([0.9]), np.array([label], dtype=object)))
+        ids.append((int(out.track_id[0]), out.label[0]) if len(out) else None)
+    assert len({i for i, _ in ids[1:]}) == 1 and ids[4][1] == "referee"
+
+
+def test_tracks_take_the_label_most_of_their_boxes_carry():
+    df = pd.DataFrame(rows(1, range(5), 50) + rows(1, [5], 50, label="referee", conf=0.9) + rows(2, range(3), 200, label="referee"))
+    assert vote_labels(df).groupby("track_id")["label"].unique().map(list).to_dict() == {1: ["player"], 2: ["referee"]}
 
 
 class FakeSource:
