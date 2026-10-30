@@ -279,7 +279,8 @@
         {
           "key": "GRD-32",
           "title": "Measure SAM 3 throughput on the M4 (the number the whole plan assumes)",
-          "status": "todo"
+          "status": "done",
+          "note": "Done 2026-10-30: scripts/spikes/sam3_throughput. Runs on MPS with four in-process shims. 0.29 fps rested, 0.16 settled (fanless), so ~236 h per game and ~3.5 h for 2,000 labelling frames; 1080p and 576p cost the same (1008x1008 inside). Players and referees usable, football not."
         }
       ]
     },

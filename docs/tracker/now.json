@@ -34,8 +34,9 @@
       "at": "2026-10-30 03:40"
     },
     {
-      "text": "Milestone 2: measure SAM 3 throughput on the M4",
-      "status": "todo"
+      "text": "SAM 3 on the M4: 0.16 frames/s sustained (fanless Air), 236 h a game; 3.5 h for the 2,000-frame labelling set",
+      "status": "done",
+      "at": "2026-10-30 04:45"
     },
     {
       "text": "Spike GRD-95: SAM 3D Body fits All-22 players at about 1 s each; 25 of 27 crops good or rough, fitted bodies for everyone",

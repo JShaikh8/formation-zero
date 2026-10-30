@@ -1,0 +1,1137 @@
+{
+ "story": "GRD-32",
+ "frames": {
+  "1080p": {
+   "game": "2025_wk20_LA-CHI",
+   "source": "2025/wk20/LA_at_CHI/source/film_1080p.mp4",
+   "size": [
+    1920,
+    1080
+   ],
+   "frames": 40,
+   "views": {
+    "ENDZONE": 20,
+    "SIDELINE": 20
+   },
+   "decode_fps": 399.7
+  },
+  "576p": {
+   "game": "2026_wk01_SF-LA",
+   "source": "2026/wk01/SF_at_LA/source/film.mp4",
+   "size": [
+    1024,
+    576
+   ],
+   "frames": 40,
+   "views": {
+    "ENDZONE": 20,
+    "SIDELINE": 20
+   },
+   "decode_fps": 1151.2
+  }
+ },
+ "machine": {
+  "chip": "Apple M4",
+  "memory_gb": 16.0,
+  "gpu_cores": 8,
+  "macos": "15.7.4",
+  "power": "AC Power"
+ },
+ "versions": {
+  "python": "3.11.16",
+  "torch": "2.14.1",
+  "torchvision": "0.29.1",
+  "numpy": "2.4.6",
+  "sam3_commit": "f1647e8d0c1d280991f4d1b7d974c2704537fe66",
+  "checkpoint": "facebook/sam3@3c879f3 sam3.pt",
+  "mps_fallback": "1"
+ },
+ "updated": "2026-10-30T09:38:54+00:00",
+ "burst_sequential_first_try": {
+  "note": "First attempt: configs run one after another with 45 s idle between; per-frame time climbed from ~6.9 s to ~8.9 s within each config as the fanless machine heated, so configs were not comparable and the run was stopped after two. Replaced by the interleaved burst.",
+  "configs": {
+   "1080p/seq/fp32/mps": {
+    "frames": 20,
+    "fps": 0.12,
+    "s_per_frame_mean": 8.301,
+    "s_per_frame_median": 8.685,
+    "s_per_frame_p90": 8.924,
+    "image_s_mean": 6.464,
+    "prompts_s_mean": 1.837,
+    "detections_mean": {
+     "player": 21.9,
+     "referee": 1.4,
+     "football": 0.1
+    },
+    "input": "1920x1080",
+    "model_input": "1008x1008",
+    "memory_peak": {
+     "current_gb": 3.79,
+     "driver_gb": 5.17,
+     "rss_gb": 0.12
+    },
+    "mps_cpu_fallback_ops": [],
+    "load_s": 102.0,
+    "at": "2026-10-30T08:56:34+00:00",
+    "thermal_after": "Note: No thermal warning level has been recorded; Note: No performance warning level has been recorded; Note: No CPU power status has been recorded; load 2.8 3.6 4.1",
+    "per_frame": [
+     6.88,
+     6.875,
+     7.105,
+     7.958,
+     7.6,
+     7.879,
+     8.276,
+     7.944,
+     8.413,
+     8.734,
+     8.806,
+     8.865,
+     8.954,
+     8.92,
+     9.054,
+     8.744,
+     8.826,
+     8.755,
+     8.798,
+     8.636
+    ]
+   },
+   "576p/seq/fp32/mps": {
+    "frames": 20,
+    "fps": 0.122,
+    "s_per_frame_mean": 8.2,
+    "s_per_frame_median": 8.636,
+    "s_per_frame_p90": 8.925,
+    "image_s_mean": 6.399,
+    "prompts_s_mean": 1.802,
+    "detections_mean": {
+     "player": 23.3,
+     "referee": 2.8,
+     "football": 0.2
+    },
+    "input": "1024x576",
+    "model_input": "1008x1008",
+    "memory_peak": {
+     "current_gb": 3.67,
+     "driver_gb": 5.17,
+     "rss_gb": 0.1
+    },
+    "mps_cpu_fallback_ops": [],
+    "load_s": 102.0,
+    "at": "2026-10-30T09:00:24+00:00",
+    "thermal_after": "Note: No thermal warning level has been recorded; Note: No performance warning level has been recorded; Note: No CPU power status has been recorded; load 2.6 3.2 3.8",
+    "per_frame": [
+     6.805,
+     6.983,
+     6.938,
+     7.217,
+     7.457,
+     7.532,
+     7.852,
+     8.119,
+     8.376,
+     8.596,
+     8.755,
+     8.822,
+     8.937,
+     9.013,
+     8.746,
+     8.924,
+     8.8,
+     8.772,
+     8.676,
+     8.689
+    ]
+   }
+  }
+ },
+ "sustained": {
+  "config": "1080p/batched/bf16",
+  "device": "mps",
+  "rest_s": 480,
+  "seconds": 360.7,
+  "frames": 67,
+  "fps": 0.186,
+  "fps_first_20_frames": 0.287,
+  "fps_first_minute": 0.29,
+  "fps_last_minute": 0.159,
+  "image_s_first_minute": 2.627,
+  "image_s_last_minute": 4.911,
+  "windows": [
+   {
+    "from_s": 0,
+    "fps": 0.298
+   },
+   {
+    "from_s": 30,
+    "fps": 0.286
+   },
+   {
+    "from_s": 60,
+    "fps": 0.251
+   },
+   {
+    "from_s": 90,
+    "fps": 0.183
+   },
+   {
+    "from_s": 120,
+    "fps": 0.146
+   },
+   {
+    "from_s": 150,
+    "fps": 0.139
+   },
+   {
+    "from_s": 180,
+    "fps": 0.145
+   },
+   {
+    "from_s": 210,
+    "fps": 0.152
+   },
+   {
+    "from_s": 240,
+    "fps": 0.157
+   },
+   {
+    "from_s": 270,
+    "fps": 0.16
+   },
+   {
+    "from_s": 300,
+    "fps": 0.16
+   },
+   {
+    "from_s": 330,
+    "fps": 0.158
+   }
+  ],
+  "memory_peak": {
+   "current_gb": 3.61,
+   "driver_gb": 6.13,
+   "rss_gb": 1.15
+  },
+  "mps_cpu_fallback_ops": [],
+  "load_s": 99.0,
+  "thermal_before": "Note: No thermal warning level has been recorded; Note: No performance warning level has been recorded; Note: No CPU power status has been recorded; load 1.9 2.2 2.8",
+  "thermal_after": "Note: No thermal warning level has been recorded; Note: No performance warning level has been recorded; Note: No CPU power status has been recorded; load 2.7 2.3 2.6",
+  "started": "2026-10-30T09:13:00+00:00",
+  "per_frame": [
+   {
+    "t": 3.85,
+    "s": 3.852,
+    "image_s": 3.037,
+    "players": 22
+   },
+   {
+    "t": 7.21,
+    "s": 3.353,
+    "image_s": 2.517,
+    "players": 22
+   },
+   {
+    "t": 10.53,
+    "s": 3.32,
+    "image_s": 2.517,
+    "players": 19
+   },
+   {
+    "t": 13.86,
+    "s": 3.33,
+    "image_s": 2.53,
+    "players": 17
+   },
+   {
+    "t": 17.22,
+    "s": 3.354,
+    "image_s": 2.536,
+    "players": 20
+   },
+   {
+    "t": 20.57,
+    "s": 3.348,
+    "image_s": 2.529,
+    "players": 23
+   },
+   {
+    "t": 23.91,
+    "s": 3.341,
+    "image_s": 2.544,
+    "players": 22
+   },
+   {
+    "t": 27.31,
+    "s": 3.406,
+    "image_s": 2.568,
+    "players": 23
+   },
+   {
+    "t": 30.72,
+    "s": 3.403,
+    "image_s": 2.592,
+    "players": 24
+   },
+   {
+    "t": 34.14,
+    "s": 3.424,
+    "image_s": 2.61,
+    "players": 25
+   },
+   {
+    "t": 37.58,
+    "s": 3.431,
+    "image_s": 2.619,
+    "players": 22
+   },
+   {
+    "t": 41.06,
+    "s": 3.487,
+    "image_s": 2.644,
+    "players": 25
+   },
+   {
+    "t": 44.54,
+    "s": 3.479,
+    "image_s": 2.662,
+    "players": 20
+   },
+   {
+    "t": 48.07,
+    "s": 3.526,
+    "image_s": 2.681,
+    "players": 25
+   },
+   {
+    "t": 51.65,
+    "s": 3.577,
+    "image_s": 2.706,
+    "players": 22
+   },
+   {
+    "t": 55.17,
+    "s": 3.513,
+    "image_s": 2.68,
+    "players": 20
+   },
+   {
+    "t": 58.7,
+    "s": 3.532,
+    "image_s": 2.692,
+    "players": 23
+   },
+   {
+    "t": 62.27,
+    "s": 3.568,
+    "image_s": 2.728,
+    "players": 19
+   },
+   {
+    "t": 65.92,
+    "s": 3.654,
+    "image_s": 2.798,
+    "players": 22
+   },
+   {
+    "t": 69.75,
+    "s": 3.828,
+    "image_s": 2.919,
+    "players": 22
+   },
+   {
+    "t": 73.64,
+    "s": 3.888,
+    "image_s": 2.977,
+    "players": 23
+   },
+   {
+    "t": 77.68,
+    "s": 4.037,
+    "image_s": 3.073,
+    "players": 23
+   },
+   {
+    "t": 81.83,
+    "s": 4.151,
+    "image_s": 3.179,
+    "players": 15
+   },
+   {
+    "t": 86.13,
+    "s": 4.305,
+    "image_s": 3.295,
+    "players": 17
+   },
+   {
+    "t": 90.63,
+    "s": 4.491,
+    "image_s": 3.441,
+    "players": 20
+   },
+   {
+    "t": 95.37,
+    "s": 4.746,
+    "image_s": 3.636,
+    "players": 16
+   },
+   {
+    "t": 100.41,
+    "s": 5.034,
+    "image_s": 3.879,
+    "players": 22
+   },
+   {
+    "t": 105.78,
+    "s": 5.368,
+    "image_s": 4.124,
+    "players": 22
+   },
+   {
+    "t": 111.82,
+    "s": 6.039,
+    "image_s": 4.583,
+    "players": 22
+   },
+   {
+    "t": 117.98,
+    "s": 6.167,
+    "image_s": 4.768,
+    "players": 27
+   },
+   {
+    "t": 124.24,
+    "s": 6.252,
+    "image_s": 4.838,
+    "players": 17
+   },
+   {
+    "t": 130.83,
+    "s": 6.595,
+    "image_s": 5.097,
+    "players": 24
+   },
+   {
+    "t": 137.76,
+    "s": 6.924,
+    "image_s": 5.4,
+    "players": 19
+   },
+   {
+    "t": 144.73,
+    "s": 6.967,
+    "image_s": 5.408,
+    "players": 18
+   },
+   {
+    "t": 151.86,
+    "s": 7.13,
+    "image_s": 5.591,
+    "players": 22
+   },
+   {
+    "t": 158.97,
+    "s": 7.111,
+    "image_s": 5.563,
+    "players": 27
+   },
+   {
+    "t": 166.28,
+    "s": 7.309,
+    "image_s": 5.646,
+    "players": 24
+   },
+   {
+    "t": 173.46,
+    "s": 7.181,
+    "image_s": 5.602,
+    "players": 20
+   },
+   {
+    "t": 180.52,
+    "s": 7.054,
+    "image_s": 5.501,
+    "players": 21
+   },
+   {
+    "t": 187.55,
+    "s": 7.026,
+    "image_s": 5.466,
+    "players": 19
+   },
+   {
+    "t": 194.44,
+    "s": 6.889,
+    "image_s": 5.376,
+    "players": 22
+   },
+   {
+    "t": 201.83,
+    "s": 7.392,
+    "image_s": 5.419,
+    "players": 22
+   },
+   {
+    "t": 208.2,
+    "s": 6.367,
+    "image_s": 4.878,
+    "players": 19
+   },
+   {
+    "t": 214.86,
+    "s": 6.66,
+    "image_s": 5.203,
+    "players": 17
+   },
+   {
+    "t": 221.5,
+    "s": 6.639,
+    "image_s": 5.228,
+    "players": 20
+   },
+   {
+    "t": 228.1,
+    "s": 6.596,
+    "image_s": 5.132,
+    "players": 23
+   },
+   {
+    "t": 234.62,
+    "s": 6.52,
+    "image_s": 5.119,
+    "players": 22
+   },
+   {
+    "t": 241.02,
+    "s": 6.401,
+    "image_s": 4.994,
+    "players": 23
+   },
+   {
+    "t": 247.42,
+    "s": 6.4,
+    "image_s": 4.985,
+    "players": 24
+   },
+   {
+    "t": 253.79,
+    "s": 6.371,
+    "image_s": 4.963,
+    "players": 25
+   },
+   {
+    "t": 260.15,
+    "s": 6.352,
+    "image_s": 4.96,
+    "players": 22
+   },
+   {
+    "t": 266.49,
+    "s": 6.336,
+    "image_s": 4.967,
+    "players": 25
+   },
+   {
+    "t": 272.77,
+    "s": 6.281,
+    "image_s": 4.907,
+    "players": 20
+   },
+   {
+    "t": 279.01,
+    "s": 6.24,
+    "image_s": 4.858,
+    "players": 25
+   },
+   {
+    "t": 285.23,
+    "s": 6.218,
+    "image_s": 4.848,
+    "players": 22
+   },
+   {
+    "t": 291.58,
+    "s": 6.352,
+    "image_s": 4.888,
+    "players": 20
+   },
+   {
+    "t": 297.76,
+    "s": 6.173,
+    "image_s": 4.802,
+    "players": 23
+   },
+   {
+    "t": 304.07,
+    "s": 6.312,
+    "image_s": 4.926,
+    "players": 19
+   },
+   {
+    "t": 310.29,
+    "s": 6.222,
+    "image_s": 4.858,
+    "players": 22
+   },
+   {
+    "t": 316.56,
+    "s": 6.27,
+    "image_s": 4.881,
+    "players": 22
+   },
+   {
+    "t": 322.82,
+    "s": 6.251,
+    "image_s": 4.864,
+    "players": 23
+   },
+   {
+    "t": 329.06,
+    "s": 6.238,
+    "image_s": 4.86,
+    "players": 23
+   },
+   {
+    "t": 335.35,
+    "s": 6.296,
+    "image_s": 4.924,
+    "players": 15
+   },
+   {
+    "t": 341.6,
+    "s": 6.251,
+    "image_s": 4.88,
+    "players": 17
+   },
+   {
+    "t": 347.94,
+    "s": 6.339,
+    "image_s": 4.942,
+    "players": 20
+   },
+   {
+    "t": 354.36,
+    "s": 6.409,
+    "image_s": 5.054,
+    "players": 16
+   },
+   {
+    "t": 360.67,
+    "s": 6.314,
+    "image_s": 4.921,
+    "players": 22
+   }
+  ]
+ },
+ "burst": {
+  "order": "interleaved, one frame per config per round",
+  "device": "mps",
+  "warmup_frames": 3,
+  "started": "2026-10-30T09:23:16+00:00",
+  "finished": "2026-10-30T09:36:23+00:00",
+  "load_s": 106.6,
+  "memory_peak": {
+   "current_gb": 3.82,
+   "driver_gb": 7.19,
+   "rss_gb": 0.86
+  },
+  "mps_cpu_fallback_ops": [],
+  "thermal_after": "Note: No thermal warning level has been recorded; Note: No performance warning level has been recorded; Note: No CPU power status has been recorded; load 3.0 2.6 2.5",
+  "configs": {
+   "1080p/seq/fp32": {
+    "frames": 15,
+    "fps": 0.122,
+    "s_per_frame_mean": 8.221,
+    "s_per_frame_median": 8.081,
+    "s_per_frame_p90": 8.39,
+    "image_s_mean": 6.385,
+    "prompts_s_mean": 1.837,
+    "detections_mean": {
+     "player": 22.2,
+     "referee": 1.3,
+     "football": 0.1
+    },
+    "input": "1920x1080",
+    "model_input": "1008x1008",
+    "memory_current_peak_gb": 3.79,
+    "per_frame": [
+     9.991,
+     8.538,
+     8.168,
+     7.988,
+     8.079,
+     8.152,
+     8.096,
+     8.102,
+     7.995,
+     7.947,
+     7.985,
+     7.97,
+     8.073,
+     8.154,
+     8.081
+    ]
+   },
+   "1080p/batched/fp32": {
+    "frames": 15,
+    "fps": 0.124,
+    "s_per_frame_mean": 8.057,
+    "s_per_frame_median": 7.901,
+    "s_per_frame_p90": 8.193,
+    "image_s_mean": 6.377,
+    "prompts_s_mean": 1.68,
+    "detections_mean": {
+     "player": 22.2,
+     "referee": 1.3,
+     "football": 0.1
+    },
+    "input": "1920x1080",
+    "model_input": "1008x1008",
+    "memory_current_peak_gb": 3.82,
+    "per_frame": [
+     9.852,
+     8.323,
+     7.997,
+     7.87,
+     7.865,
+     7.958,
+     7.969,
+     7.897,
+     7.92,
+     7.906,
+     7.872,
+     7.837,
+     7.901,
+     7.804,
+     7.882
+    ]
+   },
+   "1080p/batched/bf16": {
+    "frames": 15,
+    "fps": 0.148,
+    "s_per_frame_mean": 6.752,
+    "s_per_frame_median": 6.625,
+    "s_per_frame_p90": 6.831,
+    "image_s_mean": 5.263,
+    "prompts_s_mean": 1.489,
+    "detections_mean": {
+     "player": 22.0,
+     "referee": 1.3,
+     "football": 0.1
+    },
+    "input": "1920x1080",
+    "model_input": "1008x1008",
+    "memory_current_peak_gb": 3.6,
+    "per_frame": [
+     8.504,
+     6.879,
+     6.609,
+     6.638,
+     6.634,
+     6.621,
+     6.551,
+     6.76,
+     6.625,
+     6.467,
+     6.516,
+     6.602,
+     6.626,
+     6.571,
+     6.681
+    ]
+   },
+   "1080p/batched/fp16": {
+    "frames": 15,
+    "fps": 0.149,
+    "s_per_frame_mean": 6.727,
+    "s_per_frame_median": 6.618,
+    "s_per_frame_p90": 6.79,
+    "image_s_mean": 5.221,
+    "prompts_s_mean": 1.506,
+    "detections_mean": {
+     "player": 22.1,
+     "referee": 1.3,
+     "football": 0.1
+    },
+    "input": "1920x1080",
+    "model_input": "1008x1008",
+    "memory_current_peak_gb": 3.6,
+    "per_frame": [
+     8.137,
+     6.823,
+     6.67,
+     6.65,
+     6.587,
+     6.618,
+     6.74,
+     6.598,
+     6.641,
+     6.599,
+     6.561,
+     6.592,
+     6.633,
+     6.601,
+     6.453
+    ]
+   },
+   "576p/seq/fp32": {
+    "frames": 15,
+    "fps": 0.124,
+    "s_per_frame_mean": 8.064,
+    "s_per_frame_median": 7.987,
+    "s_per_frame_p90": 8.165,
+    "image_s_mean": 6.268,
+    "prompts_s_mean": 1.796,
+    "detections_mean": {
+     "player": 21.5,
+     "referee": 2.5,
+     "football": 0.2
+    },
+    "input": "1024x576",
+    "model_input": "1008x1008",
+    "memory_current_peak_gb": 3.66,
+    "per_frame": [
+     9.215,
+     8.225,
+     8.074,
+     7.987,
+     7.902,
+     7.939,
+     7.921,
+     8.01,
+     8.023,
+     8.022,
+     7.955,
+     7.872,
+     7.903,
+     7.883,
+     8.022
+    ]
+   },
+   "576p/batched/fp32": {
+    "frames": 15,
+    "fps": 0.126,
+    "s_per_frame_mean": 7.948,
+    "s_per_frame_median": 7.887,
+    "s_per_frame_p90": 7.969,
+    "image_s_mean": 6.289,
+    "prompts_s_mean": 1.659,
+    "detections_mean": {
+     "player": 21.5,
+     "referee": 2.5,
+     "football": 0.2
+    },
+    "input": "1024x576",
+    "model_input": "1008x1008",
+    "memory_current_peak_gb": 3.79,
+    "per_frame": [
+     8.928,
+     7.982,
+     7.949,
+     7.882,
+     7.885,
+     7.853,
+     7.923,
+     7.833,
+     7.777,
+     7.785,
+     7.85,
+     7.887,
+     7.893,
+     7.887,
+     7.904
+    ]
+   },
+   "576p/batched/bf16": {
+    "frames": 15,
+    "fps": 0.15,
+    "s_per_frame_mean": 6.654,
+    "s_per_frame_median": 6.571,
+    "s_per_frame_p90": 6.941,
+    "image_s_mean": 5.214,
+    "prompts_s_mean": 1.44,
+    "detections_mean": {
+     "player": 21.2,
+     "referee": 2.5,
+     "football": 0.2
+    },
+    "input": "1024x576",
+    "model_input": "1008x1008",
+    "memory_current_peak_gb": 3.58,
+    "per_frame": [
+     7.277,
+     6.686,
+     6.607,
+     6.571,
+     6.534,
+     6.56,
+     6.493,
+     6.598,
+     6.676,
+     6.56,
+     6.602,
+     6.532,
+     6.497,
+     6.514,
+     7.111
+    ]
+   }
+  }
+ },
+ "overlays": {
+  "config": "batched/bf16/mps",
+  "threshold": 0.5,
+  "images": [
+   {
+    "image": "/Volumes/Vault/formation-zero/spikes/sam3/overlays/1080p_f068627.png",
+    "res": "1080p",
+    "frame": 68627,
+    "time_s": 2745.08,
+    "view": "SIDELINE",
+    "counts": {
+     "player": 22,
+     "referee": 0,
+     "football": 0
+    },
+    "player_box_height_px": [
+     29.6,
+     56.8,
+     66.2,
+     72.3,
+     87.2,
+     95.5,
+     99.6,
+     101.8,
+     105.7,
+     106.9,
+     108.8,
+     110.5,
+     114.1,
+     117.3,
+     122.4,
+     123.4,
+     123.9,
+     126.1,
+     128.8,
+     129.2,
+     133.8,
+     143.3
+    ],
+    "referee_scores": [],
+    "football_scores": []
+   },
+   {
+    "image": "/Volumes/Vault/formation-zero/spikes/sam3/overlays/1080p_f124799.png",
+    "res": "1080p",
+    "frame": 124799,
+    "time_s": 4991.96,
+    "view": "SIDELINE",
+    "counts": {
+     "player": 23,
+     "referee": 3,
+     "football": 0
+    },
+    "player_box_height_px": [
+     34.3,
+     48.4,
+     65.2,
+     77.0,
+     77.0,
+     81.7,
+     84.4,
+     86.5,
+     87.6,
+     89.1,
+     92.8,
+     93.3,
+     93.7,
+     93.9,
+     95.2,
+     95.4,
+     97.4,
+     97.7,
+     98.5,
+     98.9,
+     102.2,
+     103.4,
+     104.1
+    ],
+    "referee_scores": [
+     0.91,
+     0.54,
+     0.86
+    ],
+    "football_scores": []
+   },
+   {
+    "image": "/Volumes/Vault/formation-zero/spikes/sam3/overlays/1080p_f159269.png",
+    "res": "1080p",
+    "frame": 159269,
+    "time_s": 6370.76,
+    "view": "ENDZONE",
+    "counts": {
+     "player": 17,
+     "referee": 2,
+     "football": 0
+    },
+    "player_box_height_px": [
+     114.6,
+     121.0,
+     149.5,
+     158.1,
+     176.9,
+     188.2,
+     191.3,
+     192.7,
+     193.9,
+     204.2,
+     213.8,
+     214.8,
+     220.0,
+     221.0,
+     236.0,
+     238.8,
+     278.5
+    ],
+    "referee_scores": [
+     0.96,
+     0.96
+    ],
+    "football_scores": []
+   },
+   {
+    "image": "/Volumes/Vault/formation-zero/spikes/sam3/overlays/576p_f048644.png",
+    "res": "576p",
+    "frame": 48644,
+    "time_s": 1945.76,
+    "view": "SIDELINE",
+    "counts": {
+     "player": 29,
+     "referee": 2,
+     "football": 1
+    },
+    "player_box_height_px": [
+     18.7,
+     21.4,
+     24.7,
+     27.9,
+     28.8,
+     29.8,
+     39.0,
+     39.4,
+     40.1,
+     41.3,
+     41.4,
+     41.5,
+     42.0,
+     42.5,
+     42.9,
+     44.1,
+     45.3,
+     45.5,
+     45.6,
+     48.7,
+     48.8,
+     48.9,
+     54.2,
+     55.6,
+     56.1,
+     59.1,
+     66.4,
+     67.1,
+     72.5
+    ],
+    "referee_scores": [
+     0.86,
+     0.85
+    ],
+    "football_scores": [
+     0.59
+    ]
+   },
+   {
+    "image": "/Volumes/Vault/formation-zero/spikes/sam3/overlays/576p_f075502.png",
+    "res": "576p",
+    "frame": 75502,
+    "time_s": 3020.08,
+    "view": "ENDZONE",
+    "counts": {
+     "player": 20,
+     "referee": 2,
+     "football": 0
+    },
+    "player_box_height_px": [
+     55.3,
+     61.1,
+     67.8,
+     72.0,
+     72.3,
+     73.9,
+     74.1,
+     74.3,
+     75.6,
+     76.3,
+     79.4,
+     84.7,
+     87.1,
+     88.9,
+     89.2,
+     93.6,
+     107.6,
+     110.2,
+     112.5,
+     115.2
+    ],
+    "referee_scores": [
+     0.88,
+     0.9
+    ],
+    "football_scores": []
+   },
+   {
+    "image": "/Volumes/Vault/formation-zero/spikes/sam3/overlays/576p_f004322.png",
+    "res": "576p",
+    "frame": 4322,
+    "time_s": 172.88,
+    "view": "ENDZONE",
+    "counts": {
+     "player": 22,
+     "referee": 4,
+     "football": 0
+    },
+    "player_box_height_px": [
+     30.1,
+     32.3,
+     32.7,
+     50.1,
+     51.4,
+     53.3,
+     55.4,
+     63.8,
+     64.6,
+     65.0,
+     67.4,
+     68.2,
+     68.6,
+     69.7,
+     70.9,
+     71.9,
+     73.3,
+     75.2,
+     79.1,
+     80.1,
+     80.7,
+     82.3
+    ],
+    "referee_scores": [
+     0.73,
+     0.92,
+     0.77,
+     0.89
+    ],
+    "football_scores": []
+   }
+  ],
+  "notes": "Looked at by eye. player: no on-field player visibly missed in any of the 6, in snow and in clear weather; the smallest on-field players in them are ~40 px tall at 576p and ~65 px at 1080p (the widest shots, with smaller far-side players, are not in the sample); pile-ups get one box per visible body or a box over two. Uniformed players and staff on the sidelines also count as 'player' (9 of 29 in the 576p kickoff frame f048644): the field-mask filter planned in ARCHITECTURE 7.1 is needed. What looks like one duplicate box on a far-side player (1080p f124799). referee: real officials score 0.73-0.96, including one cut off at the frame edge and sideline officials; one Bears player in a dark jersey scored 0.54 as referee and was not boxed as player (snow game, f124799). football: found in 1 of 6, and that one (0.59) is the football drawn in the painted NFL shield at midfield; the real ball on the tee was missed. Mean 0.1-0.2 footballs per frame over the 20-frame bursts. The ball needs its own approach (lower threshold, tiles, or tracking), not this prompt as is."
+ }
+}

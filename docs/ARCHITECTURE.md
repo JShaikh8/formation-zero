@@ -40,7 +40,9 @@ That is what this blueprint designs.
 
 Hardware and runtime facts that shape the design:
 
-- Apple M4, 16 GB unified memory, Metal 3. GPU inference runs through PyTorch **MPS**.
+- Apple M4 MacBook Air (8-core GPU, fanless), 16 GB unified memory, Metal 3. GPU inference runs
+  through PyTorch **MPS**. Fanless matters: sustained GPU work settles at a little over half its
+  rested speed within about 90 seconds (measured 2026-10-30, GRD-32).
 - Only system Python 3.9.6 is installed today. Current torch and ultralytics wheels target
   3.10+, and 3.9 has been end-of-life since October 2025. Section 2.1 fixes this without
   Homebrew.
@@ -550,9 +552,11 @@ and skeleton from a single image, and **SAM 3D Objects**.
 ### 6.2 Why it is not the runtime detector
 
 The model is roughly 850M parameters. Meta quotes about 30 ms per frame for 100+ objects on an
-H200. On an M4 with 16 GB unified memory through MPS, expect low single-digit frames per second
-at full resolution; this has not been measured here and the first task of milestone 2 is to
-measure it. The workload per game is large:
+H200. Measured here (2026-10-30, GRD-32, `scripts/spikes/sam3_throughput`): with the three
+labelling prompts batched in bf16 it does 0.29 frames per second rested and settles at **0.16** once
+the fanless Air heats up, 6.3 s a frame. Resolution does not matter: the model squashes every
+frame to 1008x1008, so 576p costs the same as 1080p and 1080p adds no horizontal detail. The
+workload per game is large:
 
 | Quantity | Value |
 |---|---|
@@ -561,7 +565,9 @@ measure it. The workload per game is large:
 | Seconds per clip | ~15 |
 | Frames at 25 fps | ~135,000 per game |
 
-At 2 fps that is about 19 hours per game for detection alone. A YOLO11-s or RF-DETR-small
+At the measured 0.16 fps that is about 236 hours per game for detection alone (the guess before
+measuring was 2 fps and 19 hours). The 2,000-frame labelling set takes about 3.5 hours, an
+overnight job. A YOLO11-s or RF-DETR-small
 student runs at 30–60 fps on the same hardware, so the same game takes under an hour, and the
 student is trained on SAM 3's own output, so it inherits most of the accuracy where it matters.
 

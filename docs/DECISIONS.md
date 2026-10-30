@@ -196,6 +196,10 @@ angles. An 850-million-parameter model on a 16 GB M4 runs at low single-digit fr
 which is about 19 hours per game for detection alone. A student trained on SAM 3's own output
 runs the same game in under an hour.
 
+**Measured 2026-10-30 (GRD-32).** 0.16 frames per second sustained on the fanless M4 Air, about
+236 hours per game, twelve times the estimate. The decision stands, by a wider margin; labelling
+2,000 frames takes about 3.5 hours.
+
 **Alternatives.** Grounding DINO plus SAM 2 as the teacher (kept as the fallback if SAM 3 weights
 are gated). SAM 3's own video tracker (heavy for 22 objects over long clips).
 
