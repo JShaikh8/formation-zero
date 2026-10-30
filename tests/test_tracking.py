@@ -89,3 +89,23 @@ def test_overlay_draws_without_changing_the_frame_size():
     img = np.zeros((36, 64, 3), np.uint8)
     out = draw(img, pd.DataFrame([{"track_id": 3, "label": "player", "x1": 5, "y1": 5, "x2": 15, "y2": 30}]), {3: 1})
     assert out.shape == img.shape and out.any()
+
+
+def test_tracks_vote_their_team_and_doubtful_crops_abstain():
+    from formation_zero.perception.tracking import vote_teams
+
+    class Teams:      # margin by box width: wide boxes are team 1, middling ones too close to call
+        def margin(self, crops):
+            return np.array([{10: -1.0, 20: 0.1, 30: 1.0}[c.shape[1]] for c in crops])
+
+    class Source(FakeSource):
+        def iter_frames(self, start, end, step=1):
+            from formation_zero.ingest.sources import Frame
+
+            for i in range(start, end, step):
+                yield Frame(index=i, time_s=i / 25, image=np.zeros((80, 120, 3), np.uint8))
+
+    boxes = pd.DataFrame([{"frame": f, "track_id": t, "label": lab, "conf": 0.9, "x1": 0, "y1": 0, "x2": w, "y2": 40}
+                          for f in range(10) for t, w, lab in ((1, 10, "player"), (2, 30, "player"), (3, 20, "player"),
+                                                               (4, 30, "referee"))])
+    assert vote_teams(Source(), 0, 10, boxes, Teams(), every=5) == {1: 0, 2: 1, 3: -1}
