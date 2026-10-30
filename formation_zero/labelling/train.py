@@ -142,13 +142,21 @@ def disagreement(teacher: list[dict], student: list[dict], iou_min: float = DISA
 
 
 def fit(data_yaml: Path, *, base: str = "yolo11s.pt", epochs: int = 60, imgsz: int = 1280, batch: int = 8,
-        device: str = "mps", name: str = "student", project: Path = Path("data/derived/labels/runs")):
-    """Fine-tune a COCO-pretrained YOLO11. Large input: far-side players are small."""
+        val: bool = True, device: str = "mps", name: str = "student", project: Path = Path("data/derived/labels/runs")):
+    """Fine-tune a COCO-pretrained YOLO11. Large input: far-side players are small, but on the 16 GB
+    laptop 1280 px at batch 8 swapped itself to a standstill (2026-10-30); 960 at batch 4 fits.
+    `val=False` validates only after the last epoch (a round-0 fold validates on half the frames)."""
     from ultralytics import YOLO
 
     model = YOLO(base)
-    return model.train(data=str(data_yaml), epochs=epochs, imgsz=imgsz, batch=batch, device=device,
+    return model.train(data=str(data_yaml), epochs=epochs, imgsz=imgsz, batch=batch, val=val, device=device,
                        project=str(project.resolve()), name=name, exist_ok=True, plots=False)
+
+
+def weights_of(run: Path) -> Path:
+    """A run's best.pt, or last.pt when it validated only at the end and kept no best."""
+    best = run / "weights" / "best.pt"
+    return best if best.exists() else run / "weights" / "last.pt"
 
 
 def score_frames(paths, weights: Path, frames: list[str], *, imgsz: int = 1280, device: str = "mps") -> dict[str, int]:
@@ -219,6 +227,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--imgsz", type=int, default=1280)
     ap.add_argument("--batch", type=int, default=8)
     ap.add_argument("--fold", type=int, choices=[0, 1], help="round 0: train on the other fold's plays")
+    ap.add_argument("--no-val", action="store_true", help="validate only after the last epoch (fit)")
     ap.add_argument("--data-root", default="data")
     a = ap.parse_args(argv)
     out, name = DATASETS[a.source], RUN_NAMES[a.source]
@@ -227,10 +236,10 @@ def main(argv: list[str] | None = None) -> int:
     if a.action == "export":
         print(f"{export_dataset(_games(a.games, a.data_root), out, source=a.source, fold=a.fold)} frames -> {out}")
     elif a.action == "fit":
-        fit(out / "data.yaml", base=a.base, epochs=a.epochs, imgsz=a.imgsz, batch=a.batch, name=name)
+        fit(out / "data.yaml", base=a.base, epochs=a.epochs, imgsz=a.imgsz, batch=a.batch, val=not a.no_val, name=name)
     elif a.action == "heldout":
         runs = Path("data/derived/labels/runs")
-        weights = {k: runs / f"{RUN_NAMES['teacher']}_f{k}" / "weights" / "best.pt" for k in (0, 1)}
+        weights = {k: weights_of(runs / f"{RUN_NAMES['teacher']}_f{k}") for k in (0, 1)}
         for paths in _games(a.games, a.data_root):
             print(f"held-out disagreement -> {heldout(paths, weights, imgsz=a.imgsz)}")
     else:
@@ -241,7 +250,7 @@ def main(argv: list[str] | None = None) -> int:
 
 
 __all__ = ["CLASSES", "disagreement", "export_dataset", "fit", "fold_of", "heldout", "labelled_frames", "next_sheet",
-           "score_frames", "val_play", "yolo_lines"]
+           "score_frames", "val_play", "weights_of", "yolo_lines"]
 
 
 if __name__ == "__main__":
