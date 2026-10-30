@@ -49,8 +49,9 @@
       "at": "2026-10-30 02:10"
     },
     {
-      "text": "Get a 1080p copy of 49ers–Rams: the drive's copy is 576p, and wide-shot players are mostly missed at that size",
-      "status": "todo"
+      "text": "1080p copy of 49ers–Rams on the drive (owner downloaded it): frame for frame with the 576p copy, linked as film_1080p.mp4",
+      "status": "done",
+      "at": "2026-10-30 17:00"
     },
     {
       "text": "Owner: spot-check the 86 camera labels Claude added to the clear game (source \"claude\" in its shot_views file)",
@@ -82,7 +83,17 @@
       "at": "2026-10-30 16:05"
     },
     {
-      "text": "Owner: review both games' boxes, most disputed first (review.html in each game's frames folder on the drive; one key per frame, space enlarges, a click removes or restores a box; Export when done)",
+      "text": "Tracking marks player tracks standing off the field (sideline takes) and draws them grey; catches benches when the sideline paint is in shot",
+      "status": "done",
+      "at": "2026-10-30 16:45"
+    },
+    {
+      "text": "SAM 3 relabelling 49ers–Rams on the same 2,000 frames from the 1080p copy (576p labels and page kept beside them); review page rebuilt after",
+      "status": "active",
+      "at": "2026-10-30 17:05"
+    },
+    {
+      "text": "Owner: review the snow game's boxes, most disputed first (review.html in its frames folder on the drive; one key per frame, space enlarges, a click removes or restores a box; Export when done). 49ers–Rams waits for its 1080p page",
       "status": "todo"
     }
   ]

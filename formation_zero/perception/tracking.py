@@ -12,8 +12,10 @@ on the film drive under overlays/.
 Take spans from the play index run a few frames past their cut (the index reads the film every
 0.4 s; on 49ers-Rams plays 1-10, 19 of 20 takes ran 3 to 17 frames into the next shot). So each take
 is cut-checked at full rate (`Cuts`): a cut within TRIM_S of either end trims the take there, and a
-cut further in ends every track (the tracker's `cut`). The 576p copy of 49ers-Rams also freezes and
-jumps a second at a time in places; a jump reads as a cut, which is right for tracking.
+cut further in ends every track (the tracker's `cut`). The film itself freezes and jumps a second at a
+time in places (49ers-Rams p006, the same in the 576p and 1080p copies), and the camera sometimes
+zooms out in four frames (p004); both read as cuts, which is right, since box tracking cannot follow
+either.
 
 Player tracks whose feet stay off the field (benches, staff) are marked `off_field` on sideline
 takes (`vote_field`); they take no team, and the overlay draws them grey without an id.
