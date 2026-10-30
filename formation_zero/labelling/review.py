@@ -6,7 +6,10 @@
 `build` writes review.html into the game's frames folder on the film drive, beside the sampled
 JPEGs, so the page loads them by relative path with no server. Frames come least confident first:
 the teacher's weakest frames are where review time pays. Keys: k keep, d drop, f flag (look again
-with masks), u undo, arrows move. Decisions live in the browser until Export downloads them.
+with masks), u undo, arrows move, space enlarges the current frame. In the enlarged frame a click
+removes one box (and a second click restores it), so a frame that is right but for a bench player
+the teacher boxed can still be kept. Decisions live in the browser until Export downloads them.
+Frames load as they scroll into view; 2,000 full-size frames at once would exhaust the tab.
 
 `import` writes the kept frames' boxes to data/groundtruth/<game>.detections.json, keyed by source
 frame number and time like the other ground truth, and lists the flagged frames for a second look.
@@ -40,16 +43,21 @@ def build_page(game_key: str, detections: dict, frames: list[int]) -> str:
 
 
 def import_decisions(game_key: str, detections: dict, decisions: dict, *, fps: float = 25.0) -> dict:
-    """Kept frames with their boxes, flagged frames listed; dropped and undecided frames left out."""
-    kept, flagged = [], []
+    """Kept frames with their boxes less any the reviewer removed, flagged frames listed; dropped and
+    undecided frames left out. `removed` maps a frame to indices into its teacher box list."""
+    removed = decisions.get("removed", {})
+    kept, flagged, n_removed = [], [], 0
     for f, d in sorted(((int(k), v) for k, v in decisions["decisions"].items())):
         if d == "keep":
-            kept.append({"frame": f, "time_s": round(f / fps, 3), "boxes": detections["frames"][str(f)]})
+            teacher, gone = detections["frames"][str(f)], set(removed.get(str(f), []))
+            boxes = [b for j, b in enumerate(teacher) if j not in gone]
+            n_removed += len(teacher) - len(boxes)
+            kept.append({"frame": f, "time_s": round(f / fps, 3), "boxes": boxes})
         elif d == "flag":
             flagged.append(f)
     return {"game_key": game_key, "teacher": detections.get("teacher"), "source": "human review",
             "keyed_by": "source frame number (frame-aligned with every rendition)",
-            "reviewed": len(decisions["decisions"]), "kept": kept, "flagged": flagged}
+            "reviewed": len(decisions["decisions"]), "boxes_removed": n_removed, "kept": kept, "flagged": flagged}
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -101,41 +109,89 @@ header b { font-size:16px; } .keys { color:var(--muted); } button { font:inherit
 .tile { background:var(--card); border:3px solid var(--line); border-radius:6px; overflow:hidden; }
 .tile.cur { border-color:var(--ink); } .tile.keep { border-color:var(--keep); } .tile.drop { border-color:var(--drop); opacity:.55; } .tile.flag { border-color:var(--flag); }
 .tile.cur.keep, .tile.cur.drop, .tile.cur.flag { outline:3px solid var(--ink); }
-canvas { width:100%; display:block; } .cap { padding:4px 8px; color:var(--muted); font-size:12px; display:flex; justify-content:space-between; }
+.pic { position:relative; aspect-ratio:16 / 9; background:#000; }
+.pic img, .pic svg { position:absolute; inset:0; width:100%; height:100%; display:block; object-fit:contain; }
+.pic rect { fill:transparent; stroke-width:2; vector-effect:non-scaling-stroke; pointer-events:none; }
+.pic rect.gone { stroke:#fff !important; stroke-width:1; stroke-dasharray:4 4; opacity:.75; }
+.cap { padding:4px 8px; color:var(--muted); font-size:12px; display:flex; justify-content:space-between; }
+#big { position:fixed; inset:0; background:rgba(0,0,0,.93); display:none; flex-direction:column; z-index:5; }
+#big.on { display:flex; }
+#big .pic { flex:1; aspect-ratio:auto; background:none; }
+#big rect { stroke-width:3; pointer-events:all; cursor:pointer; }
+#big .bar { color:#d8ddd6; padding:8px 16px; display:flex; gap:16px; justify-content:space-between; flex-wrap:wrap; }
 </style></head><body>
 <header><b>Teacher review</b><span id="meta"></span><span id="count"></span>
-<span class="keys">k keep · d drop · f flag · u undo · arrows move</span><button id="export">Export</button></header>
+<span class="keys">k keep · d drop · f flag · u undo · arrows move · space enlarge, then click a box to remove it</span><button id="export">Export</button></header>
 <div id="grid"></div>
+<div id="big"><div class="bar"><span id="bigcap"></span><span>click a box to remove it, again to restore · k keep · d drop · f flag · u undo · space or esc close</span></div></div>
 <script>
 const D = __DATA__;
 const KEY = "fz-review-" + D.game + "-" + D.teacher;
-let dec = {}; try { dec = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) {}
-const hist = []; let cur = Math.max(0, D.frames.findIndex(f => !(f.frame in dec)));
-const grid = document.getElementById("grid");
+const NS = "http://www.w3.org/2000/svg";
+let st = { decisions: {}, removed: {} };
+try { const s = JSON.parse(localStorage.getItem(KEY) || "null"); if (s && s.decisions) st = { decisions: s.decisions, removed: s.removed || {} }; } catch (e) {}
+const dec = st.decisions, rm = st.removed, hist = [];
+let cur = Math.max(0, D.frames.findIndex(f => !(f.frame in dec))), bigOn = false;
+const grid = document.getElementById("grid"), big = document.getElementById("big");
 document.getElementById("meta").textContent = D.game + " · teacher " + D.teacher + " · " + D.frames.length + " frames, least confident first";
+const area = b => (b.box[2] - b.box[0]) * (b.box[3] - b.box[1]);
+const at = fr => D.frames.findIndex(f => f.frame === fr);
+
+// A frame with its boxes as SVG over the image: the browser loads and frees the images as they scroll.
+function pic(f, eager, onBox) {
+  const p = document.createElement("div"); p.className = "pic";
+  const img = document.createElement("img"); img.loading = eager ? "eager" : "lazy"; img.decoding = "async"; img.alt = "frame " + f.frame; img.src = f.img;
+  const svg = document.createElementNS(NS, "svg"); svg.style.display = "none";   // until the image gives its size
+  for (const j of f.boxes.map((b, j) => j).sort((a, b) => area(f.boxes[b]) - area(f.boxes[a]))) {   // small boxes on top, so clickable
+    const b = f.boxes[j], r = document.createElementNS(NS, "rect");
+    r.setAttribute("x", b.box[0]); r.setAttribute("y", b.box[1]); r.setAttribute("width", b.box[2] - b.box[0]); r.setAttribute("height", b.box[3] - b.box[1]);
+    r.style.stroke = D.colors[b.label] || "#fff"; r.dataset.j = j;
+    if (onBox) r.addEventListener("click", e => { e.stopPropagation(); onBox(j); });
+    svg.append(r);
+  }
+  img.onload = () => { svg.setAttribute("viewBox", "0 0 " + img.naturalWidth + " " + img.naturalHeight); svg.style.display = ""; };
+  p.append(img, svg); mark(p, f.frame); return p;
+}
+function mark(p, fr) { const gone = new Set(rm[fr] || []); p.querySelectorAll("rect").forEach(r => r.classList.toggle("gone", gone.has(+r.dataset.j))); }
+function caption(i) {
+  const f = D.frames[i], n = (rm[f.frame] || []).length;
+  const low = f.boxes.length ? Math.min(...f.boxes.map(b => b.score ?? 1)) : null;
+  return "frame " + f.frame + " · " + f.boxes.length + " boxes" + (n ? " · " + n + " removed" : "") + (low !== null ? " · weakest " + low.toFixed(2) : "");
+}
 const tiles = D.frames.map((f, i) => {
   const t = document.createElement("div"); t.className = "tile";
-  const c = document.createElement("canvas"); const cap = document.createElement("div"); cap.className = "cap";
-  const low = f.boxes.length ? Math.min(...f.boxes.map(b => b.score ?? 1)) : null;
-  cap.innerHTML = "<span>frame " + f.frame + "</span><span>" + f.boxes.length + " boxes" + (low !== null ? " · weakest " + low.toFixed(2) : "") + "</span>";
-  t.append(c, cap); grid.append(t); t.onclick = () => { cur = i; paint(); };
-  const img = new Image(); img.loading = "lazy"; img.src = f.img;
-  img.onload = () => { c.width = img.naturalWidth; c.height = img.naturalHeight; const g = c.getContext("2d"); g.drawImage(img, 0, 0);
-    g.lineWidth = Math.max(2, img.naturalWidth / 640);
-    for (const b of f.boxes) { g.strokeStyle = D.colors[b.label] || "#fff"; const [x1, y1, x2, y2] = b.box; g.strokeRect(x1, y1, x2 - x1, y2 - y1); } };
-  return t; });
-function save() { try { localStorage.setItem(KEY, JSON.stringify(dec)); } catch (e) {} }
+  const cap = document.createElement("div"); cap.className = "cap"; cap.textContent = caption(i);
+  t.append(pic(f, false, null), cap); grid.append(t);
+  t.onclick = () => { cur = i; paint(); };
+  t.ondblclick = () => { cur = i; bigOn = true; paint(); };
+  return t;
+});
+function save() { try { localStorage.setItem(KEY, JSON.stringify({ decisions: dec, removed: rm })); } catch (e) {} }
+function flip(fr, j) {
+  const s = new Set(rm[fr] || []); if (s.has(j)) s.delete(j); else s.add(j);
+  if (s.size) rm[fr] = [...s].sort((a, b) => a - b); else delete rm[fr];
+  save(); const i = at(fr); mark(tiles[i], fr); tiles[i].querySelector(".cap").textContent = caption(i);
+  if (bigOn && i === cur) { mark(big, fr); document.getElementById("bigcap").textContent = caption(i); }
+}
 function paint() {
   tiles.forEach((t, i) => { const d = dec[D.frames[i].frame]; t.className = "tile" + (d ? " " + d : "") + (i === cur ? " cur" : ""); });
-  tiles[cur].scrollIntoView({ block: "nearest" });
   const n = Object.keys(dec).length; document.getElementById("count").textContent = n + " / " + D.frames.length + " decided";
+  big.classList.toggle("on", bigOn);
+  const old = big.querySelector(".pic"); if (old) old.remove();
+  if (bigOn) {
+    const f = D.frames[cur];
+    big.prepend(pic(f, true, j => { hist.push({ fr: f.frame, box: j }); flip(f.frame, j); }));
+    document.getElementById("bigcap").textContent = (dec[f.frame] ? dec[f.frame] + " · " : "") + caption(cur);
+  } else tiles[cur].scrollIntoView({ block: "nearest" });
 }
 const NAMES = { k: "keep", d: "drop", f: "flag" };
 document.addEventListener("keydown", e => {
-  if (e.metaKey || e.ctrlKey) return;
-  const cols = Math.max(1, Math.round(grid.clientWidth / tiles[0].clientWidth));
-  if (NAMES[e.key]) { const fr = D.frames[cur].frame; hist.push([fr, dec[fr]]); dec[fr] = NAMES[e.key]; save(); cur = Math.min(D.frames.length - 1, cur + 1); }
-  else if (e.key === "u" && hist.length) { const [fr, prev] = hist.pop(); if (prev) dec[fr] = prev; else delete dec[fr]; save(); cur = D.frames.findIndex(f => f.frame === fr); }
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const cols = bigOn ? 1 : Math.max(1, Math.round(grid.clientWidth / tiles[0].clientWidth));
+  if (NAMES[e.key]) { const fr = D.frames[cur].frame; hist.push({ fr, prev: dec[fr] || null }); dec[fr] = NAMES[e.key]; save(); cur = Math.min(D.frames.length - 1, cur + 1); }
+  else if (e.key === "u" && hist.length) { const h = hist.pop(); if ("box" in h) flip(h.fr, h.box); else { if (h.prev) dec[h.fr] = h.prev; else delete dec[h.fr]; save(); } cur = at(h.fr); }
+  else if (e.key === " " || e.key === "Enter") bigOn = !bigOn;
+  else if (e.key === "Escape" && bigOn) bigOn = false;
   else if (e.key === "ArrowRight") cur = Math.min(D.frames.length - 1, cur + 1);
   else if (e.key === "ArrowLeft") cur = Math.max(0, cur - 1);
   else if (e.key === "ArrowDown") cur = Math.min(D.frames.length - 1, cur + cols);
@@ -144,7 +200,7 @@ document.addEventListener("keydown", e => {
   e.preventDefault(); paint();
 });
 document.getElementById("export").onclick = () => {
-  const blob = new Blob([JSON.stringify({ game: D.game, teacher: D.teacher, decisions: dec }, null, 1)], { type: "application/json" });
+  const blob = new Blob([JSON.stringify({ game: D.game, teacher: D.teacher, decisions: dec, removed: rm }, null, 1)], { type: "application/json" });
   const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = D.game + ".review.json"; a.click();
 };
 paint();
