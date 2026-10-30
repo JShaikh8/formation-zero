@@ -255,6 +255,12 @@
           "note": "Done 2026-10-30: perception/align.py, the pipeline's dense and play_index stages. Count the rows that put a play on film (nullified snaps yes; pre-snap fouls and kneel-downs optional, chosen by how predictable play types become). Snow game 185 on film / 183 indexed, clear game 147 / 141; all 46 kicks land on their film. The old index had ~55 plays on the wrong film."
         },
         {
+          "key": "GRD-97",
+          "title": "Take boundaries: audit every boundary with a geometric camera reading and move the misplaced ones",
+          "status": "todo",
+          "note": "Found 2026-10-30 by the field-line work (GRD-37): some boundaries inside the play index are off by seconds, though every play is on its own film. Confirmed by eye on the clear game: p064's end-zone take starts at 2011.6 s, before the snap (index 2014.4, a missed cut beside a false one), and p062's sideline take opens with 4 s of an end-zone shot. Moving boundaries to where the 0.4 s camera reading flips would touch 11 (snow) and 31 (clear) boundaries, but 2 of 3 such moves checked by eye were wrong: the reading errs on unusual shots (wide end-zone, tight sideline), which is where boundaries are. Plan: read the camera from yard-line direction (flat = end zone, steep = sideline; perception/field/lines.py) near each boundary, and split takes at strong full-rate cuts during tracking. First try of the line reading with no angle label, on 16 clear-game frames judged by eye around these boundaries: 11 right; all 5 end-zone frames of p062 and p064 read as sideline (hash-mark columns look like steep yard lines); snow frames too faint to read. Needs a hash-row test before it can audit boundaries."
+        },
+        {
           "key": "GRD-28",
           "title": "Frame sampler stratified by angle, phase, and half of the film",
           "status": "done",
