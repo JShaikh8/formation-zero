@@ -8,8 +8,12 @@ next review sheet. Two or three rounds is the expectation.
     PYTHONPATH=. .venv-sam3d/bin/python -m formation_zero.labelling.train fit     # fine-tune (needs ultralytics)
     PYTHONPATH=. .venv-sam3d/bin/python -m formation_zero.labelling.train disagree --games 2025:20:LA:CHI
 
-Round 0, before any review: the same three steps with `--source teacher` (fit with
-`--base <film root>/models/yolo/yolo11s.pt` to keep downloads off the laptop's disk).
+Round 0, before any review (fit with `--base <film root>/models/yolo/yolo11s.pt` to keep
+downloads off the laptop's disk):
+
+    fz-train export --source teacher --fold 0                                  # and --fold 1
+    PYTHONPATH=. .venv-sam3d/bin/python -m formation_zero.labelling.train fit --source teacher --fold 0
+    PYTHONPATH=. .venv-sam3d/bin/python -m formation_zero.labelling.train heldout
 
 Splits are by play, never by frame: two frames of one play are near copies, and one in training
 with the other in validation would flatter every number.
@@ -19,9 +23,11 @@ frame in eight (GRD-29), so most training frames would show a ball with no box, 
 detector that balls are background. The ball gets its own model from the frames where it is
 labelled (section 7.1).
 
-Round 0 (`--source teacher`) trains on every teacher-labelled frame before anyone has reviewed
-them: a realistic detector for the tracking work, and a first disagreement sheet that sends the
-teacher's likely mistakes to the front of the review.
+Round 0 (`--source teacher`) trains on the teacher's boxes before anyone has reviewed them, in two
+folds by play (`--fold 0`, `--fold 1`): each student learns half the plays and scores the half it
+never saw, so every frame gets an honest disagreement score (`heldout`), which orders the review
+page with the teacher's likely mistakes first (`fz-review build --order`). Two half-size runs cost
+about one full one, and either student serves the tracking work.
 """
 
 from __future__ import annotations
@@ -45,6 +51,11 @@ def val_play(play_uid: str, fraction: float = VAL_FRACTION) -> bool:
     return int(hashlib.sha1(play_uid.encode()).hexdigest()[:8], 16) / 0xFFFFFFFF < fraction
 
 
+def fold_of(play_uid: str, folds: int = 2) -> int:
+    """A play's fold, from other bits of the same hash, so folds and the validation split are independent."""
+    return int(hashlib.sha1(play_uid.encode()).hexdigest()[8:16], 16) % folds
+
+
 def yolo_lines(boxes: list[dict], width: int, height: int) -> list[str]:
     """Boxes in pixels -> YOLO label lines (class cx cy w h, normalised), clipped to the frame."""
     out = []
@@ -59,12 +70,13 @@ def yolo_lines(boxes: list[dict], width: int, height: int) -> list[str]:
     return out
 
 
-def export_dataset(games, out_dir: Path = DATASET, *, source: str = "approved") -> dict:
+def export_dataset(games, out_dir: Path = DATASET, *, source: str = "approved", fold: int | None = None) -> dict:
     """Labelled frames of each game -> <out_dir>/{images,labels}/{train,val}/ and data.yaml.
 
     `source` is "approved" (the kept frames of the human review) or "teacher" (every frame the
-    teacher labelled, unreviewed: round 0). Images are symlinks to the extracted frames on the film
-    drive. `games` is a list of GamePaths.
+    teacher labelled, unreviewed: round 0). With `fold`, that fold's plays are the validation set
+    and the rest train; otherwise VAL_FRACTION of plays validate. Images are symlinks to the
+    extracted frames on the film drive. `games` is a list of GamePaths.
     """
     from PIL import Image
 
@@ -79,7 +91,8 @@ def export_dataset(games, out_dir: Path = DATASET, *, source: str = "approved") 
         play_of = {s["frame"]: s["play_uid"] for s in json.loads(paths.samples_path.read_text())["samples"]}
         for row in rows:
             frame = row["frame"]
-            split = "val" if val_play(play_of[frame]) else "train"
+            uid = play_of[frame]
+            split = "val" if (val_play(uid) if fold is None else fold_of(uid) == fold) else "train"
             src = paths.frames_dir / f"{frame:06d}.jpg"
             name = f"{paths.game_key}_{frame:06d}"
             with Image.open(src) as im:
@@ -138,26 +151,44 @@ def fit(data_yaml: Path, *, base: str = "yolo11s.pt", epochs: int = 60, imgsz: i
                        project=str(project.resolve()), name=name, exist_ok=True, plots=False)
 
 
+def score_frames(paths, weights: Path, frames: list[str], *, imgsz: int = 1280, device: str = "mps") -> dict[str, int]:
+    """Teacher-student disagreement on each of `frames` (keys of the teacher's file)."""
+    from ultralytics import YOLO
+
+    teacher = json.loads((paths.labels_dir / f"{paths.game_key}.teacher_sam3.json").read_text())["frames"]
+    model = YOLO(str(weights))
+    out = {}
+    for f in frames:
+        r = model.predict(str(paths.frames_dir / f"{int(f):06d}.jpg"), imgsz=imgsz, device=device, verbose=False)[0]
+        sboxes = [{"label": CLASSES[int(c)], "box": b.tolist()} for b, c in zip(r.boxes.xyxy.cpu().numpy(), r.boxes.cls.cpu().numpy())]
+        out[f] = disagreement(teacher[f], sboxes)
+    return out
+
+
+def heldout(paths, weights_by_fold: dict[int, Path], **kw) -> Path:
+    """Round 0: each fold's student scores the frames of the plays it never saw. Writes
+    <game>.round0_disagreement.json, {frame: unmatched boxes}, for `fz-review build --order`."""
+    teacher = json.loads((paths.labels_dir / f"{paths.game_key}.teacher_sam3.json").read_text())["frames"]
+    play_of = {str(s["frame"]): s["play_uid"] for s in json.loads(paths.samples_path.read_text())["samples"]}
+    scores: dict[str, int] = {}
+    for k, w in weights_by_fold.items():
+        scores |= score_frames(paths, w, [f for f in teacher if fold_of(play_of[f], len(weights_by_fold)) == k], **kw)
+    out = paths.labels_dir / f"{paths.game_key}.round0_disagreement.json"
+    out.write_text(json.dumps({"scores": scores, "folds": {k: str(w) for k, w in weights_by_fold.items()}}))
+    return out
+
+
 def next_sheet(paths, weights: Path, *, top: int = 300, device: str = "mps") -> Path:
     """Run the student on teacher-labelled frames nobody reviewed; the worst disagreements become
     the next review sheet's detections file (teacher boxes, ordered for review by `labelling.review`)."""
-    from ultralytics import YOLO
-
     teacher = json.loads((paths.labels_dir / f"{paths.game_key}.teacher_sam3.json").read_text())
     approved = paths.groundtruth_dir / f"{paths.game_key}.detections.json"
     seen = set()
     if approved.exists():
         a = json.loads(approved.read_text())
         seen = {r["frame"] for r in a["kept"]} | set(a["flagged"])
-    model = YOLO(str(weights))
-    scored = []
-    for f, tboxes in teacher["frames"].items():
-        if int(f) in seen:
-            continue
-        r = model.predict(str(paths.frames_dir / f"{int(f):06d}.jpg"), device=device, verbose=False)[0]
-        sboxes = [{"label": CLASSES[int(c)], "box": b.tolist()} for b, c in zip(r.boxes.xyxy.cpu().numpy(), r.boxes.cls.cpu().numpy())]
-        scored.append((disagreement(tboxes, sboxes), f))
-    scored.sort(reverse=True)
+    todo = [f for f in teacher["frames"] if int(f) not in seen]
+    scored = sorted(((d, f) for f, d in score_frames(paths, weights, todo, device=device).items()), reverse=True)
     out = paths.labels_dir / f"{paths.game_key}.round_next.json"
     out.write_text(json.dumps({"teacher": teacher["teacher"] + " (student disagreements)",
                                "frames": {f: teacher["frames"][f] for d, f in scored[:top] if d > 0}}))
@@ -178,7 +209,7 @@ def main(argv: list[str] | None = None) -> int:
     import argparse
 
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("action", choices=["export", "fit", "disagree"])
+    ap.add_argument("action", choices=["export", "fit", "disagree", "heldout"])
     ap.add_argument("--games", nargs="+", default=["2025:20:LA:CHI", "2026:1:SF:LA"], help="season:week:away:home")
     ap.add_argument("--source", choices=sorted(DATASETS), default="approved",
                     help="approved review labels, or the unreviewed teacher boxes (round 0)")
@@ -187,13 +218,21 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--epochs", type=int, default=60)
     ap.add_argument("--imgsz", type=int, default=1280)
     ap.add_argument("--batch", type=int, default=8)
+    ap.add_argument("--fold", type=int, choices=[0, 1], help="round 0: train on the other fold's plays")
     ap.add_argument("--data-root", default="data")
     a = ap.parse_args(argv)
     out, name = DATASETS[a.source], RUN_NAMES[a.source]
+    if a.fold is not None:
+        out, name = out.with_name(f"{out.name}_f{a.fold}"), f"{name}_f{a.fold}"
     if a.action == "export":
-        print(f"{export_dataset(_games(a.games, a.data_root), out, source=a.source)} frames -> {out}")
+        print(f"{export_dataset(_games(a.games, a.data_root), out, source=a.source, fold=a.fold)} frames -> {out}")
     elif a.action == "fit":
         fit(out / "data.yaml", base=a.base, epochs=a.epochs, imgsz=a.imgsz, batch=a.batch, name=name)
+    elif a.action == "heldout":
+        runs = Path("data/derived/labels/runs")
+        weights = {k: runs / f"{RUN_NAMES['teacher']}_f{k}" / "weights" / "best.pt" for k in (0, 1)}
+        for paths in _games(a.games, a.data_root):
+            print(f"held-out disagreement -> {heldout(paths, weights, imgsz=a.imgsz)}")
     else:
         weights = Path(a.weights or f"data/derived/labels/runs/{name}/weights/best.pt")
         for paths in _games(a.games, a.data_root):
@@ -201,7 +240,8 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
-__all__ = ["CLASSES", "disagreement", "export_dataset", "fit", "labelled_frames", "next_sheet", "val_play", "yolo_lines"]
+__all__ = ["CLASSES", "disagreement", "export_dataset", "fit", "fold_of", "heldout", "labelled_frames", "next_sheet",
+           "score_frames", "val_play", "yolo_lines"]
 
 
 if __name__ == "__main__":

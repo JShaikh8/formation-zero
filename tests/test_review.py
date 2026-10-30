@@ -33,3 +33,7 @@ def test_import_leaves_out_boxes_the_reviewer_removed():
     out = import_decisions("g", DET, {"decisions": {"200": "keep", "100": "drop"}, "removed": {"200": [0], "100": [0]}})
     assert out["kept"][0]["boxes"] == [DET["frames"]["200"][1]]
     assert out["boxes_removed"] == 1                     # removals on a dropped frame do not count
+
+
+def test_disputed_frames_come_first_and_confidence_breaks_ties():
+    assert frame_order(DET, {"100": 3, "300": 3}) == [300, 100, 200]

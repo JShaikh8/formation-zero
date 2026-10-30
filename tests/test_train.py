@@ -59,3 +59,12 @@ def test_round_zero_exports_every_teacher_frame_and_leaves_out_the_ball(tmp_path
     assert counts["train"] + counts["val"] == 1
     (label,) = (tmp_path / "ds" / "labels").rglob("*.txt")
     assert label.read_text().splitlines() == ["0 0.085938 0.291667 0.140625 0.527778"]
+
+
+def test_folds_split_plays_in_half_independently_of_validation():
+    from formation_zero.labelling.train import fold_of
+
+    uids = [f"g_p{i:03d}" for i in range(1000)]
+    assert 0.45 < sum(fold_of(u) for u in uids) / 1000 < 0.55
+    both = sum(fold_of(u) == 1 and val_play(u) for u in uids) / sum(val_play(u) for u in uids)
+    assert 0.35 < both < 0.65
