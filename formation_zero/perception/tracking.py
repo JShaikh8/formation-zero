@@ -9,6 +9,12 @@ derived/tracking/<game>_pNNN.<angle>.boxes.parquet (one row per tracked box, in 
 and a .summary.json beside it (`track.bytetrack.summarise`); with --overlay, an MP4 of the take
 on the film drive under overlays/.
 
+Take spans from the play index run a few frames past their cut (the index reads the film every
+0.4 s; on 49ers-Rams plays 1-10, 19 of 20 takes ran 3 to 17 frames into the next shot). So each take
+is cut-checked at full rate (`Cuts`): a cut within TRIM_S of either end trims the take there, and a
+cut further in ends every track (the tracker's `cut`). The 576p copy of 49ers-Rams also freezes and
+jumps a second at a time in places; a jump reads as a cut, which is right for tracking.
+
 Teams (`perception.team`): the colour split is fitted once per game on the teacher's player boxes
 in the sampled frames, then each player track takes the median of its confident margins over
 crops every TEAM_EVERY frames. Team 0 is the lighter-shirted side.
@@ -28,6 +34,43 @@ ANGLES = ("sideline", "endzone")
 COLUMNS = ["frame", "track_id", "label", "conf", "x1", "y1", "x2", "y2"]
 TEAM_EVERY = 5          # frames between the crops a track votes with
 TEAM_FIT_FRAMES = 400   # sampled frames whose teacher player boxes fit the game's split
+CUT_CHANGE = 12.0       # a cut changes a 64x36 grey thumbnail by at least this much a pixel (on 0-255)...
+CUT_RATIO = 4.0         # ...and by this many times the median change over the frames before it
+TRIM_S = 1.0            # a cut this close to a take's end trims the take there
+
+
+class Cuts:
+    """Fed one frame at a time, says whether a hard cut (or a freeze-and-jump) comes just before it.
+    Measured on 20 takes: cuts change the thumbnail by 16 to 32, ordinary frames by a median of 0.3 to 2.6."""
+
+    def __init__(self, window: int = 15):
+        from collections import deque
+
+        self._last, self._recent = None, deque(maxlen=window)
+
+    def __call__(self, image) -> bool:
+        import numpy as np
+
+        grey = image @ np.array([0.299, 0.587, 0.114], np.float32) if image.ndim == 3 else image.astype(np.float32)
+        bh, bw = max(1, grey.shape[0] // 36), max(1, grey.shape[1] // 64)
+        thumb = grey[:bh * (grey.shape[0] // bh), :bw * (grey.shape[1] // bw)]
+        thumb = thumb.reshape(thumb.shape[0] // bh, bh, thumb.shape[1] // bw, bw).mean(axis=(1, 3))   # block means
+        if self._last is None:
+            self._last = thumb
+            return False
+        change = float(np.abs(thumb - self._last).mean())
+        self._last = thumb
+        cut = change > max(CUT_CHANGE, CUT_RATIO * (float(np.median(self._recent)) if self._recent else 0.0))
+        self._recent.append(change)
+        return cut
+
+
+def trim_span(start: int, end: int, cuts: list[int], fps: float, edge_s: float = TRIM_S) -> tuple[int, int]:
+    """The take [start, end) without the stretch beyond a cut near either end; a cut trims only the
+    end it is nearer to, so a short take never trims to nothing."""
+    edge = edge_s * fps
+    return (max([c for c in cuts if c - start <= edge and c - start < end - c], default=start),
+            min([c for c in cuts if end - c <= edge and end - c <= c - start], default=end))
 
 
 def take_span(play, angle: str, fps: float) -> tuple[int, int]:
@@ -35,26 +78,32 @@ def take_span(play, angle: str, fps: float) -> tuple[int, int]:
     return round(getattr(play, f"{angle}_start_s") * fps), round(getattr(play, f"{angle}_end_s") * fps)
 
 
-def track_take(source, start: int, end: int, detector: Detector, tracker: Tracker, *, batch: int = 8) -> pd.DataFrame:
-    """Every tracked box in frames [start, end) of `source` (a FileSource)."""
+def track_take(source, start: int, end: int, detector: Detector, tracker: Tracker, *,
+               batch: int = 8) -> tuple[pd.DataFrame, list[int]]:
+    """Every tracked box in frames [start, end) of `source` (a FileSource), and the frames that
+    open a new shot; the tracker's tracks end at each."""
     tracker.reset()
-    rows, buf = [], []
+    rows, buf, cuts, is_cut = [], [], [], Cuts()
 
     def flush():
         for frame, det in zip(buf, detector([f.image for f in buf])):
+            if frame.index in cuts:
+                tracker.cut()
             t = tracker.update(det)
             rows.extend((frame.index, int(i), str(lab), round(float(c), 3), *(round(float(v), 1) for v in box))
                         for box, c, lab, i in zip(t.xyxy, t.confidence, t.label, t.track_id))
         buf.clear()
 
     for frame in source.iter_frames(start, end):
+        if is_cut(frame.image):
+            cuts.append(frame.index)
         buf.append(frame)
         if len(buf) == batch:
             flush()
     flush()
     from formation_zero.perception.track.bytetrack import vote_labels
 
-    return vote_labels(pd.DataFrame(rows, columns=COLUMNS))
+    return vote_labels(pd.DataFrame(rows, columns=COLUMNS)), cuts
 
 
 def fit_teams(paths, *, frames: int = TEAM_FIT_FRAMES, seed: int = 0):
@@ -117,10 +166,12 @@ def run(paths, plays: pd.DataFrame, detector: Detector, *, overlay: bool = False
         tracker = ByteTracker(source.fps)
         for play in plays.itertuples():
             for angle in ANGLES:
-                start, end = take_span(play, angle, source.fps)
+                index_span = take_span(play, angle, source.fps)
                 t0 = time.perf_counter()
-                boxes = track_take(source, start, end, detector, tracker, batch=batch)
+                boxes, cuts = track_take(source, *index_span, detector, tracker, batch=batch)
                 secs = time.perf_counter() - t0
+                start, end = trim_span(*index_span, cuts, source.fps)
+                boxes = boxes[(boxes["frame"] >= start) & (boxes["frame"] < end)].reset_index(drop=True)
                 tracks, take = summarise(boxes, source.fps)
                 team_of = vote_teams(source, start, end, boxes, teams) if teams is not None else None
                 if team_of is not None:
@@ -130,13 +181,16 @@ def run(paths, plays: pd.DataFrame, detector: Detector, *, overlay: bool = False
                 box_path, summary_path, video = take_paths(paths, int(play.play_index), angle)
                 boxes.to_parquet(box_path, index=False)
                 take.update({"play_uid": play.play_uid, "angle": angle, "start_frame": start, "end_frame": end,
-                             "frames": end - start, "fps_processed": round((end - start) / secs, 1),
+                             "frames": end - start, "index_span": list(index_span),
+                             "cuts": [c for c in cuts if start < c < end],
+                             "fps_processed": round((index_span[1] - index_span[0]) / secs, 1),
                              "tracks_detail": tracks.to_dict("records")})
                 summary_path.write_text(json.dumps(take, indent=1))
                 if overlay:
                     render(source, start, end, boxes, video, team_of=team_of)
                 out.append(take)
-                print(f"  {play.play_uid} {angle}: {end - start} frames, {take['tracks']} tracks "
+                print(f"  {play.play_uid} {angle}: {end - start} frames (trimmed {index_span[1] - index_span[0] - (end - start)}, "
+                      f"{len(take['cuts'])} cuts inside), {take['tracks']} tracks "
                       f"({take['by_label']}), {take['fragments']} fragments, teams {take.get('teams')}, "
                       f"{take['fps_processed']} fps", flush=True)
     return out
@@ -180,7 +234,8 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
-__all__ = ["ANGLES", "COLUMNS", "crop", "fit_teams", "run", "take_paths", "take_span", "track_take", "vote_teams"]
+__all__ = ["ANGLES", "COLUMNS", "Cuts", "crop", "fit_teams", "run", "take_paths", "take_span", "track_take", "trim_span",
+           "vote_teams"]
 
 
 if __name__ == "__main__":

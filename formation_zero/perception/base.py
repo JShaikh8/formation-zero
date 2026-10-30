@@ -41,6 +41,7 @@ class Detector(Protocol):
 class Tracker(Protocol):
     def update(self, detections: Detections) -> Detections: ...    # the same boxes with track_id set
     def reset(self) -> None: ...                                     # before each new take
+    def cut(self) -> None: ...                                       # at a cut inside a take: tracks end, ids stay unique
 
 
 class TeamClassifier(Protocol):

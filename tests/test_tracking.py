@@ -59,6 +59,9 @@ def test_a_player_called_a_referee_for_a_frame_keeps_his_id():
         out = t.update(Detections(np.array([[10 + i, 10, 30 + i, 60]], float), np.array([0.9]), np.array([label], dtype=object)))
         ids.append((int(out.track_id[0]), out.label[0]) if len(out) else None)
     assert len({i for i, _ in ids[1:]}) == 1 and ids[4][1] == "referee"
+    t.cut()
+    out = t.update(Detections(np.array([[20, 10, 40, 60]], float), np.array([0.9]), np.array(["player"], dtype=object)))
+    assert int(out.track_id[0]) not in {i for i, _ in ids}                 # after a cut, a new id
 
 
 def test_tracks_take_the_label_most_of_their_boxes_carry():
@@ -87,6 +90,9 @@ class CountingTracker:
     def reset(self):
         self.n = 0
 
+    def cut(self):
+        pass
+
     def update(self, d):
         self.n += 1
         return Detections(d.xyxy, d.confidence, d.label, np.full(len(d), 7))
@@ -95,9 +101,30 @@ class CountingTracker:
 def test_track_take_keeps_source_frame_numbers_across_batches():
     from formation_zero.perception.tracking import _plays, track_take
 
-    boxes = track_take(FakeSource(), 100, 111, OneBox(), CountingTracker(), batch=4)
-    assert boxes["frame"].tolist() == list(range(100, 111)) and set(boxes["track_id"]) == {7}
+    boxes, cuts = track_take(FakeSource(), 100, 111, OneBox(), CountingTracker(), batch=4)
+    assert boxes["frame"].tolist() == list(range(100, 111)) and set(boxes["track_id"]) == {7} and cuts == []
     assert _plays("1-3,7") == {1, 2, 3, 7}
+
+
+class TwoShots(FakeSource):     # a slowly brightening shot, then a cut to a bright one at frame 108
+    def iter_frames(self, start, end):
+        from formation_zero.ingest.sources import Frame
+
+        for i in range(start, end):
+            level = 200 if i >= 108 else 40 + i - start
+            yield Frame(index=i, time_s=i / 25, image=np.full((72, 128, 3), level, np.uint8))
+
+
+def test_a_cut_inside_a_take_ends_every_track_and_one_near_the_end_trims_it():
+    from formation_zero.perception.tracking import track_take, trim_span
+
+    tracker = CountingTracker()
+    tracker.cut = lambda: setattr(tracker, "cuts", getattr(tracker, "cuts", 0) + 1)
+    boxes, cuts = track_take(TwoShots(), 100, 111, OneBox(), tracker, batch=4)
+    assert cuts == [108] and tracker.cuts == 1 and len(boxes) == 11
+    assert trim_span(100, 111, cuts, fps=25) == (100, 108)                 # 3 frames from the end: trimmed
+    assert trim_span(100, 200, cuts, fps=25) == (108, 200)                 # 8 frames from the start: trimmed
+    assert trim_span(0, 300, cuts, fps=25) == (0, 300)                     # well inside: kept
 
 
 def test_overlay_draws_without_changing_the_frame_size():

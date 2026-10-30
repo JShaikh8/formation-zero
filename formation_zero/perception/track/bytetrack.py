@@ -40,6 +40,11 @@ class ByteTracker:
     def reset(self) -> None:
         self._by_group: dict[str, object] = {}
         self._ids: dict[tuple[str, int], int] = {}
+        self._next = 1
+
+    def cut(self) -> None:
+        """A cut inside the take: every track ends here, and later ids never repeat earlier ones."""
+        self._by_group, self._ids = {}, {}
 
     def _tracker(self, group: str):
         import supervision as sv
@@ -63,13 +68,19 @@ class ByteTracker:
             sd = sv.Detections(xyxy=mine.xyxy.reshape(-1, 4), confidence=mine.confidence,
                                class_id=np.arange(len(mine)))          # class_id carries the row back
             out = self._tracker(group).update_with_detections(sd)
-            ids = np.array([self._ids.setdefault((group, int(t)), len(self._ids) + 1) for t in out.tracker_id], dtype=int)
+            ids = np.array([self._id(group, int(t)) for t in out.tracker_id], dtype=int)
             parts.append(Detections(out.xyxy.astype(float), out.confidence.astype(float),
                                     mine.label[out.class_id] if len(out) else np.zeros(0, dtype=object), ids))
         if not parts:
             return Detections(np.zeros((0, 4)), np.zeros(0), np.zeros(0, dtype=object), np.zeros(0, dtype=int))
         return Detections(np.concatenate([p.xyxy for p in parts]), np.concatenate([p.confidence for p in parts]),
                           np.concatenate([p.label for p in parts]), np.concatenate([p.track_id for p in parts]))
+
+
+    def _id(self, group: str, t: int) -> int:
+        if (group, t) not in self._ids:
+            self._ids[group, t], self._next = self._next, self._next + 1
+        return self._ids[group, t]
 
 
 def vote_labels(rows: pd.DataFrame) -> pd.DataFrame:
