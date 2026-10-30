@@ -1,7 +1,8 @@
 """Draw tracked boxes and ids on a take's frames and write an MP4: the milestone 3 check by eye.
 
-Colours say team when teams are known (`team_of`: track id -> 0 or 1), else label. A track keeps
-its number, so an id switch shows as a number changing on one player.
+Colours say team when teams are known (`team_of`: track id -> 0 or 1), else label; people off the
+field are thin and grey. A track keeps its number, so an id switch shows as a number changing on one
+player.
 """
 
 from __future__ import annotations
@@ -13,10 +14,12 @@ import pandas as pd
 
 TEAM_COLOURS = {0: (255, 210, 63), 1: (63, 208, 255)}
 LABEL_COLOURS = {"player": (255, 255, 255), "referee": (255, 93, 115)}
+OFF_FIELD = (140, 140, 140)
 
 
 def draw(image: np.ndarray, boxes: pd.DataFrame, team_of: dict[int, int] | None = None) -> np.ndarray:
-    """One frame with its boxes: rows of track_id, label, x1, y1, x2, y2."""
+    """One frame with its boxes: rows of track_id, label, x1, y1, x2, y2, and optionally off_field
+    (drawn thin and grey, without an id)."""
     from PIL import Image, ImageDraw, ImageFont
 
     im = Image.fromarray(image)
@@ -24,6 +27,9 @@ def draw(image: np.ndarray, boxes: pd.DataFrame, team_of: dict[int, int] | None 
     width = max(2, image.shape[1] // 640)
     font = ImageFont.load_default(size=max(12, image.shape[1] // 64))   # legible after scaling to 1280
     for r in boxes.itertuples():
+        if getattr(r, "off_field", False):
+            d.rectangle([r.x1, r.y1, r.x2, r.y2], outline=OFF_FIELD, width=1)
+            continue
         team = (team_of or {}).get(int(r.track_id), -1)
         colour = LABEL_COLOURS["referee"] if r.label == "referee" else TEAM_COLOURS.get(team, LABEL_COLOURS["player"])
         d.rectangle([r.x1, r.y1, r.x2, r.y2], outline=colour, width=width)

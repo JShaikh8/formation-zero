@@ -153,3 +153,37 @@ def test_tracks_vote_their_team_and_doubtful_crops_abstain():
                           for f in range(10) for t, w, lab in ((1, 10, "player"), (2, 30, "player"), (3, 20, "player"),
                                                                (4, 30, "referee"))])
     assert vote_teams(Source(), 0, 10, boxes, Teams(), every=5) == {1: 0, 2: 1, 3: -1}
+
+
+def test_off_field_boxes_are_grey_and_have_no_id():
+    from formation_zero.perception.overlay import OFF_FIELD, draw
+
+    img = np.zeros((36, 64, 3), np.uint8)
+    row = {"track_id": 3, "label": "player", "x1": 5, "y1": 5, "x2": 15, "y2": 30}
+    out = draw(img, pd.DataFrame([{**row, "off_field": True}]), {3: 1})
+    assert set(map(tuple, out.reshape(-1, 3))) == {(0, 0, 0), OFF_FIELD}
+
+
+def test_players_whose_feet_stay_off_the_field_are_voted_off_and_officials_stay(monkeypatch):
+    import formation_zero.perception.field.lines as lines
+    from formation_zero.perception.tracking import vote_field
+
+    mask = np.zeros((80, 120), bool)
+    mask[30:, :] = True                                   # the field is the lower part of the frame
+    monkeypatch.setattr(lines, "field_mask", lambda image, angle=None: mask)
+
+    class Source(FakeSource):
+        def iter_frames(self, start, end, step=1):
+            from formation_zero.ingest.sources import Frame
+
+            for i in range(start, end, step):
+                yield Frame(index=i, time_s=i / 25, image=np.zeros((80, 120, 3), np.uint8))
+
+    def box(t, label, foot_y, x=10):
+        return [{"frame": f, "track_id": t, "label": label, "conf": 0.9, "x1": x, "y1": foot_y - 15, "x2": x + 8, "y2": foot_y}
+                for f in range(0, 40)]
+
+    boxes = pd.DataFrame(box(1, "player", 20) + box(2, "referee", 20, 30) + box(3, "player", 60, 50)
+                         + box(4, "player", 60, 70) + box(5, "player", 60, 90))
+    assert vote_field(Source(), 0, 40, boxes, "sideline", every=10) == {1}
+    assert vote_field(Source(), 0, 40, boxes, "endzone", every=10) == set()

@@ -15,6 +15,9 @@ is cut-checked at full rate (`Cuts`): a cut within TRIM_S of either end trims th
 cut further in ends every track (the tracker's `cut`). The 576p copy of 49ers-Rams also freezes and
 jumps a second at a time in places; a jump reads as a cut, which is right for tracking.
 
+Player tracks whose feet stay off the field (benches, staff) are marked `off_field` on sideline
+takes (`vote_field`); they take no team, and the overlay draws them grey without an id.
+
 Teams (`perception.team`): the colour split is fitted once per game on the teacher's player boxes
 in the sampled frames, then each player track takes the median of its confident margins over
 crops every TEAM_EVERY frames. Team 0 is the lighter-shirted side.
@@ -37,6 +40,11 @@ TEAM_FIT_FRAMES = 400   # sampled frames whose teacher player boxes fit the game
 CUT_CHANGE = 12.0       # a cut changes a 64x36 grey thumbnail by at least this much a pixel (on 0-255)...
 CUT_RATIO = 4.0         # ...and by this many times the median change over the frames before it
 TRIM_S = 1.0            # a cut this close to a take's end trims the take there
+FIELD_ANGLES = ("sideline",)    # where the field mask finds the far sideline reliably (GRD-37); end-zone paint fools it
+FIELD_EVERY = 10        # frames between the field masks a track votes with
+FIELD_MAX_SHARE = 0.5   # a mask that would put more of a frame's boxes off the field than this is not trusted
+OFF_FIELD_SHARE = 0.5   # a track whose feet are off the field in at least this share of its votes is off it...
+OFF_FIELD_MIN = 2       # ...given at least this many off-field votes
 
 
 class Cuts:
@@ -148,6 +156,43 @@ def vote_teams(source, start: int, end: int, boxes: pd.DataFrame, teams, *, ever
     return {t: (int(np.median(v) > 0) if v else -1) for t, v in margins.items()}
 
 
+def vote_field(source, start: int, end: int, boxes: pd.DataFrame, angle: str, *,
+               every: int = FIELD_EVERY) -> set[int]:
+    """Player track ids standing off the field (benches, staff, the chain crew): the bottom middle of
+    the box outside `perception.field.lines.field_mask` in most of the frames the track is in, one mask
+    every `every` frames. Feet past the frame edge count as on. Officials stay (some work the sideline).
+    Empty for angles the mask cannot read.
+
+    Checked on 49ers-Rams plays 1-10 (2026-10-30): of 165 tracks it put off the field, nearly all were
+    bench players, staff, chain crew and cheerleaders. It misses the near bench whenever the near
+    sideline is out of shot (no boundary to cut at); field registration (milestone 4) does that properly."""
+    import numpy as np
+
+    from formation_zero.perception.field.lines import field_mask
+
+    if angle not in FIELD_ANGLES or boxes.empty:
+        return set()
+    votes: dict[int, list[bool]] = {}
+    players = set(boxes.loc[boxes["label"] == "player", "track_id"].astype(int))
+    by_frame = dict(tuple(boxes.groupby("frame")))
+    for f in source.iter_frames(start, end, step=every):
+        rows = by_frame.get(f.index)
+        mask = field_mask(f.image, angle) if rows is not None else None
+        if mask is None:
+            continue
+        h, w = mask.shape
+        x = ((rows["x1"] + rows["x2"]) / 2).astype(int).to_numpy()
+        y = rows["y2"].astype(int).to_numpy()
+        seen = (x >= 0) & (x < w) & (y >= 0) & (y < h)
+        off = np.zeros(len(rows), bool)
+        off[seen] = ~mask[y[seen], x[seen]]
+        if off.mean() > FIELD_MAX_SHARE:
+            continue
+        for t, o in zip(rows["track_id"], off):
+            votes.setdefault(int(t), []).append(bool(o))
+    return {t for t, v in votes.items() if t in players and sum(v) >= OFF_FIELD_MIN and sum(v) >= OFF_FIELD_SHARE * len(v)}
+
+
 def take_paths(paths, play_index: int, angle: str) -> tuple[Path, Path, Path]:
     stem = f"{paths.game_key}_p{play_index:03d}.{angle}"
     return (paths.tracking_dir / f"{stem}.boxes.parquet", paths.tracking_dir / f"{stem}.summary.json",
@@ -172,8 +217,14 @@ def run(paths, plays: pd.DataFrame, detector: Detector, *, overlay: bool = False
                 secs = time.perf_counter() - t0
                 start, end = trim_span(*index_span, cuts, source.fps)
                 boxes = boxes[(boxes["frame"] >= start) & (boxes["frame"] < end)].reset_index(drop=True)
+                off = vote_field(source, start, end, boxes, angle)
+                boxes["off_field"] = boxes["track_id"].isin(off)
                 tracks, take = summarise(boxes, source.fps)
-                team_of = vote_teams(source, start, end, boxes, teams) if teams is not None else None
+                if len(tracks):
+                    tracks["off_field"] = tracks["track_id"].isin(off)
+                take["off_field"] = len(off)
+                on = boxes[~boxes["off_field"]]
+                team_of = vote_teams(source, start, end, on, teams) if teams is not None else None
                 if team_of is not None:
                     boxes["team"] = boxes["track_id"].map(team_of).fillna(-1).astype(int)
                     tracks["team"] = tracks["track_id"].map(team_of).fillna(-1).astype(int)
@@ -191,7 +242,7 @@ def run(paths, plays: pd.DataFrame, detector: Detector, *, overlay: bool = False
                 out.append(take)
                 print(f"  {play.play_uid} {angle}: {end - start} frames (trimmed {index_span[1] - index_span[0] - (end - start)}, "
                       f"{len(take['cuts'])} cuts inside), {take['tracks']} tracks "
-                      f"({take['by_label']}), {take['fragments']} fragments, teams {take.get('teams')}, "
+                      f"({take['by_label']}, {len(off)} off the field), {take['fragments']} fragments, teams {take.get('teams')}, "
                       f"{take['fps_processed']} fps", flush=True)
     return out
 
@@ -235,7 +286,7 @@ def main(argv: list[str] | None = None) -> int:
 
 
 __all__ = ["ANGLES", "COLUMNS", "Cuts", "crop", "fit_teams", "run", "take_paths", "take_span", "track_take", "trim_span",
-           "vote_teams"]
+           "vote_field", "vote_teams"]
 
 
 if __name__ == "__main__":
