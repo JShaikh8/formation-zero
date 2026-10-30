@@ -1,8 +1,8 @@
 """Camera angle per take: sideline or end zone, from a tiny learned model on frame layout.
 
-Why learned: the hand-tuned edge-orientation feature from the summer read 88/47 on the snow
-game and 2 to 6 / 15 to 33 on a clear one, and two hand-built replacements failed the same
-afternoon. The difference between the two NFL+ cameras is obvious to a person in a thumbnail
+Why learned: the hand-tuned edge-orientation feature from the summer read 88/47 (endzone /
+sideline) on the snow game and 2 to 6 / 15 to 33 on a clear one, and two hand-built replacements
+failed the same afternoon. The difference between the two NFL+ cameras is obvious to a person in a thumbnail
 (far-sideline wall at the top vs the crowd band; rotated vs upright yard numbers), so it is
 obvious to a linear model on layout features. Labels come from contact sheets, one keystroke each.
 

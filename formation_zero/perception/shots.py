@@ -28,9 +28,11 @@ looks reasonable if you have not looked at the distribution — finds almost not
 
 Tilt: the magnitude-weighted circular mean of edge orientation, reported as 0-90 degrees, where
 0 means the dominant lines run horizontally across the image and 90 means they run vertically.
-On the demo game sideline shots measure around 88 and endzone shots around 47 — so what actually
-dominates the sideline frames is upright players and the vertical LOS/first-down graphics, not
-the yard lines. Worth knowing before reading any physical meaning into the number.
+On the demo game endzone shots measure around 88 and sideline shots around 47. Snow hides the
+yard lines, so the endzone frames are dominated by the goalposts and upright players; on a clear
+field the same camera reads near 0 because its yard lines run across the frame. The sideline
+camera's yard lines rake diagonally, hence the middle band. (Until 2026-10-30 the hand labels had
+the two names swapped, and this paragraph explained the swapped numbers away.)
 
 Demo game film window
 ---------------------

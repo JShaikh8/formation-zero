@@ -22,8 +22,8 @@ def shots(n, duration=14.0):
     return [Shot(start=i * duration, duration=duration, tilt=None, samples=35) for i in range(n)]
 
 
-def alternating(n, first="ENDZONE"):
-    other = "SIDELINE" if first == "ENDZONE" else "ENDZONE"
+def alternating(n, first="SIDELINE"):
+    other = "ENDZONE" if first == "SIDELINE" else "SIDELINE"
     return [first if i % 2 == 0 else other for i in range(n)]
 
 
@@ -36,7 +36,7 @@ def test_kde_is_denser_near_its_training_points():
 
 
 def test_kde_represents_a_bimodal_class():
-    """Sideline reads near 0 or near 85; both modes must score above the gap between them."""
+    """The endzone camera reads near 0 or near 85; both modes must score above the gap between them."""
     points = [1.0, 3.0, 5.0, 82.0, 85.0, 88.0]
     assert kde_logpdf(3.0, points) > kde_logpdf(45.0, points)
     assert kde_logpdf(85.0, points) > kde_logpdf(45.0, points)
@@ -47,55 +47,55 @@ def test_kde_on_no_points_is_negative_infinity():
 
 
 def test_emissions_drop_unmeasurable_tilts():
-    labels = [{"view": "SIDELINE", "tilt": 85.0}, {"view": "SIDELINE", "tilt": None},
-              {"view": "ENDZONE", "tilt": float("nan")}, {"view": "ENDZONE", "tilt": 30.0}]
-    assert emissions_from(labels) == {"SIDELINE": [85.0], "ENDZONE": [30.0]}
+    labels = [{"view": "ENDZONE", "tilt": 85.0}, {"view": "ENDZONE", "tilt": None},
+              {"view": "SIDELINE", "tilt": float("nan")}, {"view": "SIDELINE", "tilt": 30.0}]
+    assert emissions_from(labels) == {"ENDZONE": [85.0], "SIDELINE": [30.0]}
 
 
 # ---- view labelling ------------------------------------------------------------------------
 
 
 def test_viterbi_recovers_alternation_from_clean_signal():
-    em = {"SIDELINE": [85.0], "ENDZONE": [30.0]}
+    em = {"ENDZONE": [85.0], "SIDELINE": [30.0]}
     tilts = [85.0, 30.0, 85.0, 30.0, 85.0, 30.0]
-    assert label_views(tilts, em) == ["SIDELINE", "ENDZONE"] * 3
+    assert label_views(tilts, em) == ["ENDZONE", "SIDELINE"] * 3
 
 
-# Emission sets shaped like the real ones: sideline is bimodal near 0 and near 85, endzone
+# Emission sets shaped like the real ones: endzone is bimodal near 0 and near 85, sideline
 # occupies the middle band. Single-point emissions would make the KDE absurdly confident and
 # no realistic prior could move it, which is not the regime this model runs in.
-REAL_EMISSIONS = {"SIDELINE": [1.0, 3.0, 5.0, 80.0, 84.0, 88.0],
-                  "ENDZONE": [15.0, 25.0, 30.0, 35.0, 45.0, 50.0]}
+REAL_EMISSIONS = {"ENDZONE": [1.0, 3.0, 5.0, 80.0, 84.0, 88.0],
+                  "SIDELINE": [15.0, 25.0, 30.0, 35.0, 45.0, 50.0]}
 
 
 def test_viterbi_overrides_one_ambiguous_shot_using_its_neighbours():
     """The whole reason for a sequence model: structure beats a single bad observation.
 
-    Shot 3 reads 70, which on its own looks sideline. It sits between two confident sidelines,
+    Shot 3 reads 70, which on its own looks endzone. It sits between two confident endzones,
     and alternation says it cannot be one.
     """
     tilts = [85.0, 30.0, 85.0, 70.0, 85.0, 30.0, 85.0]
-    assert label_views(tilts, REAL_EMISSIONS, p_same=0.02)[3] == "ENDZONE"
+    assert label_views(tilts, REAL_EMISSIONS, p_same=0.02)[3] == "SIDELINE"
 
 
 def test_a_weak_alternation_prior_lets_the_observation_win():
     """The override is not unconditional — it is the prior's strength doing the work."""
     tilts = [85.0, 30.0, 85.0, 70.0, 85.0, 30.0, 85.0]
-    assert label_views(tilts, REAL_EMISSIONS, p_same=0.45)[3] == "SIDELINE"
+    assert label_views(tilts, REAL_EMISSIONS, p_same=0.45)[3] == "ENDZONE"
 
 
 def test_viterbi_carries_a_shot_with_no_measurable_tilt():
-    em = {"SIDELINE": [85.0], "ENDZONE": [30.0]}
-    assert label_views([85.0, 30.0, 85.0, None, 85.0], em)[3] == "ENDZONE"
+    em = {"ENDZONE": [85.0], "SIDELINE": [30.0]}
+    assert label_views([85.0, 30.0, 85.0, None, 85.0], em)[3] == "SIDELINE"
 
 
 def test_viterbi_handles_nan_the_same_as_none():
-    em = {"SIDELINE": [85.0], "ENDZONE": [30.0]}
-    assert label_views([85.0, 30.0, 85.0, float("nan"), 85.0], em)[3] == "ENDZONE"
+    em = {"ENDZONE": [85.0], "SIDELINE": [30.0]}
+    assert label_views([85.0, 30.0, 85.0, float("nan"), 85.0], em)[3] == "SIDELINE"
 
 
 def test_viterbi_on_empty_input():
-    assert label_views([], {"SIDELINE": [85.0], "ENDZONE": [30.0]}) == []
+    assert label_views([], {"ENDZONE": [85.0], "SIDELINE": [30.0]}) == []
 
 
 # ---- merging -------------------------------------------------------------------------------
@@ -104,14 +104,14 @@ def test_viterbi_on_empty_input():
 def test_merge_collapses_a_same_view_run():
     """A spurious cut splits one take into two pieces of the same view."""
     s = shots(4)
-    merged, views = merge_same_view(s, ["ENDZONE", "SIDELINE", "SIDELINE", "ENDZONE"])
-    assert views == ["ENDZONE", "SIDELINE", "ENDZONE"]
+    merged, views = merge_same_view(s, ["SIDELINE", "ENDZONE", "ENDZONE", "SIDELINE"])
+    assert views == ["SIDELINE", "ENDZONE", "SIDELINE"]
     assert len(merged) == 3
 
 
 def test_merged_shot_spans_the_whole_run():
     s = shots(3)
-    merged, _ = merge_same_view(s, ["SIDELINE", "SIDELINE", "SIDELINE"])
+    merged, _ = merge_same_view(s, ["ENDZONE", "ENDZONE", "ENDZONE"])
     assert len(merged) == 1
     assert merged[0].start == s[0].start
     assert merged[0].end == pytest.approx(s[-1].end)
@@ -126,27 +126,27 @@ def test_merge_leaves_a_strictly_alternating_sequence_untouched():
 # ---- pairing -------------------------------------------------------------------------------
 
 
-def test_pairing_starts_at_the_first_shot_when_endzone_leads():
-    """The demo film leads with endzone; assuming sideline-first would drop the opening play."""
-    plays = pair_plays(shots(6), alternating(6, first="ENDZONE"))
-    assert len(plays) == 3
-    assert plays[0].endzone.start == 0.0
-    assert plays[0].sideline.start == 14.0
-
-
-def test_pairing_handles_sideline_leading_film():
+def test_pairing_starts_at_the_first_shot_when_sideline_leads():
+    """The demo film leads with sideline; assuming endzone-first would drop the opening play."""
     plays = pair_plays(shots(6), alternating(6, first="SIDELINE"))
     assert len(plays) == 3
     assert plays[0].sideline.start == 0.0
+    assert plays[0].endzone.start == 14.0
+
+
+def test_pairing_handles_endzone_leading_film():
+    plays = pair_plays(shots(6), alternating(6, first="ENDZONE"))
+    assert len(plays) == 3
+    assert plays[0].endzone.start == 0.0
 
 
 def test_pairing_rejects_an_unmerged_same_view_pair():
     with pytest.raises(ValueError, match="merge_same_view"):
-        pair_plays(shots(4), ["SIDELINE", "SIDELINE", "ENDZONE", "SIDELINE"])
+        pair_plays(shots(4), ["ENDZONE", "ENDZONE", "SIDELINE", "ENDZONE"])
 
 
 def test_play_span_covers_both_angles():
-    plays = pair_plays(shots(2), ["ENDZONE", "SIDELINE"])
+    plays = pair_plays(shots(2), ["SIDELINE", "ENDZONE"])
     assert plays[0].start == 0.0
     assert plays[0].end == pytest.approx(28.0)
 
@@ -188,7 +188,7 @@ def test_join_refuses_when_counts_disagree():
 
 
 def test_join_carries_frame_numbers_for_both_angles():
-    plays = pair_plays(shots(2), ["ENDZONE", "SIDELINE"])
+    plays = pair_plays(shots(2), ["SIDELINE", "ENDZONE"])
     row = join(plays, pbp_frame(["pass"]), fps=25.0).iloc[0]
-    assert row["endzone_start_frame"] == 0
-    assert row["sideline_start_frame"] == 350
+    assert row["sideline_start_frame"] == 0
+    assert row["endzone_start_frame"] == 350

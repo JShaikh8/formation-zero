@@ -10,7 +10,7 @@
   {
    "id": "c01",
    "frame": 1727,
-   "view": "SIDELINE",
+   "view": "ENDZONE",
    "bbox": [
     662.5,
     278.0,
@@ -25,7 +25,7 @@
   {
    "id": "c02",
    "frame": 45589,
-   "view": "SIDELINE",
+   "view": "ENDZONE",
    "bbox": [
     264.4,
     209.0,
@@ -40,7 +40,7 @@
   {
    "id": "c03",
    "frame": 3391,
-   "view": "SIDELINE",
+   "view": "ENDZONE",
    "bbox": [
     35.8,
     267.2,
@@ -55,7 +55,7 @@
   {
    "id": "c04",
    "frame": 48428,
-   "view": "SIDELINE",
+   "view": "ENDZONE",
    "bbox": [
     456.1,
     257.4,
@@ -70,7 +70,7 @@
   {
    "id": "c05",
    "frame": 45589,
-   "view": "SIDELINE",
+   "view": "ENDZONE",
    "bbox": [
     929.2,
     232.3,
@@ -85,7 +85,7 @@
   {
    "id": "c06",
    "frame": 3391,
-   "view": "SIDELINE",
+   "view": "ENDZONE",
    "bbox": [
     914.5,
     3.2,
@@ -100,7 +100,7 @@
   {
    "id": "c07",
    "frame": 8195,
-   "view": "SIDELINE",
+   "view": "ENDZONE",
    "bbox": [
     829.7,
     266.0,
@@ -115,7 +115,7 @@
   {
    "id": "c08",
    "frame": 24751,
-   "view": "SIDELINE",
+   "view": "ENDZONE",
    "bbox": [
     535.0,
     182.8,
@@ -130,7 +130,7 @@
   {
    "id": "c09",
    "frame": 24643,
-   "view": "SIDELINE",
+   "view": "ENDZONE",
    "bbox": [
     339.3,
     249.3,
@@ -145,7 +145,7 @@
   {
    "id": "c10",
    "frame": 45589,
-   "view": "SIDELINE",
+   "view": "ENDZONE",
    "bbox": [
     635.1,
     264.1,
@@ -160,7 +160,7 @@
   {
    "id": "c11",
    "frame": 48337,
-   "view": "SIDELINE",
+   "view": "ENDZONE",
    "bbox": [
     193.3,
     323.6,
@@ -175,7 +175,7 @@
   {
    "id": "c12",
    "frame": 3391,
-   "view": "SIDELINE",
+   "view": "ENDZONE",
    "bbox": [
     227.9,
     217.3,
@@ -190,7 +190,7 @@
   {
    "id": "c13",
    "frame": 8195,
-   "view": "SIDELINE",
+   "view": "ENDZONE",
    "bbox": [
     98.2,
     240.1,
@@ -205,7 +205,7 @@
   {
    "id": "c14",
    "frame": 48337,
-   "view": "SIDELINE",
+   "view": "ENDZONE",
    "bbox": [
     559.9,
     313.9,
@@ -220,7 +220,7 @@
   {
    "id": "c15",
    "frame": 48337,
-   "view": "SIDELINE",
+   "view": "ENDZONE",
    "bbox": [
     587.7,
     345.4,
@@ -235,7 +235,7 @@
   {
    "id": "c16",
    "frame": 24751,
-   "view": "SIDELINE",
+   "view": "ENDZONE",
    "bbox": [
     298.1,
     259.6,
@@ -250,7 +250,7 @@
   {
    "id": "c17",
    "frame": 48644,
-   "view": "ENDZONE",
+   "view": "SIDELINE",
    "bbox": [
     76.6,
     170.1,
@@ -265,7 +265,7 @@
   {
    "id": "c18",
    "frame": 25206,
-   "view": "ENDZONE",
+   "view": "SIDELINE",
    "bbox": [
     511.9,
     226.5,
@@ -280,7 +280,7 @@
   {
    "id": "c19",
    "frame": 4577,
-   "view": "ENDZONE",
+   "view": "SIDELINE",
    "bbox": [
     264.4,
     5.9,
@@ -295,7 +295,7 @@
   {
    "id": "c20",
    "frame": 48644,
-   "view": "ENDZONE",
+   "view": "SIDELINE",
    "bbox": [
     205.0,
     447.6,
@@ -310,7 +310,7 @@
   {
    "id": "c21",
    "frame": 4577,
-   "view": "ENDZONE",
+   "view": "SIDELINE",
    "bbox": [
     566.7,
     268.8,
@@ -325,7 +325,7 @@
   {
    "id": "c22",
    "frame": 25278,
-   "view": "ENDZONE",
+   "view": "SIDELINE",
    "bbox": [
     845.9,
     317.7,
@@ -340,7 +340,7 @@
   {
    "id": "c23",
    "frame": 8515,
-   "view": "ENDZONE",
+   "view": "SIDELINE",
    "bbox": [
     366.5,
     448.8,
@@ -355,7 +355,7 @@
   {
    "id": "c24",
    "frame": 23878,
-   "view": "ENDZONE",
+   "view": "SIDELINE",
    "bbox": [
     704.6,
     351.4,
@@ -370,7 +370,7 @@
   {
    "id": "c25",
    "frame": 46630,
-   "view": "ENDZONE",
+   "view": "SIDELINE",
    "bbox": [
     516.6,
     250.8,
@@ -385,7 +385,7 @@
   {
    "id": "c26",
    "frame": 25206,
-   "view": "ENDZONE",
+   "view": "SIDELINE",
    "bbox": [
     187.7,
     222.2,
@@ -400,7 +400,7 @@
   {
    "id": "c27",
    "frame": 46751,
-   "view": "ENDZONE",
+   "view": "SIDELINE",
    "bbox": [
     794.0,
     235.8,
@@ -415,7 +415,7 @@
   {
    "id": "c28",
    "frame": 4577,
-   "view": "ENDZONE",
+   "view": "SIDELINE",
    "bbox": [
     437.1,
     224.6,
@@ -430,7 +430,7 @@
   {
    "id": "c29",
    "frame": 46630,
-   "view": "ENDZONE",
+   "view": "SIDELINE",
    "bbox": [
     627.0,
     279.5,
@@ -445,7 +445,7 @@
   {
    "id": "c30",
    "frame": 46751,
-   "view": "ENDZONE",
+   "view": "SIDELINE",
    "bbox": [
     812.7,
     235.2,
@@ -460,7 +460,7 @@
   {
    "id": "c31",
    "frame": 25278,
-   "view": "ENDZONE",
+   "view": "SIDELINE",
    "bbox": [
     303.2,
     288.6,
@@ -475,7 +475,7 @@
   {
    "id": "c32",
    "frame": 8515,
-   "view": "ENDZONE",
+   "view": "SIDELINE",
    "bbox": [
     289.1,
     434.6,

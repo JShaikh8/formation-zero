@@ -32,7 +32,7 @@
       "src": "assets/shots-histogram.svg",
       "date": "2026-08-04",
       "milestone": "F0",
-      "caption": "How long each camera take lasts, and the 'tilt' signal that separates sideline from end-zone angles. Real measurements from the demo game. The tilt is bimodal on purpose: sideline takes read near 88 degrees, end-zone takes near 47."
+      "caption": "How long each camera take lasts, and the 'tilt' signal that separates sideline from end-zone angles. Real measurements from the demo game. The two cameras separate cleanly: end-zone takes read near 88 degrees (snow hides the yard lines, leaving goalposts and upright players), sideline takes near 47 (diagonal yard lines)."
     },
     {
       "title": "184 plays, laid out on the film's clock",

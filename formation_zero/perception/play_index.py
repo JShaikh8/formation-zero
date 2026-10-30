@@ -75,9 +75,10 @@ class Play:
 def kde_logpdf(x: float, points, bandwidth: float = TILT_BANDWIDTH) -> float:
     """Log density of a Gaussian KDE at `x`.
 
-    Nonparametric on purpose: the sideline class is bimodal, reading near 0 when the yard lines
-    dominate a frame and near 85 when upright players and the vertical LOS graphics do. A KDE
-    represents that without anyone having to name the modes or fit a mixture.
+    Nonparametric on purpose: the endzone class is bimodal, reading near 0 when its yard lines
+    (which run across the frame) dominate and near 85 when snow hides them and the goalposts and
+    upright players do. A KDE represents that without anyone having to name the modes or fit a
+    mixture.
     """
     points = np.asarray(points, dtype=float)
     if points.size == 0:
@@ -144,8 +145,9 @@ def merge_same_view(shots: list[Shot], views: list[str]) -> tuple[list[Shot], li
 def pair_plays(shots: list[Shot], views: list[str]) -> list[Play]:
     """Pair consecutive shots into plays, one view each.
 
-    Pairs start at the first shot: the demo game's film leads with the endzone angle, and
-    assuming sideline-first drops the opening play and shifts every pairing after it.
+    Pairs start at the first shot, whichever view it is. The demo game's film leads with the
+    sideline angle, as All-22 does; anchoring on a fixed view instead would drop the opening play
+    whenever the film starts on the other one, and shift every pairing after it.
     """
     plays = []
     for index, i in enumerate(range(0, len(shots) - 1, 2)):

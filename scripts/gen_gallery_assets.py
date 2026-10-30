@@ -178,7 +178,7 @@ def shots_svg() -> str:
     med = float(s["duration_s"].median())
     parts.append(text(470, 330, f"median {med:.1f}s", size=12, fill=MUTED, anchor="end",
                       family=MONO))
-    parts.append(text(960, 330, "sideline ≈ 88°   end zone ≈ 47°", size=12, fill=MUTED,
+    parts.append(text(960, 330, "end zone ≈ 88°   sideline ≈ 47°", size=12, fill=MUTED,
                       anchor="end", family=MONO))
     parts.append("</svg>")
     return "\n".join(parts)

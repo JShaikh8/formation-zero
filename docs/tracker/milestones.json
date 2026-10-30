@@ -514,7 +514,7 @@
           "key": "GRD-95",
           "title": "Spike: SAM 3D Body on 32 All-22 player crops (isolated and crowded, both angles, graded g/r/b) decides fitted bodies or posed capsules for GRD-59",
           "status": "done",
-          "note": "Done 2026-10-30 on the clear game (576p): fitted bodies for everyone. 27 player crops graded 15 good, 10 rough, 2 broken (5 sideline staff and officials left out); every isolated crop on both angles good or rough, smallest crops (43-59 px) fine; both broken crops are crowded end-zone line play. 1.06 s per person on the M4 with the MHR body model on CPU (it needs float64), about 14.5 h per game at 6 keyframes. Untested: wide-shot players the detector misses at 576p."
+          "note": "Done 2026-10-30 on the clear game (576p): fitted bodies for everyone. 27 player crops graded 15 good, 10 rough, 2 broken (5 sideline staff and officials left out); every isolated crop on both angles good or rough, smallest crops (43-59 px) fine; both broken crops are crowded line play on the sideline camera. 1.06 s per person on the M4 with the MHR body model on CPU (it needs float64), about 14.5 h per game at 6 keyframes. Untested: wide-shot players the detector misses at 576p."
         },
         {
           "key": "GRD-60",
