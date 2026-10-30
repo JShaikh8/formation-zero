@@ -37,3 +37,9 @@ def test_import_leaves_out_boxes_the_reviewer_removed():
 
 def test_disputed_frames_come_first_and_confidence_breaks_ties():
     assert frame_order(DET, {"100": 3, "300": 3}) == [300, 100, 200]
+
+
+def test_suggested_removals_travel_with_their_frames():
+    page = build_page("g", DET, frame_order(DET), suggestions={"200": [0]})
+    data = json.loads(page.split("const D = ", 1)[1].split(";\n", 1)[0])
+    assert [f.get("suggest") for f in data["frames"]] == [None, [0], None]

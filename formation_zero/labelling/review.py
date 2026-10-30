@@ -9,7 +9,8 @@ the teacher's weakest frames are where review time pays; once a held-out student
 the frames (`--order`), the most disputed come first instead. Keys: k keep, d drop, f flag (look again
 with masks), u undo, arrows move, space enlarges the current frame. In the enlarged frame a click
 removes one box (and a second click restores it), so a frame that is right but for a bench player
-the teacher boxed can still be kept. Decisions live in the browser until Export downloads them.
+the teacher boxed can still be kept. With `--suggest` (`labelling.field_filter`), boxes whose feet
+are off the field start out removed, and a click restores any the field mask got wrong. Decisions live in the browser until Export downloads them.
 Frames load as they scroll into view; 2,000 full-size frames at once would exhaust the tab.
 
 `import` writes the kept frames' boxes to data/groundtruth/<game>.detections.json, keyed by source
@@ -40,10 +41,14 @@ def frame_order(detections: dict, disputed: dict[str, int] | None = None) -> lis
                   key=lambda f: (-d.get(str(f), 0), weakest(detections["frames"][str(f)]), f))
 
 
-def build_page(game_key: str, detections: dict, frames: list[int], order: str = "least confident first") -> str:
-    """The self-contained review page: data inline, images by relative path."""
+def build_page(game_key: str, detections: dict, frames: list[int], order: str = "least confident first",
+               suggestions: dict[str, list[int]] | None = None) -> str:
+    """The self-contained review page: data inline, images by relative path. `suggestions` are box
+    indices per frame that start out removed until the reviewer restores them."""
+    sug = suggestions or {}
     data = {"game": game_key, "teacher": detections.get("teacher", "?"), "colors": COLORS, "order": order,
-            "frames": [{"frame": f, "img": f"{f:06d}.jpg", "boxes": detections["frames"][str(f)]} for f in frames]}
+            "frames": [{"frame": f, "img": f"{f:06d}.jpg", "boxes": detections["frames"][str(f)],
+                        **({"suggest": sug[str(f)]} if str(f) in sug else {})} for f in frames]}
     return _PAGE.replace("__DATA__", json.dumps(data, separators=(",", ":")))
 
 
@@ -79,6 +84,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--detections", required=True, help="teacher detections JSON")
     ap.add_argument("--decisions", help="the file Export downloaded (import only)")
     ap.add_argument("--order", help="held-out disagreement JSON: most disputed frames first (build only)")
+    ap.add_argument("--suggest", help="field-mask suggestions JSON: those boxes start removed (build only)")
     ap.add_argument("--data-root", default="data")
     a = ap.parse_args(argv)
 
@@ -90,8 +96,14 @@ def main(argv: list[str] | None = None) -> int:
         if missing:
             raise SystemExit(f"{len(missing)} frames not extracted yet (fz-sample --extract), e.g. {missing[:3]}")
         disputed = json.loads(Path(a.order).read_text())["scores"] if a.order else None
+        suggestions = None
+        if a.suggest:
+            sug = json.loads(Path(a.suggest).read_text())
+            if sug["teacher"] != detections.get("teacher"):
+                raise SystemExit("suggestions were made for another detections file (box indices would not match)")
+            suggestions = sug["suggestions"]
         page.write_text(build_page(paths.game_key, detections, frame_order(detections, disputed),
-                                   "most disputed first" if disputed else "least confident first"))
+                                   "most disputed first" if disputed else "least confident first", suggestions))
         print(f"{len(detections['frames'])} frames -> {page}")
     else:
         if not a.decisions:
@@ -129,7 +141,7 @@ header b { font-size:16px; } .keys { color:var(--muted); } button { font:inherit
 #big .bar { color:#d8ddd6; padding:8px 16px; display:flex; gap:16px; justify-content:space-between; flex-wrap:wrap; }
 </style></head><body>
 <header><b>Teacher review</b><span id="meta"></span><span id="count"></span>
-<span class="keys">k keep · d drop · f flag · u undo · arrows move · space enlarge, then click a box to remove it</span><button id="export">Export</button></header>
+<span class="keys">k keep · d drop · f flag · u undo · arrows move · space enlarge, then click a box to remove or restore it (dashed = removed)</span><button id="export">Export</button></header>
 <div id="grid"></div>
 <div id="big"><div class="bar"><span id="bigcap"></span><span>click a box to remove it, again to restore · k keep · d drop · f flag · u undo · space or esc close</span></div></div>
 <script>
@@ -138,7 +150,8 @@ const KEY = "fz-review-" + D.game + "-" + D.teacher;
 const NS = "http://www.w3.org/2000/svg";
 let st = { decisions: {}, removed: {} };
 try { const s = JSON.parse(localStorage.getItem(KEY) || "null"); if (s && s.decisions) st = { decisions: s.decisions, removed: s.removed || {} }; } catch (e) {}
-const dec = st.decisions, rm = st.removed, hist = [];
+const dec = st.decisions, rm = st.removed, hist = [], touched = new Set(Object.keys(rm).map(Number));
+for (const f of D.frames) if (f.suggest && !(f.frame in rm) && !(f.frame in dec)) rm[f.frame] = f.suggest.slice();   // off the field: start removed
 let cur = Math.max(0, D.frames.findIndex(f => !(f.frame in dec))), bigOn = false;
 const grid = document.getElementById("grid"), big = document.getElementById("big");
 document.getElementById("meta").textContent = D.game + " · teacher " + D.teacher + " · " + D.frames.length + " frames, " + D.order;
@@ -174,10 +187,13 @@ const tiles = D.frames.map((f, i) => {
   t.ondblclick = () => { cur = i; bigOn = true; paint(); };
   return t;
 });
-function save() { try { localStorage.setItem(KEY, JSON.stringify({ decisions: dec, removed: rm })); } catch (e) {} }
+function save() {   // removals are saved only for frames looked at, so a rebuilt page's new suggestions reach the rest
+  const kept = Object.fromEntries(Object.entries(rm).filter(([fr]) => touched.has(+fr) || fr in dec));
+  try { localStorage.setItem(KEY, JSON.stringify({ decisions: dec, removed: kept })); } catch (e) {}
+}
 function flip(fr, j) {
   const s = new Set(rm[fr] || []); if (s.has(j)) s.delete(j); else s.add(j);
-  if (s.size) rm[fr] = [...s].sort((a, b) => a - b); else delete rm[fr];
+  rm[fr] = [...s].sort((a, b) => a - b); touched.add(fr);
   save(); const i = at(fr); mark(tiles[i], fr); tiles[i].querySelector(".cap").textContent = caption(i);
   if (bigOn && i === cur) { mark(big, fr); document.getElementById("bigcap").textContent = caption(i); }
 }
