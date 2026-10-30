@@ -264,13 +264,13 @@
           "key": "GRD-29",
           "title": "SAM 3 teacher: text prompts to boxes and masks, geometry filters",
           "status": "active",
-          "note": "Running 2026-10-30: labelling/teacher_sam3.py on both games' 2,000 sampled frames (~6 s a frame, ~7 h overnight, resumable). Players and referees good on a trial; sideline staff come back as players until a field mask exists; football weak."
+          "note": "Snow game done 2026-10-30 (2,000 frames, 3.4 h, 6.1 s a frame); 49ers-Rams running. Checked by eye on 12 random frames: players and referees nearly all boxed, few false boxes; the errors are bench players and staff in wide kickoff shots, the odd box around two players, and people cut by the frame edge. Balls: precise at 0.4 and up (21 of 24 right), about half wrong below, found in one frame in eight; the detections file cuts balls at 0.4."
         },
         {
           "key": "GRD-30",
           "title": "Review contact sheets: one-key approve / reject / flag, saved as JSON",
           "status": "active",
-          "note": "Built 2026-10-30: labelling/review.py (fz-review build / import). A self-contained HTML page beside the extracted frames, least confident first, k/d/f/u keys, decisions exported as JSON and imported to groundtruth/<game>.detections.json. Waits on the teacher's first boxes for a real run in a browser."
+          "note": "Built 2026-10-30: labelling/review.py (fz-review build / import). Tested in headless Chrome on the snow game's 2,000 frames, which found two bugs, now fixed: no boxes were drawn, and every full-size frame was decoded at once. Boxes are SVG over lazy images; space enlarges a frame, where a click removes one box (D-015 amended). Page: <film root>/2025/wk20/LA_at_CHI/frames/review.html. Waits on the owner's review."
         },
         {
           "key": "GRD-31",
@@ -282,7 +282,7 @@
           "key": "GRD-32",
           "title": "Measure SAM 3 throughput on the M4 (the number the whole plan assumes)",
           "status": "done",
-          "note": "Done 2026-10-30: scripts/spikes/sam3_throughput. Runs on MPS with four in-process shims. 0.29 fps rested, 0.16 settled (fanless), so ~236 h per game and ~3.5 h for 2,000 labelling frames; 1080p and 576p cost the same (1008x1008 inside). Players and referees usable, football not."
+          "note": "Done 2026-10-30: scripts/spikes/sam3_throughput. Runs on MPS with four in-process shims. 0.29 fps rested, 0.16 settled (fanless), so ~236 h per game and ~3.5 h for 2,000 labelling frames; 1080p and 576p cost the same (1008x1008 inside). Players and referees usable; football judged unusable here, revised by the full run (GRD-29): precise at 0.4 and up, low recall."
         }
       ]
     },

@@ -34,7 +34,12 @@ from pathlib import Path
 import numpy as np
 
 PROMPTS = ("player", "referee", "football")
-THRESHOLDS = {"player": 0.5, "referee": 0.5, "football": 0.3}   # the ball rarely clears upstream's 0.5
+# What the run records, and what the detections file keeps. Balls go into the log down to 0.3 but
+# the file keeps 0.4 and up: on 48 snow-game balls checked by eye, 21 of 24 at 0.4 or more were the
+# ball (none clearly not), against 10 of 24 below it (8 hands, shoes or blur). The log keeps the
+# rest, so the cut can move without running SAM 3 again (--limit 0 rewrites the file).
+LOG_FLOOR = {"player": 0.5, "referee": 0.5, "football": 0.3}
+THRESHOLDS = {"player": 0.5, "referee": 0.5, "football": 0.4}
 DUPLICATE_IOU = 0.7
 BALL_MAX_OF_PLAYER = 1 / 3
 SAM3_COMMIT = "f1647e8"
@@ -144,7 +149,7 @@ class Teacher:
                                                load_from_HF=False)
         self.torch, self.device = torch, device
         self.model = model.to(device).eval()
-        self.proc = Sam3Processor(self.model, device=device, confidence_threshold=min(THRESHOLDS.values()))
+        self.proc = Sam3Processor(self.model, device=device, confidence_threshold=min(LOG_FLOOR.values()))
         n = len(PROMPTS)
         with torch.inference_mode(), self._autocast():
             self.text = self.model.backbone.forward_text(list(PROMPTS), device=device)
@@ -157,7 +162,7 @@ class Teacher:
         return self.torch.autocast(device_type=self.device, dtype=self.torch.bfloat16)
 
     def __call__(self, img: np.ndarray) -> list[dict]:
-        """Boxes for every prompt on one RGB frame, in its own pixels, above each prompt's threshold."""
+        """Boxes for every prompt on one RGB frame, in its own pixels, above each prompt's log floor."""
         from sam3.model import box_ops
 
         torch = self.torch
@@ -172,7 +177,7 @@ class Teacher:
             scale = torch.tensor([w, h, w, h], device=self.device)
             boxes = []
             for k, label in enumerate(PROMPTS):
-                keep = probs[k] > THRESHOLDS[label]
+                keep = probs[k] > LOG_FLOOR[label]
                 xyxy = (box_ops.box_cxcywh_to_xyxy(out["pred_boxes"][k][keep]) * scale).float().cpu().numpy()
                 scores = probs[k][keep].float().cpu().numpy()
                 boxes += [{"label": label, "box": [round(float(v), 1) for v in b], "score": round(float(s), 3)}
@@ -210,9 +215,16 @@ def run(paths, *, device: str = "mps", limit: int | None = None) -> Path:
                     print(f"  {i}/{len(todo)}  {time.perf_counter() - t:.1f}s/frame  {len(boxes)} boxes", flush=True)
     rows = [json.loads(line) for line in log.read_text().splitlines() if line.strip()]
     out = paths.labels_dir / f"{paths.game_key}.teacher_sam3.json"
-    out.write_text(json.dumps({"teacher": f"sam3@{SAM3_COMMIT} bf16 batched", "thresholds": THRESHOLDS,
-                               "frames": {str(r["frame"]): r["boxes"] for r in rows}}))
+    out.write_text(json.dumps(detections_file(rows)))
     return out
+
+
+def detections_file(rows: list[dict]) -> dict:
+    """The review tool's detections from the run's log, cut at THRESHOLDS. The thresholds are part of
+    the teacher's name: the review page keys its saved decisions by it, and box indices change with them."""
+    cut = " ".join(f"{k}>{v}" for k, v in THRESHOLDS.items())
+    return {"teacher": f"sam3@{SAM3_COMMIT} bf16 batched, {cut}", "thresholds": THRESHOLDS,
+            "frames": {str(r["frame"]): [b for b in r["boxes"] if b["score"] > THRESHOLDS[b["label"]]] for r in rows}}
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -226,7 +238,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--away", required=True)
     ap.add_argument("--home", required=True)
     ap.add_argument("--device", default="mps", choices=["mps", "cpu", "cuda"])
-    ap.add_argument("--limit", type=int, help="stop after this many new frames (a trial run)")
+    ap.add_argument("--limit", type=int, help="stop after this many new frames (a trial run; 0 rewrites the detections file from the log)")
     ap.add_argument("--data-root", default="data")
     a = ap.parse_args(argv)
     paths = GamePaths(a.data_root, a.season, a.week, a.away, a.home)
@@ -236,7 +248,8 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
-__all__ = ["PROMPTS", "THRESHOLDS", "Teacher", "apply_filters", "drop_duplicates", "drop_giant_balls", "iou", "run"]
+__all__ = ["LOG_FLOOR", "PROMPTS", "THRESHOLDS", "Teacher", "apply_filters", "detections_file", "drop_duplicates",
+           "drop_giant_balls", "iou", "run"]
 
 
 if __name__ == "__main__":

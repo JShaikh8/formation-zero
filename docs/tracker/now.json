@@ -62,12 +62,17 @@
       "at": "2026-10-30 04:55"
     },
     {
-      "text": "SAM 3 teacher labelling both games' 2,000 frames overnight (~7 h)",
+      "text": "SAM 3 teacher: snow game done (2,000 frames, 3.4 h); 49ers–Rams running",
       "status": "active",
       "at": "2026-10-30 04:55"
     },
     {
-      "text": "Owner: review the teacher's boxes, one key per frame (fz-review build, then open review.html)",
+      "text": "Review page tested in Chrome and fixed (boxes were not drawn); ball boxes below 0.4 cut after an eyeball check",
+      "status": "done",
+      "at": "2026-10-30 10:50"
+    },
+    {
+      "text": "Owner: review the snow game's boxes, one key per frame (open review.html in its frames folder on the drive; space enlarges, a click removes a stray box; Export when done)",
       "status": "todo"
     }
   ]

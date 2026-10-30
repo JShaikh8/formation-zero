@@ -28,3 +28,13 @@ def test_a_ball_as_big_as_a_player_is_a_logo():
 def test_filters_report_what_they_dropped():
     _, dropped = apply_filters([box("player", 0, 0, 10, 60), box("player", 0, 0, 10, 61, 0.5)])
     assert dropped == {"duplicates": 1, "giant_balls": 0}
+
+
+def test_detections_file_cuts_weak_balls_and_names_the_cut():
+    from formation_zero.labelling.teacher_sam3 import detections_file
+
+    rows = [{"frame": 7, "boxes": [box("player", 0, 0, 10, 60, 0.55), box("football", 1, 1, 3, 3, 0.35),
+                                   box("football", 5, 5, 7, 7, 0.45)]}]
+    out = detections_file(rows)
+    assert [b["score"] for b in out["frames"]["7"]] == [0.55, 0.45]
+    assert "football>0.4" in out["teacher"]

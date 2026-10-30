@@ -112,6 +112,12 @@ Six frames drawn with masks and boxes (batched, bf16, upstream's 0.5 threshold),
 - **Football:** not usable as is. Over the bursts it averaged 0.1 to 0.2 detections per frame,
   and the only hit in the overlays is a painted logo. The ball needs its own approach: a lower
   threshold, tiles, or tracking plus the pass/run filter in section 7.1.
+  *Later, on the full teacher run (2026-10-30, GRD-29):* this was too harsh. With the three
+  prompts batched and the ball's threshold at 0.3, the snow game's 2,000 frames gave 395 balls in
+  313 frames. Checked by eye, 21 of 24 at 0.4 or more were the ball and none clearly were not;
+  below 0.4, 10 of 24 were (8 hands, shoes or blur). So the ball prompt is precise above 0.4 but
+  finds the ball in only about one frame in eight, mostly at the snap and in the quarterback's
+  hands. The teacher's detections file now cuts balls at 0.4.
 
 ## What it does
 

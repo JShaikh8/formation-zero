@@ -218,6 +218,10 @@ through an initial homography, with no clicks at all.
 
 **Why.** The owner's time is the scarce resource; the laptop's time is not.
 
+**Amended 2026-10-30.** Still one keystroke per image, plus an optional click to remove a single
+box in the enlarged frame. The teacher's first run boxes bench players in wide kickoff shots;
+without the click those frames, the hardest ones for small players, would all be dropped.
+
 **Gained / lost.** Gained a labelling loop that scales to many games. Cost: a first-time build of
 the review tooling and a few rounds of retraining per game.
 
