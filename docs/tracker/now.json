@@ -62,9 +62,9 @@
       "at": "2026-10-30 04:55"
     },
     {
-      "text": "SAM 3 teacher: snow game done (2,000 frames, 3.4 h); 49ers–Rams running",
-      "status": "active",
-      "at": "2026-10-30 04:55"
+      "text": "SAM 3 teacher: both games done (2,000 frames each, 3.4 and 3.8 h)",
+      "status": "done",
+      "at": "2026-10-30 12:10"
     },
     {
       "text": "Review page tested in Chrome and fixed (boxes were not drawn); ball boxes below 0.4 cut after an eyeball check",
@@ -72,7 +72,17 @@
       "at": "2026-10-30 10:30"
     },
     {
-      "text": "Owner: review the snow game's boxes, one key per frame (open review.html in its frames folder on the drive; space enlarges, a click removes a stray box; Export when done)",
+      "text": "Round-0 students trained on both games in two folds (mAP50 0.94 against the teacher on unseen plays); review pages reordered by their disagreement",
+      "status": "done",
+      "at": "2026-10-30 15:40"
+    },
+    {
+      "text": "Tracking plays 1-10 of 49ers–Rams with a round-0 student, overlay videos and team colours",
+      "status": "active",
+      "at": "2026-10-30 15:45"
+    },
+    {
+      "text": "Owner: review both games' boxes, most disputed first (review.html in each game's frames folder on the drive; one key per frame, space enlarges, a click removes or restores a box; Export when done)",
       "status": "todo"
     }
   ]

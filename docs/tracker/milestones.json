@@ -276,13 +276,13 @@
           "key": "GRD-30",
           "title": "Review contact sheets: one-key approve / reject / flag, saved as JSON",
           "status": "active",
-          "note": "Built 2026-10-30: labelling/review.py (fz-review build / import). Tested in headless Chrome on the snow game's 2,000 frames, which found two bugs, now fixed: no boxes were drawn, and every full-size frame was decoded at once. Boxes are SVG over lazy images; space enlarges a frame, where a click removes one box (D-015 amended). Page: <film root>/2025/wk20/LA_at_CHI/frames/review.html. Waits on the owner's review."
+          "note": "Built 2026-10-30: labelling/review.py (fz-review build / import). Tested in headless Chrome on the snow game's 2,000 frames, which found two bugs, now fixed: no boxes were drawn, and every full-size frame was decoded at once. Boxes are SVG over lazy images; space enlarges a frame, where a click removes one box (D-015 amended). On 49ers-Rams sideline frames, boxes whose feet are off the field start removed (labelling/field_filter.py, never more than half a frame's boxes; a click restores them; snow left out). Both games' pages are built most disputed first, from round 0's held-out disagreement (GRD-31): the top of each is wide kickoff shots with benches, snow pile-ups, and boxes drawn around several players. Pages: <film root>/<season>/<week>/<game>/frames/review.html. Waits on the owner's review."
         },
         {
           "key": "GRD-31",
           "title": "Train the first student detector; disagreement-driven second round",
           "status": "active",
-          "note": "Code ready 2026-10-30: labelling/train.py (fz-train export / fit / disagree): YOLO dataset split by play, YOLO11-s fine-tune at 1280 px, and the next review sheet from teacher-student disagreements. The student learns players and referees, not the ball (the teacher finds it in one frame in eight). Round 0 (--source teacher) trains on the unreviewed teacher boxes first: snow game exported, 1,742 train / 258 val frames; training waits for the GPU."
+          "note": "Code 2026-10-30: labelling/train.py (fz-train export / fit / disagree / heldout): YOLO dataset split by play, YOLO11-s fine-tune, and the next review sheet from teacher-student disagreements. The student learns players and referees, not the ball (the teacher finds it in one frame in eight). Round 0 done 2026-10-30 on the unreviewed teacher boxes of both games, two folds by play, each trained on half the plays and scoring the other half: 960 px, batch 4, 8 epochs, validation only at the end (1280 px at batch 8 swapped the 16 GB laptop to a standstill), 1.3 and 1.6 h a fold. Against the teacher on its held-out plays: mAP50 0.94, players recall 0.90-0.91 at precision 0.95-0.97, referees about 0.80 / 0.85. Held-out disagreement averages 3.2 boxes a frame on the snow game and 5.5 on 49ers-Rams (576p); it orders the review pages. Round 1 waits on the review."
         },
         {
           "key": "GRD-32",
