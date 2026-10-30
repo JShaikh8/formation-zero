@@ -77,9 +77,9 @@
       "at": "2026-10-30 15:40"
     },
     {
-      "text": "Tracking plays 1-10 of 49ers–Rams with a round-0 student, overlay videos and team colours",
-      "status": "active",
-      "at": "2026-10-30 15:45"
+      "text": "Tracked plays 1-10 of 49ers–Rams with a round-0 student: overlay videos with ids and team colours on the drive (overlays folder); ids hold through play 10, benches still tracked as players",
+      "status": "done",
+      "at": "2026-10-30 16:05"
     },
     {
       "text": "Owner: review both games' boxes, most disputed first (review.html in each game's frames folder on the drive; one key per frame, space enlarges, a click removes or restores a box; Export when done)",
