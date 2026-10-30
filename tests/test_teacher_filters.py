@@ -38,3 +38,11 @@ def test_detections_file_cuts_weak_balls_and_names_the_cut():
     out = detections_file(rows)
     assert [b["score"] for b in out["frames"]["7"]] == [0.55, 0.45]
     assert "football>0.4" in out["teacher"]
+
+
+def test_the_frame_size_names_the_teacher_when_the_log_has_it():
+    from formation_zero.labelling.teacher_sam3 import detections_file
+
+    old = detections_file([{"frame": 1, "boxes": []}])["teacher"]
+    new = detections_file([{"frame": 1, "size": [1920, 1080], "boxes": []}])["teacher"]
+    assert "x" not in old.split(",")[0] and new.split(",")[0].endswith("batched 1920x1080")

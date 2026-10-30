@@ -208,8 +208,8 @@ def run(paths, *, device: str = "mps", limit: int | None = None) -> Path:
                 t = time.perf_counter()
                 img = np.array(Image.open(paths.frames_dir / f"{s['frame']:06d}.jpg").convert("RGB"))
                 boxes, dropped = apply_filters(teacher(img))
-                f.write(json.dumps({"frame": s["frame"], "boxes": boxes, "dropped": dropped,
-                                    "s": round(time.perf_counter() - t, 2)}) + "\n")
+                f.write(json.dumps({"frame": s["frame"], "size": [img.shape[1], img.shape[0]], "boxes": boxes,
+                                    "dropped": dropped, "s": round(time.perf_counter() - t, 2)}) + "\n")
                 f.flush()
                 if i % 25 == 0 or i == len(todo):
                     print(f"  {i}/{len(todo)}  {time.perf_counter() - t:.1f}s/frame  {len(boxes)} boxes", flush=True)
@@ -221,9 +221,13 @@ def run(paths, *, device: str = "mps", limit: int | None = None) -> Path:
 
 def detections_file(rows: list[dict]) -> dict:
     """The review tool's detections from the run's log, cut at THRESHOLDS. The thresholds are part of
-    the teacher's name: the review page keys its saved decisions by it, and box indices change with them."""
+    the teacher's name: the review page keys its saved decisions by it, and box indices change with them.
+    So is the frame size when the log records it (runs from 2026-10-30 on), so the 576p and 1080p labels
+    of one game never share saved decisions (Chrome gives every local page the same storage)."""
     cut = " ".join(f"{k}>{v}" for k, v in THRESHOLDS.items())
-    return {"teacher": f"sam3@{SAM3_COMMIT} bf16 batched, {cut}", "thresholds": THRESHOLDS,
+    sizes = {tuple(r["size"]) for r in rows if "size" in r}
+    size = f" {'/'.join(f'{w}x{h}' for w, h in sorted(sizes))}" if sizes else ""
+    return {"teacher": f"sam3@{SAM3_COMMIT} bf16 batched{size}, {cut}", "thresholds": THRESHOLDS,
             "frames": {str(r["frame"]): [b for b in r["boxes"] if b["score"] > THRESHOLDS[b["label"]]] for r in rows}}
 
 
