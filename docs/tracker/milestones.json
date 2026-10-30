@@ -239,14 +239,20 @@
         {
           "key": "GRD-93",
           "title": "Camera-angle classifier: contact-sheet review of takes, tiny model on downscaled frames, alternation prior; validate by play count on both games",
-          "status": "active",
-          "note": "Classifier trained (86% LOO from 42 sheet labels). Pairing blocked on sequence defects; next: align takes to the S/E pattern with insertions and deletions (sequence alignment)."
+          "status": "done",
+          "note": "Done 2026-10-30. The labels had the two names swapped (corrected in both games). Per-game model on colour layout plus line direction, read every 0.4 s: 100% / 95% held out on the snow / clear game; neither transfers between games yet, so each game needs ~40 sheet labels. Validated through the play count by GRD-96."
         },
         {
           "key": "GRD-94",
           "title": "Spike-based cut detection: a cut is a spike against its neighbours, not an absolute threshold",
           "status": "done",
           "note": "Done 2026-09-14: a cut is a spike against its neighbours' median (ratio 2.5, floor 8). Clear game: 286 takes vs 282 implied."
+        },
+        {
+          "key": "GRD-96",
+          "title": "Take alignment: pair the film's takes to the plays on film (sequence alignment with false cuts, missed cuts, footage outside plays, optional plays)",
+          "status": "done",
+          "note": "Done 2026-10-30: perception/align.py, the pipeline's dense and play_index stages. Count the rows that put a play on film (nullified snaps yes; pre-snap fouls and kneel-downs optional, chosen by how predictable play types become). Snow game 185 on film / 183 indexed, clear game 147 / 141; all 46 kicks land on their film. The old index had ~55 plays on the wrong film."
         },
         {
           "key": "GRD-28",

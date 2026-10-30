@@ -106,7 +106,7 @@ def take_thumbnails(proxy_path, shots, first_frame: int = 0) -> np.ndarray:
     return np.array(out)
 
 
-__all__ = ["VIEWS", "thumbnail", "layout_features", "ViewModel", "emissions_from_proba", "label_views_viterbi", "take_thumbnails", "pair_by_count", "per_frame_features", "split_missed_cuts", "dense_samples", "area_mean", "orientation_features"]
+__all__ = ["VIEWS", "thumbnail", "layout_features", "ViewModel", "emissions_from_proba", "label_views_viterbi", "take_thumbnails", "pair_by_count", "per_frame_features", "split_missed_cuts", "dense_samples", "area_mean", "orientation_features", "dense_features", "labelled_samples"]
 
 
 def pair_by_count(shots, p_sideline, n_plays: int, *, p_same: float = 0.10):
@@ -316,3 +316,33 @@ def area_mean(image: np.ndarray, width: int, height: int) -> np.ndarray:
     xs = (np.arange(width + 1) * w / width).astype(int)
     return np.array([[img[ys[i]:ys[i + 1], xs[j]:xs[j + 1]].mean(axis=(0, 1)) for j in range(width)]
                      for i in range(height)])
+
+
+def dense_features(thumbs: np.ndarray, orient: np.ndarray) -> np.ndarray:
+    """Per-sample classifier input: colour layout of the thumbnail plus the edge-orientation histograms.
+
+    Neither alone is enough: colour layout read 100% / 86% held out on the snow / clear game and is
+    fooled by painted end zones; line direction read 80% / 93% and goes blind in snow. Together:
+    100% / 95%. Neither carries over between games yet, so every game trains its own model.
+    """
+    layout = np.array([layout_features(t.astype(np.float32) / 255) for t in thumbs])
+    return np.hstack([layout, np.asarray(orient, dtype=np.float32)]).astype(np.float32)
+
+
+def labelled_samples(frames: np.ndarray, fps: float, labels, *, pad: float = 0.15, every: int = 3):
+    """(sample indices, y) from time-keyed view labels: the interior of each labelled stretch.
+
+    The ends are trimmed because a label's edges sit next to a cut. `y` is 1 for SIDELINE.
+    """
+    idx, y = [], []
+    for lab in labels:
+        if not lab.get("confident", True):
+            continue
+        a, b = lab["start_s"], lab["end_s"]
+        trim = pad * (b - a)
+        inside = np.where((frames >= (a + trim) * fps) & (frames <= (b - trim) * fps))[0][::every]
+        idx.append(inside)
+        y.append(np.full(len(inside), float(lab["view"] == "SIDELINE")))
+    if not idx:
+        return np.array([], dtype=int), np.array([])
+    return np.concatenate(idx), np.concatenate(y)

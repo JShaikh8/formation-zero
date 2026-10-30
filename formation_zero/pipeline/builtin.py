@@ -110,56 +110,44 @@ def shots_stage(ctx: StageContext) -> None:
     table.to_parquet(ctx.paths.shots_path, index=False)
 
 
-@stage("play_index", inputs=("pbp/{game_key}.parquet",), per="game", config_keys=("view_labels_game",))
-def play_index_stage(ctx: StageContext) -> None:
-    """Label takes sideline/end zone, pair them into plays, join in order to the official play list.
+@stage("dense", per="game", config_keys=("source_name",))
+def dense_stage(ctx: StageContext) -> None:
+    """Camera-angle evidence every 0.4 s across the film window, from the proxy; writes derived/shots/<game>.dense.npz."""
+    import json
 
-    View labelling needs tilt examples per view. They come from this game's hand labels when they
-    exist, otherwise from another game's (config `view_labels_game`): the tilt signal is a property
-    of the two camera positions, which NFL+ keeps the same from game to game.
+    import numpy as np
+
+    from formation_zero.perception.views import dense_samples
+
+    proxy = ctx.paths.proxy_path(ctx.config.get("source_name", "film.mp4"))
+    meta = json.loads(proxy.with_name(proxy.name + ".json").read_text())
+    frames, diffs, thumbs, orient = dense_samples(proxy, int(meta.get("first_frame", 0)))
+    ctx.paths.shots_dir.mkdir(parents=True, exist_ok=True)
+    np.savez_compressed(ctx.paths.dense_path, frames=frames, diffs=diffs, thumbs=thumbs, orient=orient,
+                        fps=float(meta["fps"]))
+
+
+@stage("play_index", per="game",
+       inputs=("pbp/{game_key}.parquet", "derived/shots/{game_key}.parquet", "derived/shots/{game_key}.dense.npz",
+               "groundtruth/{game_key}.shot_views.json"))
+def play_index_stage(ctx: StageContext) -> None:
+    """Align the film's takes to the plays on film and join them to the play-by-play.
+
+    Writes derived/shots/<game>.plays.parquet (one row per counted play on film) and a report beside
+    it (<game>.plays.report.json): which optional rows the film kept, nullified snaps with their film,
+    and anything the alignment could not explain. Needs this game's own view labels.
     """
     import json
 
+    import numpy as np
     import pandas as pd
 
-    from formation_zero.perception.play_index import build
-    from formation_zero.perception.shots import Shot
+    from formation_zero.perception.play_index import build_from_dense
 
-    table = pd.read_parquet(ctx.paths.shots_path)
-    shots = [Shot(start=r.start_s, duration=r.duration_s, tilt=None if pd.isna(r.tilt) else float(r.tilt), samples=int(r.samples))
-             for r in table.itertuples()]
-    own = ctx.paths.groundtruth_dir / f"{ctx.paths.game_key}.shot_views.json"
-    other = ctx.config.get("view_labels_game")
-    if own.exists():
-        labels = _labels_for(shots, own)
-    elif other:
-        # Another game's labelled tilts, used as emission examples only (not attached to our shots).
-        raw = json.load(open(ctx.paths.groundtruth_dir / f"{other}.shot_views.json"))["labels"]
-        other_shots = pd.read_parquet(ctx.paths.shots_dir / f"{other}.parquet")
-        labels = _labels_from_other(raw, other_shots)
-    else:
-        raise RuntimeError("no shot-view labels for this game and no view_labels_game configured")
-    pbp = pd.read_parquet(ctx.paths.pbp_path)
-    fps = float(json.loads((_src(ctx).with_name(_src(ctx).name + ".probe.json")).read_text())["fps"]) if _src(ctx).with_name(_src(ctx).name + ".probe.json").exists() else 25.0
-    index, merged, views = build(shots, labels, pbp, fps)
+    labels = json.loads((ctx.paths.groundtruth_dir / f"{ctx.paths.game_key}.shot_views.json").read_text())["labels"]
+    with np.load(ctx.paths.dense_path) as dense:
+        index, report = build_from_dense(dict(dense), pd.read_parquet(ctx.paths.shots_path),
+                                         pd.read_parquet(ctx.paths.pbp_path), labels)
     index.to_parquet(ctx.paths.play_index_path, index=False)
-
-
-def _labels_for(shots, path):
-    from formation_zero.perception.play_index import _labels_for as inner
-
-    return inner(shots, path)
-
-
-def _labels_from_other(raw_labels, other_shots):
-    """Attach another game's time-keyed view labels to that game's shots to get (view, tilt) examples."""
-    out = []
-    for label in raw_labels:
-        if not label.get("confident", True):
-            continue
-        mid = (label["start_s"] + label["end_s"]) / 2
-        hit = other_shots[(other_shots.start_s <= mid) & (mid < other_shots.end_s)]
-        if len(hit):
-            t = hit.iloc[0].tilt
-            out.append({**label, "tilt": None if t != t else float(t)})
-    return out
+    ctx.paths.play_index_path.with_name(f"{ctx.paths.game_key}.plays.report.json").write_text(
+        json.dumps(report, indent=1, default=str))

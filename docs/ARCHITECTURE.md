@@ -29,7 +29,7 @@ The repo is not empty. Four commits, 158 passing tests, and these working pieces
 | Play-by-play backbone | `formation_zero/data/pbp.py`, `teams.py` | Working. nflverse normalised to one schema, per-play `play_uid`. The NFL API adapter (section 5) is the next source; `statsapi.py` / `stats_pbp.py` are parked. |
 | Field model | `formation_zero/configs/nfl_field.py` | Working. Yard-accurate landmark grid, LOS anchoring from `yardline_100`. |
 | Shot segmentation | `formation_zero/perception/shots.py` | Working, calibrated on `2025_wk20_LA-CHI`. Continuous film → camera cuts. |
-| Play index | `formation_zero/perception/play_index.py` | Working. Viterbi view labelling + pairing → 184 plays matched PBP exactly. |
+| Play index | `formation_zero/perception/play_index.py`, `align.py`, `playtype.py` | Working since 2026-10-30. Take alignment on camera readings every 0.4 s; every kick in both games lands on its film. (The first method matched the demo game's count exactly and still had about 55 plays on the wrong film.) |
 | Intelligence | `formation_zero/intelligence/personnel.py`, `formations.py` | Working. Personnel parsing; slot-based formation taxonomy in a snap-relative frame. |
 | Store + chat | `formation_zero/data/store.py`, `formation_zero/chat/*` | Working. DuckDB semantic layer, two constrained tools, hosted Claude agent. |
 
@@ -375,6 +375,7 @@ formation-zero/                             repo root
 │   │   └── +frames.py                      the frame iterator every stage uses
 │   ├── perception/
 │   │   ├── shots.py  play_index.py         (exist)
+│   │   ├── views.py  align.py  playtype.py (exist) camera readings, take alignment, play type
 │   │   ├── +base.py                        Protocols: Detector, Tracker, TeamClassifier,
 │   │   │                                   JerseyReader, FieldRegistrar, PoseEstimator
 │   │   ├── +registry.py                    name -> implementation, from YAML
@@ -511,10 +512,11 @@ Rules carried over from turbo-meme, unchanged:
 
 ### 5.2 How it feeds the pipeline
 
-- **Play index join.** `play_index.py` currently joins film plays to nflverse rows by order.
-  With the NFL API, filmable rows are `playDeleted != true` and not an admin entry (timeout,
-  two-minute warning, end of period, using the `isNflAdminPlay` test ported from
-  `nfl-stat-types.ts`). Same ordered join, same count check, richer rows.
+- **Play index join.** Film plays join to play-by-play rows in order, but the rows to count are
+  the ones that put a play on film, not the ones that count as plays: penalty-nullified snaps are
+  on film; pre-snap fouls and kneel-downs are on some films and not others, so the aligner treats
+  them as optional and the film decides (`data/playtypes.py`, `perception/align.py`). Admin entries
+  (timeout, two-minute warning, end of period) never are.
 - **Field registration anchor.** `yardLine` like `PHI 1` plus the possessing team (from the
   drive's `teamId`) converts to `yardline_100` and then to absolute field x through
   `NFLFieldConfiguration.line_of_scrimmage_x`. `yardsRemaining` places the first-down line.

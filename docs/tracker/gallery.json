@@ -35,12 +35,12 @@
       "caption": "How long each camera take lasts, and the 'tilt' signal that separates sideline from end-zone angles. Real measurements from the demo game. The two cameras separate cleanly: end-zone takes read near 88 degrees (snow hides the yard lines, leaving goalposts and upright players), sideline takes near 47 (diagonal yard lines)."
     },
     {
-      "title": "184 plays, laid out on the film's clock",
+      "title": "183 plays, laid out on the film's clock",
       "kind": "image",
       "src": "assets/play-timeline.svg",
       "date": "2026-08-04",
       "milestone": "F0",
-      "caption": "Each bar is one play, coloured by type, placed where it sits in the film. The count matched the official play-by-play exactly, which nothing in the code arranged. It fell out."
+      "caption": "Each bar is one play, coloured by type, placed where it sits in the film, from the take alignment of 2026-10-30. The first version of this chart showed 184 plays whose count matched the official list exactly, and about 55 of them were on the wrong film; a matching count proved nothing. In this one every kick sits on film showing that kick."
     },
     {
       "title": "Overlay video: boxes and tracks on the broadcast frame",

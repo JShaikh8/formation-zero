@@ -107,6 +107,11 @@ class GamePaths:
         return self.shots_dir / f"{self.game_key}.parquet"
 
     @property
+    def dense_path(self) -> Path:
+        """Camera-angle evidence every 0.4 s — see `formation_zero.perception.views.dense_samples`."""
+        return self.shots_dir / f"{self.game_key}.dense.npz"
+
+    @property
     def play_index_path(self) -> Path:
         """Film time <-> play-by-play join — see `formation_zero.perception.play_index`."""
         return self.root / "derived" / "shots" / f"{self.game_key}.plays.parquet"

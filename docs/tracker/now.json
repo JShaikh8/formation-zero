@@ -29,9 +29,9 @@
       "at": "2026-09-14 20:40"
     },
     {
-      "text": "Pairing takes to plays on the clear game: blocked on sequence defects (missed cuts, fragments, pregame prefix); next is sequence alignment",
-      "status": "active",
-      "at": "2026-09-14 22:30"
+      "text": "Pairing takes to plays: take alignment on dense camera readings; both games index cleanly and every kick lands on its film",
+      "status": "done",
+      "at": "2026-10-30 03:40"
     },
     {
       "text": "Milestone 2: measure SAM 3 throughput on the M4",
@@ -49,6 +49,10 @@
     },
     {
       "text": "Get a 1080p copy of 49ers–Rams: the drive's copy is 576p, and wide-shot players are mostly missed at that size",
+      "status": "todo"
+    },
+    {
+      "text": "Owner: spot-check the 86 camera labels Claude added to the clear game (source \"claude\" in its shot_views file)",
       "status": "todo"
     }
   ]

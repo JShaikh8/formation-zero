@@ -1,7 +1,8 @@
 """Turn detected shots into a play index: the join between film time and play-by-play.
 
 Everything downstream — snap detection, participation, personnel, formation — needs to know
-which stretch of film is which play. This module builds that mapping in four steps.
+which stretch of film is which play. The first method built that mapping in four steps (the one in
+use now is at the end of this note).
 
 1. Label each shot sideline or endzone.
 2. Merge runs of same-view shots.
@@ -24,14 +25,21 @@ neighbour — which strict alternation says cannot happen. Merging those runs co
 exactly 368 and took alternation to 367/367. The count agreement is not something this code
 arranges; it falls out, which is the reason to believe the step is right rather than convenient.
 
-What is verified and what is not
---------------------------------
-Verified on the demo game: the play count matches PBP exactly (184), the first play begins at
-the first frame of film, and the last play contains the overtime game-winning field goal at the
-media time it is independently known to occupy. Spot-checked: kick plays land on kick formations.
-Not verified: that no interior play is off by one. A single insertion in the middle would keep
-the count right and still misattach every later play, and nothing here would catch it. Treat the
-index as strong evidence, not proof, until interior plays are checked against something external.
+What it got wrong
+-----------------
+The count matched exactly on the demo game (184), and the count was wrong: the film holds 185
+plays (a penalty-nullified snap and a pre-snap false start are on film, the kneel-down that ends
+regulation is not). Two plays merged early in the game made up the difference, so about 55 plays
+in between were attached to their neighbours' film. That is the insertion-and-deletion failure
+this section used to warn about.
+
+The method in use: `build_from_dense`
+-------------------------------------
+Since 2026-10-30 the pipeline builds the index by take alignment on dense camera readings (see
+`formation_zero.perception.align`), counting every row that puts a play on film and letting the
+film decide the optional ones. Verified the same day on both games: all 46 kicks (26 and 20) land
+on film showing that kick, three frames per take, checked by eye. `build` and the steps above stay
+for reference; nothing in the pipeline calls them.
 """
 
 from __future__ import annotations
@@ -232,6 +240,115 @@ def build(shots: list[Shot], labels, pbp, fps: float):
     return join(pair_plays(merged, merged_views), pbp, fps), merged, merged_views
 
 
+def build_from_dense(dense, shots, pbp, labels):
+    """Dense camera readings + takes + view labels + play-by-play -> (play index, report).
+
+    The method that replaced `build` (see `formation_zero.perception.align` for why):
+
+    1. A camera-angle model for this game from its own view labels (colour layout plus line
+       direction, `views.dense_features`); it reads every 0.4 s of film.
+    2. Cut candidates: every detected cut, plus luma spikes and angle-reading flips as possible
+       missed cuts.
+    3. The rows that put a play on film (`film_rows`): counted plays, nullified snaps, and optional
+       rows (pre-snap fouls, kneel-downs) that some films keep and some drop.
+    4. A take alignment for a choice of optional rows, scored by its angle evidence plus how
+       predictable the official play types are from the takes it assigns (held out; see
+       `perception.playtype`). Starting from every optional row on, one row is flipped at a time
+       while the score improves.
+
+    The index keeps its old contract, one row per counted play on film with both takes, so clips
+    and per-play stages read it unchanged. No-play rows on film (nullified snaps, kept pre-snap fouls),
+    optional rows left off, and plays with a missing take are in the report.
+    """
+    import pandas as pd
+
+    from formation_zero.perception.align import (
+        JUNK,
+        align,
+        angle_change_candidates,
+        missed_cut_candidates,
+    )
+    from formation_zero.perception.playtype import heldout_loglik, type_class
+    from formation_zero.perception.views import ViewModel, dense_features, labelled_samples
+
+    frames, diffs, fps = np.asarray(dense["frames"]), np.asarray(dense["diffs"]), float(dense["fps"])
+    features = dense_features(dense["thumbs"], dense["orient"])
+    idx, y = labelled_samples(frames, fps, labels)
+    if len(set(y.tolist())) < 2:
+        raise ValueError("view labels for both camera angles are needed to read this game's film "
+                         "(fz-sheets views, one keystroke per take)")
+    p = ViewModel.train(features[idx], y).proba(features)
+    cuts = sorted({int(np.searchsorted(frames, f)) for f in shots["start_frame"].iloc[1:]})
+    missed = sorted(set(missed_cut_candidates(diffs, set(cuts))) | set(angle_change_candidates(p, diffs, set(cuts))))
+    rows = film_rows(pbp)
+    optional = [int(i) for i in np.where(rows["film_optional"].to_numpy())[0]]
+
+    def evaluate(on: tuple[bool, ...]) -> dict:
+        kept = rows.drop(index=[i for i, keep in zip(optional, on) if not keep]).reset_index(drop=True)
+        r = align(p, cuts, missed, len(kept))
+        plays = []
+        for pl in r.plays(len(kept)):
+            segs = [sg for sg in (pl["sideline"], pl["endzone"]) if sg is not None]
+            if segs:
+                plays.append((type_class(kept["play_type"].iloc[pl["index"]]),
+                              np.concatenate([np.arange(sg.start, sg.end, 2) for sg in segs])))
+        t = heldout_loglik(features, plays)
+        return {"on": on, "kept": kept, "alignment": r, "angle_score": r.score, "type_score": t,
+                "total": r.score + t}
+
+    tried = {}
+    current = evaluate(tuple(True for _ in optional))
+    tried[current["on"]] = current
+    improved = True
+    while improved:
+        improved = False
+        for k in range(len(optional)):
+            on = tuple(not v if j == k else v for j, v in enumerate(current["on"]))
+            if on not in tried:
+                tried[on] = evaluate(on)
+            if tried[on]["total"] > current["total"] + 1e-9:
+                current, improved = tried[on], True
+    kept, r = current["kept"], current["alignment"]
+
+    def seconds(m: int) -> float:
+        return round(float(frames[m] if m < len(frames) else frames[-1] + (frames[-1] - frames[-2])) / fps, 3)
+
+    out, nullified, partial = [], [], []
+    for pl in r.plays(len(kept)):
+        row = kept.iloc[pl["index"]]
+        s, e = pl["sideline"], pl["endzone"]
+        spans = {"sideline_start_s": seconds(s.start) if s else None, "sideline_end_s": seconds(s.end) if s else None,
+                 "endzone_start_s": seconds(e.start) if e else None, "endzone_end_s": seconds(e.end) if e else None}
+        if row["play_type"] == "no_play":
+            nullified.append({"film_play_index": pl["index"], "desc": str(row["desc"]), **spans})
+            continue
+        if not (s and e):
+            partial.append({"play_uid": row["play_uid"], "film_play_index": pl["index"], **spans})
+            continue
+        out.append({"game_key": row["game_key"], "play_uid": row["play_uid"], "play_index": row["play_index"],
+                    "film_play_index": pl["index"], "play_type": row["play_type"], "desc": row["desc"],
+                    "start_s": min(spans["sideline_start_s"], spans["endzone_start_s"]),
+                    "end_s": max(spans["sideline_end_s"], spans["endzone_end_s"]), **spans,
+                    "sideline_start_frame": int(frames[s.start]), "endzone_start_frame": int(frames[e.start])})
+    report = {
+        "method": "take alignment on dense camera readings (perception.align), optional rows by play-type predictability",
+        "view_labels": len(labels), "takes": len(shots), "cut_candidates": len(cuts), "missed_cut_candidates": len(missed),
+        "rows_on_film": len(kept), "plays_in_index": len(out),
+        "optional": [{"row": str(rows["desc"].iloc[i])[:120], "play_type": str(rows["play_type"].iloc[i]),
+                      "qtr": int(rows["qtr"].iloc[i]), "time": str(rows["time"].iloc[i]), "on_film": bool(v)}
+                     for i, v in zip(optional, current["on"])],
+        "choices_scored": [{"on": list(c["on"]), "angle_score": round(c["angle_score"], 1),
+                            "type_score": round(c["type_score"], 1)} for c in tried.values()],
+        "merged_cuts": len(r.merged_cuts), "missed_cuts_used": len(r.missed_cuts),
+        "skipped_slots": r.skipped_slots,
+        "junk": [[seconds(sg.start), seconds(sg.end)] for sg in r.segments if sg.view == JUNK],
+        "takes_agreeing_with_reading": round(float(np.mean([(p[sg.start:sg.end].mean() >= 0.5) == (sg.view == "SIDELINE")
+                                                            for sg in r.segments if sg.view != JUNK])), 3),
+        "no_plays_on_film": nullified, "plays_missing_a_take": partial,
+    }
+    return pd.DataFrame(out), report
+
+
 def _labels_for(shots: list[Shot], path) -> list[dict]:
     """Attach time-keyed ground-truth labels to the shots they fall inside.
 
@@ -294,6 +411,7 @@ __all__ = [
     "VIEWS",
     "Play",
     "build",
+    "build_from_dense",
     "emissions_from",
     "film_rows",
     "filmable",
