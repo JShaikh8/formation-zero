@@ -55,6 +55,20 @@
     {
       "text": "Owner: spot-check the 86 camera labels Claude added to the clear game (source \"claude\" in its shot_views file)",
       "status": "todo"
+    },
+    {
+      "text": "Labelling loop built: sampler, SAM 3 teacher, review page, student training (GRD-28 to GRD-31)",
+      "status": "done",
+      "at": "2026-10-30 04:55"
+    },
+    {
+      "text": "SAM 3 teacher labelling both games' 2,000 frames overnight (~7 h)",
+      "status": "active",
+      "at": "2026-10-30 04:55"
+    },
+    {
+      "text": "Owner: review the teacher's boxes, one key per frame (fz-review build, then open review.html)",
+      "status": "todo"
     }
   ]
 }
