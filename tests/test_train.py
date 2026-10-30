@@ -44,3 +44,18 @@ def test_disagreement_counts_unmatched_boxes_per_class():
     student = [{"label": "player", "box": [1, 0, 11, 30]}, {"label": "referee", "box": [50, 0, 60, 30]}]
     assert disagreement(teacher, student) == 2        # one player missed, one extra referee
     assert disagreement(teacher, teacher) == 0
+
+
+def test_round_zero_exports_every_teacher_frame_and_leaves_out_the_ball(tmp_path):
+    paths = GamePaths(tmp_path / "data", 2025, 1, "AA", "BB", film_root=tmp_path / "film")
+    for d in (paths.frames_dir, paths.labels_dir):
+        d.mkdir(parents=True)
+    Image.new("RGB", (64, 36)).save(paths.frames_dir / "000100.jpg")
+    paths.samples_path.write_text(json.dumps({"samples": [{"frame": 100, "play_uid": "g_p001"}]}))
+    boxes = [{"label": "player", "box": [1, 1, 10, 20], "score": 0.9}, {"label": "football", "box": [2, 2, 4, 4], "score": 0.8}]
+    (paths.labels_dir / f"{paths.game_key}.teacher_sam3.json").write_text(json.dumps({"frames": {"100": boxes}}))
+    assert export_dataset([paths], tmp_path / "ds", source="approved") == {"train": 0, "val": 0}
+    counts = export_dataset([paths], tmp_path / "ds", source="teacher")
+    assert counts["train"] + counts["val"] == 1
+    (label,) = (tmp_path / "ds" / "labels").rglob("*.txt")
+    assert label.read_text().splitlines() == ["0 0.085938 0.291667 0.140625 0.527778"]

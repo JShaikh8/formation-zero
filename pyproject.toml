@@ -25,7 +25,7 @@ video = [
 cv = [
     "av>=12",
     "opencv-python>=4.9",
-    "supervision>=0.20",   # sv.Detections / InferenceSlicer / ByteTrack wiring
+    "supervision>=0.20,<0.30",   # sv.Detections / InferenceSlicer / ByteTrack (dropped in 0.30)
     "ultralytics>=8.2",    # YOLO11 (AGPL — prototype only; swap to RF-DETR before distribution)
     "scenedetect>=0.6",    # play segmentation from continuous film
 ]
