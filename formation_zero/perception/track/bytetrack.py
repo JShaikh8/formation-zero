@@ -12,6 +12,10 @@ ended track by two thirds (small boxes in a moving camera); one tracker for both
 lost buffer changed little. BoT-SORT's camera-motion compensation (ultralytics) did no better.
 About half the remaining track starts and ends are people leaving the frame as the camera moves.
 
+Rechecked with round-1 students, which score real players lower, on every third of plays 1-60
+(2026-10-31): starting at 0.25 moved frames with 21-23 players before the snap from 82% to 86%, for
+35% more sideline tracks and 49% more fragments. 0.5 stays.
+
 supervision dropped ByteTrack in 0.30 (pyproject pins below it). Runs in the ML environment.
 """
 

@@ -14,6 +14,14 @@ brightness is stable inside the window and sits in the recording's bright mode. 
 is the longest run of flagged windows, tolerating short gaps. On the demo game that lands within
 one window of the hand-found answer at both ends.
 
+Sun and shadow break the brightness test. On Chargers-Chiefs (2026-10-31) the film runs 0.32 to 0.50
+as shade crosses the field, 33 of 156 film windows fell below the line, and the run began 26 minutes
+into the film. So the run is only a core: it then grows (`grow`) through neighbouring windows that
+move like film and clear a lower line, BRIGHT_MARGIN under the first. The snow game's half hour of
+other moving video stays out, because idle seconds separate it from the film. That recording and
+49ers-Rams come out as before, and Chargers-Chiefs within one window of the player's own clock at
+both ends. Margins from 0.05 to 0.12 gave the same answers on all three.
+
 `fieldness` (fraction of turf-coloured pixels) is kept for later stages; it is not used here
 because snow, night games and dome turf all move it.
 """
@@ -25,6 +33,8 @@ from dataclasses import dataclass
 import numpy as np
 
 from formation_zero.ingest.sources import FrameSource
+
+BRIGHT_MARGIN = 0.08
 
 
 @dataclass(frozen=True)
@@ -97,6 +107,15 @@ def longest_run(flags: list[bool], max_gap: int) -> tuple[int, int] | None:
     return best
 
 
+def grow(flags: list[bool], i: int, j: int, max_gap: int) -> tuple[int, int]:
+    """Extend the run [i, j] through True windows either side, past up to `max_gap` False ones."""
+    while nearer := [k for k in range(max(0, i - max_gap - 1), i) if flags[k]]:
+        i = nearer[0]
+    while nearer := [k for k in range(j + 1, min(len(flags), j + max_gap + 2)) if flags[k]]:
+        j = nearer[-1]
+    return i, j
+
+
 def find(source: FrameSource, *, step_s: float = 1.0, window_s: float = 30.0, max_gap_s: float = 60.0,
          min_duration_s: float = 60.0, moving_min: float = 3.0, moving_max: float = 80.0,
          moving_fraction: float = 0.8, brightness_std_max: float = 0.10) -> FilmWindow | None:
@@ -119,12 +138,13 @@ def find(source: FrameSource, *, step_s: float = 1.0, window_s: float = 30.0, ma
     # The film is the recording's bright, stable mode. Relative, with a margin, so a recording
     # that is all film (lo ~ hi) still passes everywhere.
     bright_threshold = float((lo + hi) / 2 - 0.05)
-    flags = [w["moving"] >= moving_fraction and moving_min <= w["median"] <= moving_max
-             and w["bstd"] < brightness_std_max and w["bmean"] >= bright_threshold for w in windows]
-    run = longest_run(flags, max_gap=int(max_gap_s / window_s))
+    moves = [w["moving"] >= moving_fraction and moving_min <= w["median"] <= moving_max for w in windows]
+    flags = [m and w["bstd"] < brightness_std_max and w["bmean"] >= bright_threshold for m, w in zip(moves, windows)]
+    max_gap = int(max_gap_s / window_s)
+    run = longest_run(flags, max_gap=max_gap)
     if run is None:
         return None
-    i, j = run
+    i, j = grow([m and w["bmean"] >= bright_threshold - BRIGHT_MARGIN for m, w in zip(moves, windows)], *run, max_gap)
     start_f, start_t = windows[i]["start"][0], windows[i]["start"][1]
     end_f = windows[j]["end"][0] + int(round(step_s * source.fps))
     end_t = windows[j]["end"][1] + step_s
@@ -154,7 +174,7 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
-__all__ = ["FilmWindow", "fieldness", "luma_small", "motion_samples", "longest_run", "find"]
+__all__ = ["BRIGHT_MARGIN", "FilmWindow", "fieldness", "find", "grow", "longest_run", "luma_small", "motion_samples"]
 
 if __name__ == "__main__":
     raise SystemExit(main())

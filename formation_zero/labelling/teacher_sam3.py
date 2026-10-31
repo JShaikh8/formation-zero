@@ -198,13 +198,13 @@ class Teacher:
 # ---------------------------------------------------------------- the run
 
 
-def run(paths, *, device: str = "mps", limit: int | None = None) -> Path:
+def run(paths, *, device: str = "mps", limit: int | None = None, frames: set[int] | None = None) -> Path:
     from PIL import Image
 
     samples = json.loads(paths.samples_path.read_text())["samples"]
     log = paths.labels_dir / f"{paths.game_key}.teacher_sam3.jsonl"
     done = {json.loads(line)["frame"] for line in log.read_text().splitlines() if line.strip()} if log.exists() else set()
-    todo = [s for s in samples if s["frame"] not in done][:limit]
+    todo = [s for s in samples if s["frame"] not in done and (frames is None or s["frame"] in frames)][:limit]
     missing = [s["frame"] for s in todo if not (paths.frames_dir / f"{s['frame']:06d}.jpg").exists()]
     if missing:
         raise SystemExit(f"{len(missing)} frames not extracted (fz-sample --extract), e.g. {missing[:3]}")
@@ -254,12 +254,14 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--home", required=True)
     ap.add_argument("--device", default="mps", choices=["mps", "cpu", "cuda"])
     ap.add_argument("--limit", type=int, help="stop after this many new frames (a trial run; 0 rewrites the detections file from the log)")
+    ap.add_argument("--frames", help="JSON list of frame numbers: label only these (a test set)")
     ap.add_argument("--data-root", default="data")
     a = ap.parse_args(argv)
     paths = GamePaths(a.data_root, a.season, a.week, a.away, a.home)
     if not paths.film_root_available():
         raise SystemExit(f"film drive not mounted: {paths.film_root}")
-    print(f"detections -> {run(paths, device=a.device, limit=a.limit)}")
+    frames = set(json.loads(Path(a.frames).read_text())) if a.frames else None
+    print(f"detections -> {run(paths, device=a.device, limit=a.limit, frames=frames)}")
     return 0
 
 

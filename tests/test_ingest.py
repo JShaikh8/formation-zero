@@ -90,6 +90,13 @@ def test_fieldness_separates_turf_from_menu():
     assert filmwindow.fieldness(grey) == 0.0
 
 
+def test_a_run_grows_through_shade_but_not_across_a_long_gap():
+    flags = [True, False, False, False, True, False, True, True, False, True]
+    assert filmwindow.grow(flags, 6, 7, max_gap=1) == (4, 9)    # three False stop it before the first window
+    assert filmwindow.grow(flags, 6, 7, max_gap=3) == (0, 9)
+    assert filmwindow.grow([False, True, False], 1, 1, max_gap=2) == (1, 1)
+
+
 def test_longest_run_tolerates_short_gaps():
     flags = [False, True, True, False, True, True, True, False, False, False, True]
     assert filmwindow.longest_run(flags, max_gap=1) == (1, 6)

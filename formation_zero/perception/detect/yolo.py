@@ -17,11 +17,13 @@ import numpy as np
 from formation_zero.perception.base import Detections
 
 COCO_PERSON = 0
+NMS_IOU = 0.5   # at ultralytics' 0.7 linemen at the line carry stacks of boxes: 2.9 overlapping pairs a frame against 0.65 in approved labels
+                # (it also merges a few real linemen in the clump: `labelling.train`, round 1 in tracking)
 
 
 class YoloDetector:
     def __init__(self, weights: str | Path, *, imgsz: int = 1280, conf: float = 0.25, device: str = "mps",
-                 batch: int = 8):
+                 batch: int = 8, nms: float = NMS_IOU):
         from ultralytics import YOLO
 
         self.model = YOLO(str(weights))
@@ -29,14 +31,14 @@ class YoloDetector:
         coco = len(names) == 80 and names[COCO_PERSON] == "person"
         self.keep = {COCO_PERSON: "player"} if coco else {int(i): n for i, n in names.items()}
         self.labels = tuple(dict.fromkeys(self.keep.values()))
-        self.imgsz, self.conf, self.device, self.batch = imgsz, conf, device, batch
+        self.imgsz, self.conf, self.device, self.batch, self.nms = imgsz, conf, device, batch, nms
 
     def __call__(self, images: list[np.ndarray]) -> list[Detections]:
         out = []
         for i in range(0, len(images), self.batch):
             # ultralytics reads numpy images as OpenCV BGR; ours are RGB
             chunk = [np.ascontiguousarray(im[..., ::-1]) for im in images[i:i + self.batch]]
-            for r in self.model.predict(chunk, imgsz=self.imgsz, conf=self.conf, classes=list(self.keep),
+            for r in self.model.predict(chunk, imgsz=self.imgsz, conf=self.conf, iou=self.nms, classes=list(self.keep),
                                         device=self.device, verbose=False):
                 b = r.boxes
                 out.append(Detections(b.xyxy.cpu().numpy().astype(float), b.conf.cpu().numpy().astype(float),
@@ -44,4 +46,4 @@ class YoloDetector:
         return out
 
 
-__all__ = ["YoloDetector"]
+__all__ = ["NMS_IOU", "YoloDetector"]

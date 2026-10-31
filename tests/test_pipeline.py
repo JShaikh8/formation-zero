@@ -113,5 +113,6 @@ def test_shots_stage_reports_source_seconds(tmp_path, make_video, monkeypatch):
     assert [r.action for r in runner.run("shots")] == ["ran"]
     shots = pd.read_parquet(paths.shots_path)
     meta = json.loads((paths.proxy_path().with_name(paths.proxy_path().name + ".json")).read_text())
+    assert meta["first_frame"] == 250                                 # the window was found, so there is an offset
     assert shots.start_s.min() >= meta["first_frame"] / 25 - 0.5      # source seconds, not proxy seconds
-    assert len(shots) >= 4                                            # four takes
+    assert len(shots) >= 3                                            # the takes inside the window

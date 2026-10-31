@@ -53,6 +53,18 @@ mAP50-95 0.722 to 0.737, referee mAP50 0.850 to 0.871. For players in these two 
 nearly flat. Disagreements left at the top of the next sheet are mostly piles and tight zooms. A third
 game is unmeasured. `runs/student` is the round-1 student on all 371 frames (the fold-0 export's train
 and val together, from round 0 fold 0, 20 epochs), so the validation it prints is on training frames.
+
+Round 1 in tracking (plays 1-60 of 49ers-Rams, each play tracked by the fold student that never saw
+it, NMS 0.5, against the round-0 run): sideline tracks 5,584 to 3,144, tracks off the field 1,304 to
+16, fronts right at the snap 52 to 54 of 56, anchor error p90 0.44 to 0.36 yd. The price is about 0.6
+fewer players a frame before the snap: exactly 22 on 33% of frames against 43%, 21-23 on 75% against
+85%. Where the boxes differ, the ones lost are real linemen buried in the clump. Tracking stays on
+round 0 until the Chargers-Chiefs test frames can say how many are really missed.
+
+The first game it never saw (Chargers-Chiefs, 2026-10-31, no training on it): on 300 random frames
+the student at NMS 0.5 boxes no one extra on the sideline camera (over 26 players, 15% to 0%), and
+frames with 20-24 players go from 88% to 94% before the snap and 69% to 83% in the play. After the
+whistle they fall from 28% to 22%, unexplained until the test frames are in.
 """
 
 from __future__ import annotations
@@ -63,10 +75,11 @@ from pathlib import Path
 
 import numpy as np
 
+from formation_zero.perception.detect.yolo import NMS_IOU
+
 CLASSES = ("player", "referee")
 VAL_FRACTION = 0.15
 DISAGREE_IOU = 0.5
-NMS_IOU = 0.5   # at ultralytics' 0.7 linemen at the line carry stacks of boxes: 2.9 overlapping pairs a frame against 0.65 in approved labels
 DATASET = Path("data/derived/labels/student")
 DATASETS = {"approved": DATASET, "teacher": Path("data/derived/labels/student_round0")}
 RUN_NAMES = {"approved": "student", "teacher": "student_round0"}
@@ -283,7 +296,7 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
-__all__ = ["CLASSES", "NMS_IOU", "disagreement", "export_dataset", "fit", "fold_of", "heldout", "labelled_frames", "next_sheet",
+__all__ = ["CLASSES", "disagreement", "export_dataset", "fit", "fold_of", "heldout", "labelled_frames", "next_sheet",
            "score_frames", "val_play", "weights_of", "yolo_lines"]
 
 

@@ -153,7 +153,22 @@
       "at": "2026-10-31 06:30"
     },
     {
-      "text": "Next: track plays 1-60 with the round-1 student and compare the bird's-eye results with the current ones",
+      "text": "Plays 1-60 tracked with held-out round-1 students: sideline tracks 5,584 to 3,144, off-field tracks 1,304 to 16, fronts right on 54 of 56 (52 before); but about 0.6 fewer players a frame before the snap, real linemen lost in the clump. Tracking stays on round 0 for now",
+      "status": "done",
+      "at": "2026-10-31 16:30"
+    },
+    {
+      "text": "Third game on the drive: Chargers at Chiefs, week 6, 1080p, hard sun and shadow. Registered, 143 of 144 plays matched to the film, 2,000 frames sampled. First unseen-game test: no extra sideline boxes, and frames with 20-24 players up to 94% before the snap and 83% in the play",
+      "status": "done",
+      "at": "2026-10-31 16:30"
+    },
+    {
+      "text": "Film window no longer loses the shaded part of a recording (it dropped the first 26 minutes of this game); the other two recordings come out unchanged",
+      "status": "done",
+      "at": "2026-10-31 16:30"
+    },
+    {
+      "text": "Owner, about 10 minutes: review the 40 test frames of Chargers-Chiefs (review.html in that game's frames folder on the drive), then Export. They become the first fair score on a game neither model trained on, and decide whether tracking moves to round 1",
       "status": "todo"
     }
   ]
