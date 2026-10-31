@@ -164,26 +164,47 @@ def test_off_field_boxes_are_grey_and_have_no_id():
     assert set(map(tuple, out.reshape(-1, 3))) == {(0, 0, 0), OFF_FIELD}
 
 
-def test_players_whose_feet_stay_off_the_field_are_voted_off_and_officials_stay(monkeypatch):
-    import formation_zero.perception.field.lines as lines
+class FrameSource(FakeSource):
+    def iter_frames(self, start, end, step=1):
+        from formation_zero.ingest.sources import Frame
+
+        for i in range(start, end, step):
+            yield Frame(index=i, time_s=i / 25, image=np.zeros((80, 120, 3), np.uint8))
+
+
+def standing(t, label, foot_y, x=10):
+    return [{"frame": f, "track_id": t, "label": label, "conf": 0.9, "x1": x, "y1": foot_y - 15, "x2": x + 8, "y2": foot_y}
+            for f in range(40)]
+
+
+def fake_field(monkeypatch, mask, fit):
+    import formation_zero.perception.field.homography as hg
+    from formation_zero.perception.field import hashes
+
+    monkeypatch.setattr(hashes, "find", lambda image, angle="sideline": {"det": {"mask": mask}})
+    monkeypatch.setattr(hg, "register", lambda image, angle="sideline", found=None, prior=None: {"fit": fit})
+
+
+def test_without_registration_players_off_the_mask_are_voted_off_and_officials_stay(monkeypatch):
     from formation_zero.perception.tracking import vote_field
 
     mask = np.zeros((80, 120), bool)
     mask[30:, :] = True                                   # the field is the lower part of the frame
-    monkeypatch.setattr(lines, "field_mask", lambda image, angle=None: mask)
+    fake_field(monkeypatch, mask, None)
+    boxes = pd.DataFrame(standing(1, "player", 20) + standing(2, "referee", 20, 30) + standing(3, "player", 60, 50)
+                         + standing(4, "player", 60, 70) + standing(5, "player", 60, 90))
+    assert vote_field(FrameSource(), 0, 40, boxes, "sideline", every=10) == {1}
+    assert vote_field(FrameSource(), 0, 40, boxes, "endzone", every=10) == set()
 
-    class Source(FakeSource):
-        def iter_frames(self, start, end, step=1):
-            from formation_zero.ingest.sources import Frame
 
-            for i in range(start, end, step):
-                yield Frame(index=i, time_s=i / 25, image=np.zeros((80, 120, 3), np.uint8))
+def test_registered_frames_judge_feet_in_yards_even_where_the_mask_disagrees(monkeypatch):
+    from formation_zero.perception.tracking import vote_field
 
-    def box(t, label, foot_y, x=10):
-        return [{"frame": f, "track_id": t, "label": label, "conf": 0.9, "x1": x, "y1": foot_y - 15, "x2": x + 8, "y2": foot_y}
-                for f in range(0, 40)]
-
-    boxes = pd.DataFrame(box(1, "player", 20) + box(2, "referee", 20, 30) + box(3, "player", 60, 50)
-                         + box(4, "player", 60, 70) + box(5, "player", 60, 90))
-    assert vote_field(Source(), 0, 40, boxes, "sideline", every=10) == {1}
-    assert vote_field(Source(), 0, 40, boxes, "endzone", every=10) == set()
+    # image row v is field y 59 - 0.8 v: row 5 is 55 yd (past the far sideline), row 79.8 is -4.8 (the near bench)
+    fit = {"easy": True, "G": np.array([[1.0, 0, 0], [0, -0.8, 59], [0, 0, 1]]),
+           "camera": {"C": np.array([0.0, -87.0, 27.0]), "orth": 90.0, "f": 1000.0}}
+    fake_field(monkeypatch, np.ones((80, 120), bool), fit)
+    boxes = pd.DataFrame(standing(1, "player", 5) + standing(2, "referee", 5, 30) + standing(3, "player", 40, 50)
+                         + standing(4, "player", 79.8, 70) + standing(5, "player", 72, 90))
+    # 4 is cut off by the frame bottom, which is already past the near sideline; 5 stands at 1.4 yd, on
+    assert vote_field(FrameSource(), 0, 40, boxes, "sideline", every=10) == {1, 4}

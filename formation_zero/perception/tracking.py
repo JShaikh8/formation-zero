@@ -18,7 +18,8 @@ zooms out in four frames (p004); both read as cuts, which is right, since box tr
 either.
 
 Player tracks whose feet stay off the field (benches, staff) are marked `off_field` on sideline
-takes (`vote_field`); they take no team, and the overlay draws them grey without an id.
+takes (`vote_field`); they take no team, and the overlay draws them grey without an id. Feet are
+judged in yards where the frame registers (`perception.field.homography`), else by the field mask.
 
 Teams (`perception.team`): the colour split is fitted once per game on the teacher's player boxes
 in the sampled frames, then each player track takes the median of its confident margins over
@@ -43,8 +44,9 @@ CUT_CHANGE = 12.0       # a cut changes a 64x36 grey thumbnail by at least this 
 CUT_RATIO = 4.0         # ...and by this many times the median change over the frames before it
 TRIM_S = 1.0            # a cut this close to a take's end trims the take there
 FIELD_ANGLES = ("sideline",)    # where the field mask finds the far sideline reliably (GRD-37); end-zone paint fools it
-FIELD_EVERY = 10        # frames between the field masks a track votes with
+FIELD_EVERY = 10        # frames between the field checks a track votes with
 FIELD_MAX_SHARE = 0.5   # a mask that would put more of a frame's boxes off the field than this is not trusted
+OFF_FIELD_YD = 0.5      # registered frames: feet this far past a sideline are off the field
 OFF_FIELD_SHARE = 0.5   # a track whose feet are off the field in at least this share of its votes is off it...
 OFF_FIELD_MIN = 2       # ...given at least this many off-field votes
 
@@ -160,35 +162,60 @@ def vote_teams(source, start: int, end: int, boxes: pd.DataFrame, teams, *, ever
 
 def vote_field(source, start: int, end: int, boxes: pd.DataFrame, angle: str, *,
                every: int = FIELD_EVERY) -> set[int]:
-    """Player track ids standing off the field (benches, staff, the chain crew): the bottom middle of
-    the box outside `perception.field.lines.field_mask` in most of the frames the track is in, one mask
-    every `every` frames. Feet past the frame edge count as on. Officials stay (some work the sideline).
-    Empty for angles the mask cannot read.
+    """Player track ids standing off the field (benches, staff, the chain crew): feet (the bottom
+    middle of the box) off the field in most of the frames checked, one every `every` frames.
+    Officials stay (some work the sideline). Empty for angles the mask cannot read.
 
-    Checked on 49ers-Rams plays 1-10 (2026-10-30): of 165 tracks it put off the field, nearly all were
-    bench players, staff, chain crew and cheerleaders. It misses the near bench whenever the near
-    sideline is out of shot (no boundary to cut at); field registration (milestone 4) does that properly."""
+    A frame that registers easily (`perception.field.homography.register`), with the camera where the
+    take's other easy frames put it, judges feet in yards: off past OFF_FIELD_YD outside a sideline;
+    a box cut off by the bottom of the frame is off only if its bottom edge is already past the near
+    sideline. Other frames fall back on the field mask (feet past the frame edge count as on), and
+    a mask that would put most of a frame's boxes off is skipped.
+
+    Checked on 49ers-Rams plays 1-10 (2026-10-30). Mask only: of 165 tracks put off the field, nearly
+    all were benches, staff, chain crew and cheerleaders, but it missed much of both benches: mapped
+    through the homography, its far boundary lands up to 5.6 yd beyond the far sideline (median 1.1;
+    often the outer edge of the white border or the team area) and its near one about 3 yd inside
+    the near sideline, where the bench crowd hides the ends of the yard lines. In yards (80% of boxes
+    on easy frames; about 0.7 s more a frame checked): 256 tracks off against 152, 118 added (50 far
+    side, 68 near, none with a median foot inside the field; 116 seen by eye, all benches and sideline
+    staff) and 14 dropped, all within 1.4 yd of the near sideline."""
     import numpy as np
 
-    from formation_zero.perception.field.lines import field_mask
+    from formation_zero.configs.nfl_field import FIELD_WIDTH_YD
+    from formation_zero.perception.field import hashes
+    from formation_zero.perception.field import homography as hg
 
     if angle not in FIELD_ANGLES or boxes.empty:
         return set()
-    votes: dict[int, list[bool]] = {}
     players = set(boxes.loc[boxes["label"] == "player", "track_id"].astype(int))
     by_frame = dict(tuple(boxes.groupby("frame")))
+    checked = []
     for f in source.iter_frames(start, end, step=every):
         rows = by_frame.get(f.index)
-        mask = field_mask(f.image, angle) if rows is not None else None
-        if mask is None:
+        if rows is None:
             continue
-        h, w = mask.shape
-        x = ((rows["x1"] + rows["x2"]) / 2).astype(int).to_numpy()
-        y = rows["y2"].astype(int).to_numpy()
-        seen = (x >= 0) & (x < w) & (y >= 0) & (y < h)
-        off = np.zeros(len(rows), bool)
-        off[seen] = ~mask[y[seen], x[seen]]
-        if off.mean() > FIELD_MAX_SHARE:
+        found = hashes.find(f.image, angle)
+        fit = hg.register(f.image, angle, found=found)["fit"]
+        checked.append((rows, f.image.shape[:2], found["det"]["mask"], fit if fit is not None and fit["easy"] else None))
+    cams = np.array([fit["camera"]["C"] for *_, fit in checked if fit is not None]).reshape(-1, 3)
+    prior = (float(np.median(cams[:, 1])), float(np.median(cams[:, 2]))) if len(cams) else None
+    votes: dict[int, list[bool]] = {}
+    for rows, shape, mask, fit in checked:
+        xy = rows[["x1", "y1", "x2", "y2"]].to_numpy(float)
+        feet, whole = hg.feet(xy, shape)
+        if fit is not None and hg.plausible(fit["camera"], prior):
+            y = hg.apply(fit["G"], feet)[:, 1]
+            off = (y < -OFF_FIELD_YD) | (whole & (y > FIELD_WIDTH_YD + OFF_FIELD_YD))
+        elif mask is not None:
+            h, w = mask.shape
+            x, y = feet[:, 0].astype(int), feet[:, 1].astype(int)
+            seen = (x >= 0) & (x < w) & (y >= 0) & (y < h)
+            off = np.zeros(len(rows), bool)
+            off[seen] = ~mask[y[seen], x[seen]]
+            if off.mean() > FIELD_MAX_SHARE:
+                continue
+        else:
             continue
         for t, o in zip(rows["track_id"], off):
             votes.setdefault(int(t), []).append(bool(o))
