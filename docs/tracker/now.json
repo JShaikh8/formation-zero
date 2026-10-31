@@ -118,7 +118,22 @@
       "at": "2026-10-31 00:57"
     },
     {
-      "text": "Owner: review both games' boxes, most disputed first (review.html in each game's frames folder on the drive; one key per frame, space enlarges, a click removes or restores a box; Export when done). 49ers–Rams now has its 1080p page",
+      "text": "Tracks that swap ids between opposing linemen are cut where their colour changes: plays 1-60 relabelled, the bird's-eye videos rebuilt; p029 now anchors, fronts right on 52 of 56 takes (47 of 55 before)",
+      "status": "done",
+      "at": "2026-10-31 02:18"
+    },
+    {
+      "text": "Review: bench pre-removal judged in yards on the first 600 frames of the 49ers-Rams page, and a picture guide on the drive (review_guide.html)",
+      "status": "done",
+      "at": "2026-10-31 02:18"
+    },
+    {
+      "text": "Runpod connected to Claude Code for labelling and training rounds; nothing run on it yet",
+      "status": "done",
+      "at": "2026-10-31 02:18"
+    },
+    {
+      "text": "Owner: review about 300 frames of each game, most disputed first (review.html in each game's frames folder on the drive, review_guide.html beside the games shows how); Export when done. 49ers-Rams has its 1080p page",
       "status": "todo"
     }
   ]
