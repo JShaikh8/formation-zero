@@ -68,3 +68,27 @@ def test_folds_split_plays_in_half_independently_of_validation():
     assert 0.45 < sum(fold_of(u) for u in uids) / 1000 < 0.55
     both = sum(fold_of(u) == 1 and val_play(u) for u in uids) / sum(val_play(u) for u in uids)
     assert 0.35 < both < 0.65
+
+
+def test_next_sheet_skips_every_reviewed_frame_and_ignores_boxes_off_the_field(tmp_path, monkeypatch):
+    from formation_zero.labelling import train
+
+    paths = GamePaths(tmp_path / "data", 2025, 1, "AA", "BB", film_root=tmp_path / "film")
+    for d in (paths.labels_dir, paths.groundtruth_dir):
+        d.mkdir(parents=True)
+    on, bench = {"label": "player", "box": [0, 0, 10, 30]}, {"label": "player", "box": [50, 0, 60, 30]}
+    frames = {str(f): [on, bench] for f in (1, 2, 3, 4, 5)}
+    (paths.labels_dir / f"{paths.game_key}.teacher_sam3.json").write_text(json.dumps({"teacher": "t", "frames": frames}))
+    (paths.groundtruth_dir / f"{paths.game_key}.detections.json").write_text(
+        json.dumps({"kept": [{"frame": 1, "boxes": []}], "flagged": [2], "dropped": [3]}))
+    (paths.labels_dir / f"{paths.game_key}.field_suggestions.json").write_text(json.dumps({"suggestions": {"4": [1]}}))
+    asked = {}
+
+    def scored(paths, weights, frames, *, imgsz, device, removed):
+        asked.update(frames=frames, removed=removed)
+        return {"4": 0, "5": 1}
+
+    monkeypatch.setattr(train, "score_frames", scored)
+    sheet = json.loads(train.next_sheet(paths, tmp_path / "w.pt").read_text())
+    assert asked == {"frames": ["4", "5"], "removed": {"4": [1]}}
+    assert sheet["frames"] == {"5": [on, bench]}        # teacher boxes stay whole: suggestion indices point into them

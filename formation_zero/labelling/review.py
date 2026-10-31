@@ -53,10 +53,10 @@ def build_page(game_key: str, detections: dict, frames: list[int], order: str = 
 
 
 def import_decisions(game_key: str, detections: dict, decisions: dict, *, fps: float = 25.0) -> dict:
-    """Kept frames with their boxes less any the reviewer removed, flagged frames listed; dropped and
+    """Kept frames with their boxes less any the reviewer removed, flagged and dropped frames listed;
     undecided frames left out. `removed` maps a frame to indices into its teacher box list."""
     removed = decisions.get("removed", {})
-    kept, flagged, n_removed = [], [], 0
+    kept, flagged, dropped, n_removed = [], [], [], 0
     for f, d in sorted(((int(k), v) for k, v in decisions["decisions"].items())):
         if d == "keep":
             teacher, gone = detections["frames"][str(f)], set(removed.get(str(f), []))
@@ -65,9 +65,12 @@ def import_decisions(game_key: str, detections: dict, decisions: dict, *, fps: f
             kept.append({"frame": f, "time_s": round(f / fps, 3), "boxes": boxes})
         elif d == "flag":
             flagged.append(f)
+        elif d == "drop":
+            dropped.append(f)
     return {"game_key": game_key, "teacher": detections.get("teacher"), "source": "human review",
             "keyed_by": "source frame number (frame-aligned with every rendition)",
-            "reviewed": len(decisions["decisions"]), "boxes_removed": n_removed, "kept": kept, "flagged": flagged}
+            "reviewed": len(decisions["decisions"]), "boxes_removed": n_removed, "kept": kept, "flagged": flagged,
+            "dropped": dropped}
 
 
 def main(argv: list[str] | None = None) -> int:

@@ -28,6 +28,31 @@ folds by play (`--fold 0`, `--fold 1`): each student learns half the plays and s
 never saw, so every frame gets an honest disagreement score (`heldout`), which orders the review
 page with the teacher's likely mistakes first (`fz-review build --order`). Two half-size runs cost
 about one full one, and either student serves the tracking work.
+
+Round 1 (2026-10-31): the 371 frames the owner kept, in the same two folds, so neither round's
+student has seen a play it is scored on. Continuing from round 0 for 20 epochs beat a fresh COCO
+start at 40 on both folds and both classes (player mAP50 0.958 against 0.954, referee 0.871 against
+0.860), so rounds continue. Against round 0 on those frames player mAP50 went from 0.837 to 0.958,
+referee from 0.677 to 0.871, but those frames were picked because round 0 disputed them (median 8 and
+17 disputed boxes against 2 and 4 on the rest), so the gain is flattered. Player recall did not rise
+(0.917 to 0.911 snow, 0.956 to 0.945 clear): round 1 learned what not to box.
+
+Frames nobody chose say the same thing more soberly. On 101 random unreviewed sideline frames of
+49ers-Rams that register, boxes with feet off the field fell from 4.2 players and 4.1 referees a
+frame to 0.1 and 0.4, while referees on the field held (1.6 to 1.4); frames with 20-24 players on
+the field went from 58% to 65%. Most of the referees lost were chain crew and staff
+(`labelling.field_filter`). On the snow game, 148 random sideline frames did not move (64% to 65%).
+
+The extra boxes left are mostly stacks on linemen at the line, which a stricter merge settles without
+any labelling: NMS IoU 0.7 to 0.5 (NMS_IOU) takes overlapping pairs from 2.93 a frame to 0.61, where
+approved labels have 0.65, and player precision from 0.836 to 0.897 for recall 0.927 to 0.917.
+
+Is this many frames enough? Half the training plays (98 and 113 frames, double the epochs, so the
+same steps), scored on the same frames with NMS 0.5: player mAP50 0.950 to 0.956 for twice the frames,
+mAP50-95 0.722 to 0.737, referee mAP50 0.850 to 0.871. For players in these two games the curve is
+nearly flat. Disagreements left at the top of the next sheet are mostly piles and tight zooms. A third
+game is unmeasured. `runs/student` is the round-1 student on all 371 frames (the fold-0 export's train
+and val together, from round 0 fold 0, 20 epochs), so the validation it prints is on training frames.
 """
 
 from __future__ import annotations
@@ -41,6 +66,7 @@ import numpy as np
 CLASSES = ("player", "referee")
 VAL_FRACTION = 0.15
 DISAGREE_IOU = 0.5
+NMS_IOU = 0.5   # at ultralytics' 0.7 linemen at the line carry stacks of boxes: 2.9 overlapping pairs a frame against 0.65 in approved labels
 DATASET = Path("data/derived/labels/student")
 DATASETS = {"approved": DATASET, "teacher": Path("data/derived/labels/student_round0")}
 RUN_NAMES = {"approved": "student", "teacher": "student_round0"}
@@ -159,17 +185,20 @@ def weights_of(run: Path) -> Path:
     return best if best.exists() else run / "weights" / "last.pt"
 
 
-def score_frames(paths, weights: Path, frames: list[str], *, imgsz: int = 1280, device: str = "mps") -> dict[str, int]:
-    """Teacher-student disagreement on each of `frames` (keys of the teacher's file)."""
+def score_frames(paths, weights: Path, frames: list[str], *, imgsz: int = 1280, device: str = "mps",
+                 removed: dict[str, list[int]] | None = None) -> dict[str, int]:
+    """Teacher-student disagreement on each of `frames` (keys of the teacher's file). `removed` is
+    {frame: teacher box indices} to leave out, the off-field boxes a reviewed student rightly lacks."""
     from ultralytics import YOLO
 
     teacher = json.loads((paths.labels_dir / f"{paths.game_key}.teacher_sam3.json").read_text())["frames"]
+    gone = removed or {}
     model = YOLO(str(weights))
     out = {}
     for f in frames:
-        r = model.predict(str(paths.frames_dir / f"{int(f):06d}.jpg"), imgsz=imgsz, device=device, verbose=False)[0]
+        r = model.predict(str(paths.frames_dir / f"{int(f):06d}.jpg"), imgsz=imgsz, iou=NMS_IOU, device=device, verbose=False)[0]
         sboxes = [{"label": CLASSES[int(c)], "box": b.tolist()} for b, c in zip(r.boxes.xyxy.cpu().numpy(), r.boxes.cls.cpu().numpy())]
-        out[f] = disagreement(teacher[f], sboxes)
+        out[f] = disagreement([b for i, b in enumerate(teacher[f]) if i not in gone.get(f, ())], sboxes)
     return out
 
 
@@ -186,17 +215,22 @@ def heldout(paths, weights_by_fold: dict[int, Path], **kw) -> Path:
     return out
 
 
-def next_sheet(paths, weights: Path, *, top: int = 300, device: str = "mps") -> Path:
+def next_sheet(paths, weights: Path, *, top: int = 300, imgsz: int = 1280, device: str = "mps") -> Path:
     """Run the student on teacher-labelled frames nobody reviewed; the worst disagreements become
-    the next review sheet's detections file (teacher boxes, ordered for review by `labelling.review`)."""
+    the next review sheet's detections file (teacher boxes, ordered for review by `labelling.review`).
+    Boxes `labelling.field_filter` calls off the field don't count: a student that learned the
+    review no longer finds benches, and without this they would fill the sheet."""
     teacher = json.loads((paths.labels_dir / f"{paths.game_key}.teacher_sam3.json").read_text())
     approved = paths.groundtruth_dir / f"{paths.game_key}.detections.json"
     seen = set()
     if approved.exists():
         a = json.loads(approved.read_text())
-        seen = {r["frame"] for r in a["kept"]} | set(a["flagged"])
+        seen = {r["frame"] for r in a["kept"]} | set(a["flagged"]) | set(a.get("dropped", []))
+    suggestions = paths.labels_dir / f"{paths.game_key}.field_suggestions.json"
+    removed = json.loads(suggestions.read_text())["suggestions"] if suggestions.exists() else None
     todo = [f for f in teacher["frames"] if int(f) not in seen]
-    scored = sorted(((d, f) for f, d in score_frames(paths, weights, todo, device=device).items()), reverse=True)
+    scored = sorted(((d, f) for f, d in score_frames(paths, weights, todo, imgsz=imgsz, device=device, removed=removed).items()),
+                    reverse=True)
     out = paths.labels_dir / f"{paths.game_key}.round_next.json"
     out.write_text(json.dumps({"teacher": teacher["teacher"] + " (student disagreements)",
                                "frames": {f: teacher["frames"][f] for d, f in scored[:top] if d > 0}}))
@@ -245,11 +279,11 @@ def main(argv: list[str] | None = None) -> int:
     else:
         weights = Path(a.weights or f"data/derived/labels/runs/{name}/weights/best.pt")
         for paths in _games(a.games, a.data_root):
-            print(f"next review sheet -> {next_sheet(paths, weights)}")
+            print(f"next review sheet -> {next_sheet(paths, weights, imgsz=a.imgsz)}")
     return 0
 
 
-__all__ = ["CLASSES", "disagreement", "export_dataset", "fit", "fold_of", "heldout", "labelled_frames", "next_sheet",
+__all__ = ["CLASSES", "NMS_IOU", "disagreement", "export_dataset", "fit", "fold_of", "heldout", "labelled_frames", "next_sheet",
            "score_frames", "val_play", "weights_of", "yolo_lines"]
 
 

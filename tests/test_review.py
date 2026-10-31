@@ -26,7 +26,7 @@ def test_import_keeps_kept_frames_lists_flagged_and_drops_the_rest():
     out = import_decisions("g", DET, {"decisions": {"100": "keep", "200": "flag", "300": "drop"}})
     assert [k["frame"] for k in out["kept"]] == [100]
     assert out["kept"][0]["time_s"] == 4.0 and out["kept"][0]["boxes"] == DET["frames"]["100"]
-    assert out["flagged"] == [200] and out["reviewed"] == 3
+    assert out["flagged"] == [200] and out["dropped"] == [300] and out["reviewed"] == 3
 
 
 def test_import_leaves_out_boxes_the_reviewer_removed():

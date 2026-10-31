@@ -28,6 +28,13 @@ guards the mask only: half a kickoff frame really can be benches. On the first 4
 49ers-Rams page (2026-10-31), 34 registered, and the player boxes left a frame went from a median of
 29 to 21. `--order` and `--first` redo only the frames a review will reach first, leaving the rest as
 they were.
+
+The owner's review of that page (210 frames, 2026-10-31) kept all but 35 of 2,724 pre-removals: 2
+players, 33 officials. A removal stands unless clicked, so that is weaker evidence for officials
+than for players. By eye about 6 of 48 random "referee" boxes left removed were officials; the rest
+were chain crew, coaches and camera operators the teacher called referees, so they are mostly right
+to go, and the few officials off the field go with them. The referee class therefore means officials
+on the field, near enough: the round-1 student keeps those (1.4 a frame against 1.6, `labelling.train`).
 """
 
 from __future__ import annotations

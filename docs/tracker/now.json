@@ -143,8 +143,18 @@
       "at": "2026-10-31 02:57"
     },
     {
-      "text": "Round 1 students training on the 371 approved frames, scored against round 0 on plays neither saw",
-      "status": "doing"
+      "text": "Round 1 student on 371 approved frames: bench 'players' on random 49ers-Rams sideline frames fell from 4.2 a frame to 0.1, officials on the field held; the snow game did not move",
+      "status": "done",
+      "at": "2026-10-31 06:30"
+    },
+    {
+      "text": "Is this many frames enough? Twice the frames added 0.006 player mAP50 and 0.021 for officials: close to flat for players in these two games; a stricter box merge clears most stacked boxes on linemen with no labelling",
+      "status": "done",
+      "at": "2026-10-31 06:30"
+    },
+    {
+      "text": "Next: track plays 1-60 with the round-1 student and compare the bird's-eye results with the current ones",
+      "status": "todo"
     }
   ]
 }
