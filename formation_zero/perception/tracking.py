@@ -23,7 +23,14 @@ judged in yards where the frame registers (`perception.field.homography`), else 
 
 Teams (`perception.team`): the colour split is fitted once per game on the teacher's player boxes
 in the sampled frames, then each player track takes the median of its confident margins over
-crops every TEAM_EVERY frames. Team 0 is the lighter-shirted side.
+crops every TEAM_EVERY frames. Team 0 is the lighter-shirted side. Opposing linemen locked together
+often swap ids, so a track whose margins change team for good is first cut there (`swap_cuts`), the
+part after the cut taking a new id. Checked 2026-10-31 on 49ers-Rams plays 1-60, sideline takes:
+427 of 2,904 player tracks on the field cut (6 twice); by eye 29 of 30 random cuts are real swaps
+(a 49er one side, a Ram the other; the other one a running Ram scored weakly, which SWAP_STRONG now
+keeps whole). Rerun with the cuts (`field.topdown` holds the rest): players on the wrong side of
+the line in the 5 frames before the snap 5 on 4 takes, against 25 on 20. End-zone takes got 299 cuts,
+not checked. `--revote` redoes the teams of tracked takes without detecting again.
 """
 
 from __future__ import annotations
@@ -40,6 +47,9 @@ ANGLES = ("sideline", "endzone")
 COLUMNS = ["frame", "track_id", "label", "conf", "x1", "y1", "x2", "y2"]
 TEAM_EVERY = 5          # frames between the crops a track votes with
 TEAM_FIT_FRAMES = 400   # sampled frames whose teacher player boxes fit the game's split
+SWAP_MIN_RUN = 4        # an id swap needs this many confident crops on each side of it...
+SWAP_AGREE = 0.75       # ...this share of them on that side's team...
+SWAP_STRONG = 0.5       # ...and that side's median margin at least this far from zero
 CUT_CHANGE = 12.0       # a cut changes a 64x36 grey thumbnail by at least this much a pixel (on 0-255)...
 CUT_RATIO = 4.0         # ...and by this many times the median change over the frames before it
 TRIM_S = 1.0            # a cut this close to a take's end trims the take there
@@ -140,14 +150,56 @@ def crop(image, box):
     return image[max(0, y1):max(0, y2), max(0, x1):max(0, x2)]
 
 
-def vote_teams(source, start: int, end: int, boxes: pd.DataFrame, teams, *, every: int = TEAM_EVERY) -> dict[int, int]:
-    """Track id -> 0/1 for player tracks, from the median of confident margins; -1 where none were."""
+def swap_cuts(frames, margins, *, min_run: int = SWAP_MIN_RUN, agree: float = SWAP_AGREE,
+              strong: float = SWAP_STRONG) -> list[int]:
+    """Where a track changes team for good, from its confident margins in frame order: the frames from
+    which the track is taken to follow someone else (half-way between the last crop of one side and
+    the first of the other). The split kept is the one most crops agree with, both sides at least
+    `min_run` crops, `agree` of them on their side's team and a median margin `strong` from zero;
+    each side is then split again the same way. A swap and a swap back with a long stretch between
+    stays whole, since no one split leaves both sides agreeing."""
+    import numpy as np
+
+    f, m = np.asarray(frames), np.asarray(margins, float)
+    s = np.sign(m)
+    cuts: list[int] = []
+
+    def split(lo: int, hi: int) -> None:
+        best = None
+        for k in range(lo + min_run, hi - min_run + 1):
+            ma, mb = float(np.median(m[lo:k])), float(np.median(m[k:hi]))
+            if ma * mb >= 0 or min(abs(ma), abs(mb)) < strong:
+                continue
+            ga, gb = int((s[lo:k] == np.sign(ma)).sum()), int((s[k:hi] == np.sign(mb)).sum())
+            if ga < agree * (k - lo) or gb < agree * (hi - k):
+                continue
+            if best is None or ga + gb > best[0]:
+                best = (ga + gb, k)
+        if best is None:
+            return
+        k = best[1]
+        split(lo, k)
+        cuts.append(int((f[k - 1] + f[k]) // 2))
+        split(k, hi)
+
+    split(0, len(m))
+    return cuts
+
+
+def vote_teams(source, start: int, end: int, boxes: pd.DataFrame, teams, *,
+               every: int = TEAM_EVERY) -> tuple[pd.DataFrame, dict[int, int]]:
+    """Player tracks on the field -> 0/1, from the median of confident margins; -1 where none were.
+    Tracks are first cut where they swap ids with an opponent (`swap_cuts`), each part after a cut
+    under a new id. Returns the boxes with those ids, and the teams."""
+    from itertools import pairwise
+
     import numpy as np
 
     from formation_zero.perception.team import UNSURE
 
-    players = boxes[boxes["label"] == "player"]
-    margins: dict[int, list[float]] = {int(t): [] for t in players["track_id"].unique()}
+    off = boxes["off_field"] if "off_field" in boxes else pd.Series(False, index=boxes.index)
+    players = boxes[(boxes["label"] == "player") & ~off]
+    votes: dict[int, list[tuple[int, float]]] = {int(t): [] for t in players["track_id"].unique()}
     by_frame = dict(tuple(players.groupby("frame")))
     for f in source.iter_frames(start, end, step=every):
         rows = by_frame.get(f.index)
@@ -156,8 +208,25 @@ def vote_teams(source, start: int, end: int, boxes: pd.DataFrame, teams, *, ever
         m = teams.margin([crop(f.image, (r.x1, r.y1, r.x2, r.y2)) for r in rows.itertuples()])
         for t, v in zip(rows["track_id"], m):
             if np.isfinite(v) and abs(v) >= UNSURE:
-                margins[int(t)].append(float(v))
-    return {t: (int(np.median(v) > 0) if v else -1) for t, v in margins.items()}
+                votes[int(t)].append((f.index, float(v)))
+    boxes = boxes.copy()
+    next_id = int(boxes["track_id"].max()) + 1 if len(boxes) else 0
+    team_of: dict[int, int] = {}
+    for t, v in votes.items():
+        if not v:
+            team_of[t] = -1
+            continue
+        fs, ms = np.array([a for a, _ in v]), np.array([b for _, b in v])
+        edges = [None, *swap_cuts(fs, ms), None]
+        for i, (a, b) in enumerate(pairwise(edges)):
+            part = (fs >= (a if a is not None else -np.inf)) & (fs < (b if b is not None else np.inf))
+            tid = t
+            if i:
+                tid, next_id = next_id, next_id + 1
+                rows = (boxes["track_id"] == t) & (boxes["frame"] >= a) & (boxes["frame"] < (b if b is not None else np.inf))
+                boxes.loc[rows, "track_id"] = tid
+            team_of[tid] = int(np.median(ms[part]) > 0)
+    return boxes, team_of
 
 
 def vote_field(source, start: int, end: int, boxes: pd.DataFrame, angle: str, *,
@@ -232,7 +301,7 @@ def run(paths, plays: pd.DataFrame, detector: Detector, *, overlay: bool = False
     from formation_zero.ingest.sources import FileSource
     from formation_zero.labelling.sample import best_source
     from formation_zero.perception.overlay import render
-    from formation_zero.perception.track.bytetrack import ByteTracker, summarise
+    from formation_zero.perception.track.bytetrack import ByteTracker
 
     paths.tracking_dir.mkdir(parents=True, exist_ok=True)
     out = []
@@ -247,17 +316,7 @@ def run(paths, plays: pd.DataFrame, detector: Detector, *, overlay: bool = False
                 start, end = trim_span(*index_span, cuts, source.fps)
                 boxes = boxes[(boxes["frame"] >= start) & (boxes["frame"] < end)].reset_index(drop=True)
                 off = vote_field(source, start, end, boxes, angle)
-                boxes["off_field"] = boxes["track_id"].isin(off)
-                tracks, take = summarise(boxes, source.fps)
-                if len(tracks):
-                    tracks["off_field"] = tracks["track_id"].isin(off)
-                take["off_field"] = len(off)
-                on = boxes[~boxes["off_field"]]
-                team_of = vote_teams(source, start, end, on, teams) if teams is not None else None
-                if team_of is not None:
-                    boxes["team"] = boxes["track_id"].map(team_of).fillna(-1).astype(int)
-                    tracks["team"] = tracks["track_id"].map(team_of).fillna(-1).astype(int)
-                    take["teams"] = {str(k): int(v) for k, v in pd.Series(team_of).value_counts().items()}
+                boxes, tracks, take, team_of = label_take(source, start, end, boxes, off, teams)
                 box_path, summary_path, video = take_paths(paths, int(play.play_index), angle)
                 boxes.to_parquet(box_path, index=False)
                 take.update({"play_uid": play.play_uid, "angle": angle, "start_frame": start, "end_frame": end,
@@ -272,7 +331,63 @@ def run(paths, plays: pd.DataFrame, detector: Detector, *, overlay: bool = False
                 print(f"  {play.play_uid} {angle}: {end - start} frames (trimmed {index_span[1] - index_span[0] - (end - start)}, "
                       f"{len(take['cuts'])} cuts inside), {take['tracks']} tracks "
                       f"({take['by_label']}, {len(off)} off the field), {take['fragments']} fragments, teams {take.get('teams')}, "
-                      f"{take['fps_processed']} fps", flush=True)
+                      f"{take.get('swaps', 0)} id swaps cut, {take['fps_processed']} fps", flush=True)
+    return out
+
+
+def label_take(source, start: int, end: int, boxes: pd.DataFrame, off: set[int], teams):
+    """Off-field flags, teams (after the id-swap cuts) and the per-track summary of one tracked take.
+    Returns (boxes, tracks, take, team_of); team_of is None without `teams`. The take's fragments
+    count the cuts too."""
+    from formation_zero.perception.track.bytetrack import summarise
+
+    boxes = boxes.assign(off_field=boxes["track_id"].isin(off))
+    team_of = None
+    if teams is not None:
+        before = boxes["track_id"].nunique()
+        boxes, team_of = vote_teams(source, start, end, boxes, teams)
+        swaps = boxes["track_id"].nunique() - before
+    tracks, take = summarise(boxes, source.fps)
+    if len(tracks):
+        tracks["off_field"] = tracks["track_id"].isin(off)
+    take["off_field"] = len(off)
+    if team_of is not None:
+        boxes["team"] = boxes["track_id"].map(team_of).fillna(-1).astype(int)
+        tracks["team"] = tracks["track_id"].map(team_of).fillna(-1).astype(int)
+        take["teams"] = {str(k): int(v) for k, v in pd.Series(team_of).value_counts().items()}
+        take["swaps"] = int(swaps)
+    return boxes, tracks, take, team_of
+
+
+def revote(paths, plays: pd.DataFrame, teams, *, overlay: bool = False) -> list[dict]:
+    """The teams again, id-swap cuts included, on takes already tracked: boxes and summary rewritten
+    in place (the take's span, cuts and speed kept), the overlay too with `overlay`. No detection."""
+    from formation_zero.ingest.sources import FileSource
+    from formation_zero.labelling.sample import best_source
+    from formation_zero.perception.overlay import render
+
+    out = []
+    with FileSource(best_source(paths)) as source:
+        for play in plays.itertuples():
+            for angle in ANGLES:
+                box_path, summary_path, video = take_paths(paths, int(play.play_index), angle)
+                if not box_path.exists():
+                    continue
+                old = json.loads(summary_path.read_text())
+                boxes = pd.read_parquet(box_path)
+                off = set(boxes.loc[boxes["off_field"], "track_id"].astype(int)) if "off_field" in boxes else set()
+                boxes = boxes.drop(columns=["team", "off_field"], errors="ignore")
+                boxes, tracks, take, team_of = label_take(source, old["start_frame"], old["end_frame"], boxes, off, teams)
+                boxes.to_parquet(box_path, index=False)
+                take.update({k: old[k] for k in ("play_uid", "angle", "start_frame", "end_frame", "frames", "index_span",
+                                                 "cuts", "fps_processed") if k in old})
+                take["tracks_detail"] = tracks.to_dict("records")
+                summary_path.write_text(json.dumps(take, indent=1))
+                if overlay:
+                    render(source, old["start_frame"], old["end_frame"], boxes, video, team_of=team_of)
+                out.append(take)
+                print(f"  {play.play_uid} {angle}: {take['tracks']} tracks, teams {take.get('teams')}, "
+                      f"{take.get('swaps', 0)} id swaps cut", flush=True)
     return out
 
 
@@ -297,25 +412,31 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--away", required=True)
     ap.add_argument("--home", required=True)
     ap.add_argument("--plays", required=True, help="play_index numbers, e.g. 1-10 or 3,7,12")
-    ap.add_argument("--weights", required=True, help="YOLO weights: a student's best.pt, or COCO yolo11s.pt")
+    ap.add_argument("--weights", help="YOLO weights: a student's best.pt, or COCO yolo11s.pt (not with --revote)")
     ap.add_argument("--imgsz", type=int, default=1280)
     ap.add_argument("--device", default="mps")
     ap.add_argument("--overlay", action="store_true", help="also write an MP4 of each take with the tracks drawn")
     ap.add_argument("--no-teams", action="store_true", help="skip the team split")
+    ap.add_argument("--revote", action="store_true", help="redo only the teams of takes already tracked")
     ap.add_argument("--data-root", default="data")
     a = ap.parse_args(argv)
+    if not a.revote and not a.weights:
+        ap.error("--weights is needed unless --revote")
     paths = GamePaths(a.data_root, a.season, a.week, a.away, a.home)
     if not paths.film_root_available():
         raise SystemExit(f"film drive not mounted: {paths.film_root}")
     index = pd.read_parquet(paths.play_index_path)
     plays = index[index["play_index"].astype(int).isin(_plays(a.plays))]
     teams = None if a.no_teams else fit_teams(paths)
+    if a.revote:
+        revote(paths, plays, teams, overlay=a.overlay)
+        return 0
     run(paths, plays, YoloDetector(a.weights, imgsz=a.imgsz, conf=DETECT_CONF, device=a.device), overlay=a.overlay, teams=teams)
     return 0
 
 
-__all__ = ["ANGLES", "COLUMNS", "Cuts", "crop", "fit_teams", "run", "take_paths", "take_span", "track_take", "trim_span",
-           "vote_field", "vote_teams"]
+__all__ = ["ANGLES", "COLUMNS", "Cuts", "crop", "fit_teams", "label_take", "revote", "run", "swap_cuts", "take_paths",
+           "take_span", "track_take", "trim_span", "vote_field", "vote_teams"]
 
 
 if __name__ == "__main__":

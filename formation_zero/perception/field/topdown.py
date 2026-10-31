@@ -96,6 +96,13 @@ Held out, 2026-10-31: plays 11-60 of the same game, none looked at while buildin
   the ball, 13 of them under centre (on plays 1-10 both such were shotgun), so that case decides
   nothing alone.
 
+Rerun the same day with the tracker's id-swap cuts (`tracking.swap_cuts`). Not held out: that rule
+was set looking at these 60 plays. p029 now anchors (line at 27; by eye the teams and yard lines are
+right), and no other take's shift or line moved. Plays 11-60: 46 of 47 scrimmage plays anchored (0.16
+yd median, p90 0.43, max 0.98), fronts in the band on 43 of 47, the formation rule decides 25 of 43
+and agrees on 23. Plays 1-10: fronts on 9 of 9, the rule decides 7 of 8, all agreeing. On p042 the two
+Rams who carried the 49ers' label are right. Players on the field are unchanged.
+
 Field frame: nfl_field's, x along the field (left goal line 10, the 50 at 60, right goal line 110 as
 the sideline camera sees it), y across from the near sideline (0) to the far one (53.33).
 """

@@ -152,7 +152,45 @@ def test_tracks_vote_their_team_and_doubtful_crops_abstain():
     boxes = pd.DataFrame([{"frame": f, "track_id": t, "label": lab, "conf": 0.9, "x1": 0, "y1": 0, "x2": w, "y2": 40}
                           for f in range(10) for t, w, lab in ((1, 10, "player"), (2, 30, "player"), (3, 20, "player"),
                                                                (4, 30, "referee"))])
-    assert vote_teams(Source(), 0, 10, boxes, Teams(), every=5) == {1: 0, 2: 1, 3: -1}
+    out, team_of = vote_teams(Source(), 0, 10, boxes, Teams(), every=5)
+    assert team_of == {1: 0, 2: 1, 3: -1} and out["track_id"].equals(boxes["track_id"])
+
+
+def test_a_lasting_change_of_team_is_an_id_swap_and_a_short_one_is_not():
+    from formation_zero.perception.tracking import swap_cuts
+
+    f = np.arange(0, 100, 5)
+    one = np.r_[np.full(10, -1.0), np.full(10, 1.0)]
+    assert swap_cuts(f, one) == [47]                                    # half-way between frames 45 and 50
+    noisy = one.copy(); noisy[[2, 15]] *= -1                            # one doubtful crop each side: still cut
+    assert swap_cuts(f, noisy) == [47]
+    assert swap_cuts(f, np.r_[np.full(18, -1.0), np.full(2, 1.0)]) == []          # 2 crops is no swap
+    assert swap_cuts(f, np.r_[np.full(10, -1.0), np.full(10, 0.4)]) == []         # too weak on one side
+    assert swap_cuts(f, np.r_[np.full(4, -1.0), np.full(12, 1.0), np.full(4, -1.0)]) == [17, 77]  # and back
+    assert swap_cuts(f, np.r_[np.full(6, -1.0), np.full(7, 1.0), np.full(7, -1.0)]) == []   # no one split fits
+
+
+def test_vote_teams_gives_the_part_after_a_swap_a_new_id():
+    from formation_zero.perception.tracking import vote_teams
+
+    class Teams:      # track 1's box is narrow (team 0) until frame 50, then wide (team 1)
+        def margin(self, crops):
+            return np.array([-1.0 if c.shape[1] == 10 else 1.0 for c in crops])
+
+    class Source(FakeSource):
+        def iter_frames(self, start, end, step=1):
+            from formation_zero.ingest.sources import Frame
+
+            for i in range(start, end, step):
+                yield Frame(index=i, time_s=i / 25, image=np.zeros((80, 120, 3), np.uint8))
+
+    boxes = pd.DataFrame([{"frame": f, "track_id": t, "label": "player", "conf": 0.9, "x1": 0, "y1": 0,
+                           "x2": (10 if f < 50 else 30) if t == 1 else 30, "y2": 40, "off_field": t == 7}
+                          for f in range(100) for t in (1, 2, 7)])
+    out, team_of = vote_teams(Source(), 0, 100, boxes, Teams(), every=5)
+    assert team_of == {1: 0, 8: 1, 2: 1}                                # 7 is off the field: no vote, no cut
+    assert set(out.loc[out["frame"] < 47, "track_id"]) == {1, 2, 7}
+    assert set(out.loc[out["frame"] >= 47, "track_id"]) == {8, 2, 7}
 
 
 def test_off_field_boxes_are_grey_and_have_no_id():
