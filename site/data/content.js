@@ -162,12 +162,12 @@ window.FZ = {
    {
     "text": "Milestone 4 first light: pixel-to-yards on sideline frames of the clear game (65% of sampled frames easy), anchored to the official line of scrimmage; 69 of 69 anchored frames agree with the painted yard numbers",
     "status": "done",
-    "at": "2026-10-30 21:10"
+    "at": "2026-10-30 21:05"
    },
    {
     "text": "Benches: tracking now judges off-field in yards where the frame registers; both benches mostly grey on the overlays (256 tracks off against 152)",
     "status": "done",
-    "at": "2026-10-30 22:30"
+    "at": "2026-10-30 21:39"
    },
    {
     "text": "Owner: review both games' boxes, most disputed first (review.html in each game's frames folder on the drive; one key per frame, space enlarges, a click removes or restores a box; Export when done). 49ers–Rams now has its 1080p page",
