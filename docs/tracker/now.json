@@ -133,6 +133,11 @@
       "at": "2026-10-31 02:18"
     },
     {
+      "text": "Owner reviewed 234 frames of the snow game: 196 kept (483 boxes removed), 15 dropped, 23 flagged; imported as its first approved labels",
+      "status": "done",
+      "at": "2026-10-31 02:22"
+    },
+    {
       "text": "Owner: review about 300 frames of each game, most disputed first (review.html in each game's frames folder on the drive, review_guide.html beside the games shows how); Export when done. 49ers-Rams has its 1080p page",
       "status": "todo"
     }
