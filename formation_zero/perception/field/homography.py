@@ -83,6 +83,7 @@ ENDZONE_ACROSS_YD = (-20.0, 73.0)   # ... between these field y ...
 ENDZONE_SAME_YD = 4.0               # ... and with a game's camera known, its height within this of it
 FRONT = 3                   # `line_of_scrimmage` averages the front-most this many of each team
 EDGE_PX = 4.0               # 1080p px: a box ending this close to the bottom of the frame is cut off there
+HEAD_YD = 1.7               # `feet` with the camera: the top of a box is a head at least this high (see `feet`)
 ANCHOR_MAX_YD = 1.5         # `anchor` is trusted only if the players' line is this close to the official one
 YARD_LINE_STEP = 5.0        # yd between painted yard lines: the relative frame is right up to whole steps
 
@@ -397,13 +398,31 @@ def register(image: np.ndarray, angle: str = "sideline", found: dict | None = No
 # ---------------------------------------------------------------- the absolute anchor
 
 
-def feet(boxes: np.ndarray, shape: tuple[int, int]) -> tuple[np.ndarray, np.ndarray]:
+def feet(boxes: np.ndarray, shape: tuple[int, int], g: np.ndarray | None = None,
+         centre: np.ndarray | None = None) -> tuple[np.ndarray, np.ndarray]:
     """Foot points (bottom middle) of boxes (n, 4: x1 y1 x2 y2, frame px) and which to use: a box cut
     off by the bottom of the frame (within EDGE_PX) has its feet out of the picture, and its bottom
-    edge lands yards inside the field (the near bench, seen from the sideline)."""
+    edge lands yards inside the field (the near bench, seen from the sideline).
+
+    With the frame's image -> field homography g and the camera centre (field yd, z up; `camera`), a
+    box is also cut off when the feet under its top edge, taken as a head HEAD_YD up, fall below the
+    frame. The near bench seen over the heads in front ends tens of px above the edge (5-47 px on
+    49ers-Rams p004), and so do players at the bottom of a close-up with their legs hidden. Measured
+    2026-10-30 on 49ers-Rams plays 2-10 (sideline): it cuts 584 of 79,306 boxes the edge keeps, all
+    hidden feet by eye (15 sampled); for whole people standing near the bottom the feet it predicts
+    land on the box's bottom edge. HEAD_YD is low for a standing person (whole boxes on registered
+    frames: players 1.81 yd median, 2.0 at the 75th percentile, officials 1.91), so feet up to about
+    1 yd below the frame can be missed; a crouching player at the very bottom of a frame is lost."""
     b = np.asarray(boxes, float).reshape(-1, 4)
     pts = np.column_stack([(b[:, 0] + b[:, 2]) / 2, b[:, 3]])
-    return pts, b[:, 3] < shape[0] - EDGE_PX * shape[0] / 1080
+    whole = b[:, 3] < shape[0] - EDGE_PX * shape[0] / 1080
+    if g is not None and centre is not None and len(b):
+        c = np.asarray(centre, float)
+        q = apply(g, np.column_stack([pts[:, 0], b[:, 1]])) - c[:2]     # the head's ray meets the ground
+        ahead = (q * (apply(g, pts) - c[:2])).sum(1) > 0                 # ... beyond the camera (head below the horizon)
+        under = apply(np.linalg.inv(g), c[:2] + q * (c[2] - HEAD_YD) / c[2])[:, 1]
+        whole &= ~(ahead & (under > shape[0]))
+    return pts, whole
 
 
 def line_of_scrimmage(x: np.ndarray, offense: np.ndarray) -> dict | None:

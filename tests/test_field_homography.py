@@ -160,6 +160,29 @@ def test_boxes_cut_off_by_the_bottom_of_the_frame_have_no_feet():
     assert np.allclose(pts[0], [120, 600]) and ok.tolist() == [True, False, False]
 
 
+def project(pts3, c=CAMERA, target=(52.0, 27.0, 0.0), f=4400.0, w=W, h=H):
+    """Field points (n, 3; z up) -> pixels, for the camera of `camera_h`."""
+    fwd = np.asarray(target, float) - c
+    fwd /= np.linalg.norm(fwd)
+    right = np.cross(fwd, [0, 0, 1.0])
+    right /= np.linalg.norm(right)
+    r = np.vstack([right, np.cross(fwd, right), fwd])
+    p = (np.array([[f, 0, w / 2], [0, f, h / 2], [0, 0, 1]]) @ (r @ (np.asarray(pts3, float) - c).T)).T
+    return p[:, :2] / p[:, 2:]
+
+
+def test_with_the_camera_a_box_whose_head_needs_feet_below_the_frame_is_cut_off():
+    g = np.linalg.inv(camera_h())
+    near = Hg.apply(g, np.array([[480.0, H - 1.0]]))[0]                # the field at the frame's bottom
+    out, inside = near + [0, -2.0], near + [0, 2.0]                    # feet 2 yd below it, and 2 yd above
+    boxes = []
+    for x, y in (out, inside):
+        (hx, hy), (_, fy) = project([[x, y, 2.0], [x, y, 0.0]])
+        boxes.append([hx - 10, hy, hx + 10, min(fy, H - 15.0)])        # the bench's box stops 15 px short
+    assert Hg.feet(np.array(boxes), (H, W))[1].tolist() == [True, True]
+    assert Hg.feet(np.array(boxes), (H, W), g, CAMERA)[1].tolist() == [False, True]
+
+
 def test_an_anchor_near_the_rounding_edge_is_not_trusted():
     assert not Hg.anchor(los_rel=1.7, attack=1, yardline_100=26)["ok"]       # 2.3 yd off: could be a step out
     assert Hg.anchor(los_rel=3.6, attack=1, yardline_100=26)["ok"]
