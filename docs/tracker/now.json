@@ -88,12 +88,17 @@
       "at": "2026-10-30 16:45"
     },
     {
-      "text": "SAM 3 relabelling 49ers–Rams on the same 2,000 frames from the 1080p copy (576p labels and page kept beside them); review page rebuilt after",
-      "status": "active",
-      "at": "2026-10-30 17:05"
+      "text": "49ers–Rams relabelled by SAM 3 from the 1080p copy: twice the balls on sideline frames, players nearly the same; review page rebuilt (576p page kept in frames_576p)",
+      "status": "done",
+      "at": "2026-10-30 20:30"
     },
     {
-      "text": "Owner: review the snow game's boxes, most disputed first (review.html in its frames folder on the drive; one key per frame, space enlarges, a click removes or restores a box; Export when done). 49ers–Rams waits for its 1080p page",
+      "text": "Plays 1-10 retracked from the 1080p copy: same tracks as at 576p (the detector sees 960 px either way); sharper overlays on the drive",
+      "status": "done",
+      "at": "2026-10-30 20:40"
+    },
+    {
+      "text": "Owner: review both games' boxes, most disputed first (review.html in each game's frames folder on the drive; one key per frame, space enlarges, a click removes or restores a box; Export when done). 49ers–Rams now has its 1080p page",
       "status": "todo"
     }
   ]
