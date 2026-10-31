@@ -73,6 +73,29 @@ Measured 2026-10-30 on 49ers-Rams (2026 wk1 SF at LA, 1080p) plays 1-10, sidelin
   8), 7.4 and 8.5 on the two without (p006, 10: the back behind a quarterback under centre, who
   stands within the line's 2.3 yd); nobody there on p004 and p009 (shotgun). Rule set after looking.
 
+Held out, 2026-10-31: plays 11-60 of the same game, none looked at while building (50 sideline takes,
+18,627 frames; 0.11 s a frame with the video), nothing changed after the run:
+- 421 frames (2.3%) without a homography, 167 of them on p019; 2 registrations dropped; no step in
+  doubt. 77% of frames bridged, 15% extrapolated, 8% direct.
+- anchor: 45 of 47 scrimmage plays (the two kickoffs stay relative); the players' line 0.16 yd from
+  the official one (median; p90 0.5, max 0.9). Left relative: p019, a pass from the 2 with the end
+  zone filling the picture (1 easy registration of 37, no snap seen); p029, where four 49ers in the
+  clump at the line carry the Rams' team label and the line comes out 1.7 yd off, which the check
+  refuses. Team 0 = SF again (12.0 against 52.5).
+- by eye, one random frame of each anchored take (46, from 12 s before the snap to 9 s after): the
+  drawn yard lines sit on the painted lines and numbers on all 46, the goal line on the pylon on two
+  end-zone corners after the whistle.
+- fronts at the snap in the band on 39 of 46 (plays 1-10 the same way: 8 of 9); two of the seven miss
+  it by 0.02 yd, the others have one or two players on the wrong side, on p042 two Rams carrying the
+  49ers' label (by eye).
+- players on the field, last 1.5 s before the snap: 22 on 42% of frames, 21-23 on 83%, 20-24 on 93%
+  (plays 1-10 the same way: 53, 92, 97%).
+- formation rule, unchanged: decides on 23 of 42 pass and run plays and agrees with '(Shotgun)' on
+  21; the two others are runs with a player 3.9 and 4.3 yd deep that the play-by-play does not call
+  shotgun (not resolved by eye). Of the 19 it leaves, 17 are under centre; on 14 nobody stands behind
+  the ball, 13 of them under centre (on plays 1-10 both such were shotgun), so that case decides
+  nothing alone.
+
 Field frame: nfl_field's, x along the field (left goal line 10, the 50 at 60, right goal line 110 as
 the sideline camera sees it), y across from the near sideline (0) to the far one (53.33).
 """
