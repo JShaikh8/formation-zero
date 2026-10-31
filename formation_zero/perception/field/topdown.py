@@ -125,7 +125,8 @@ from formation_zero.configs.nfl_field import (
 )
 from formation_zero.perception.field import homography as hg
 
-PRIOR = (-87.3, 27.2)       # the game camera (y, height) of the clear game, yd (homography docstring)
+CAMERA_FRAMES = 60          # sampled sideline frames `game_camera` tries
+CAMERA_MIN = 5              # ... and how many must register for its answer to count
 EVERY = 10                  # frames between registrations (measured above)
 STEP = hg.YARD_LINE_STEP    # 5 yd: the relative frame is right up to whole steps of this
 STEP_SURE_YD = 1.0          # a step whose leftover is under this is sure; between this and 2.5, ambiguous
@@ -581,8 +582,33 @@ def offense_team(team_club: dict[int, str], posteam: str) -> int | None:
     return None
 
 
+def game_camera(paths, frames: int = CAMERA_FRAMES) -> tuple[float, float] | None:
+    """The game's sideline camera (y, height), yd: the median over sampled frames that register with
+    no prior, kept in derived/labels/<game>.camera.json. Each stadium differs, and a prior from another
+    rejects every frame: y -87.7 and height 27.3 at the 49ers-Rams game, -88.8 and 50.6 at Arrowhead,
+    -76.0 and 49.4 at the snow game (10 of 60 frames; 50 and 54 on the others), each tight within a
+    yard or two and the same in both halves. None if too few frames register; `register` then runs free."""
+    from PIL import Image
+
+    cached = paths.labels_dir / f"{paths.game_key}.camera.json"
+    if cached.exists():
+        got = json.loads(cached.read_text())["camera"]
+        return tuple(got) if got else None
+    samples = [s for s in json.loads(paths.samples_path.read_text())["samples"] if s["angle"] == "sideline"]
+    cams = []
+    for k in np.linspace(0, len(samples) - 1, min(frames, len(samples))).astype(int):
+        img = np.asarray(Image.open(paths.frames_dir / f"{samples[k]['frame']:06d}.jpg").convert("RGB"))
+        fit = hg.register(img)["fit"]
+        if fit is not None and hg.plausible(fit["camera"]):
+            cams.append(fit["camera"]["C"][1:])
+    camera = (float(np.median([c[0] for c in cams])), float(np.median([c[1] for c in cams]))) if len(cams) >= CAMERA_MIN else None
+    cached.write_text(json.dumps({"camera": camera, "registered": len(cams), "tried": min(frames, len(samples))}))
+    return camera
+
+
 def take_motion_and_registrations(source, start: int, end: int, boxes: pd.DataFrame, every: int = EVERY,
-                                  regs: dict | None = None, motion: dict | None = None) -> tuple[dict, dict, dict]:
+                                  regs: dict | None = None, motion: dict | None = None,
+                                  prior: tuple[float, float] | None = None) -> tuple[dict, dict, dict]:
     """One pass over frames [start, end) of `source` (a FileSource): the camera motion into every
     frame (`frame_motion`, players' boxes masked) and `homography.register` every `every` frames.
     Precomputed `regs` (frame -> fit dict or None) or `motion` (frame -> M or None) skip that work.
@@ -607,7 +633,7 @@ def take_motion_and_registrations(source, start: int, end: int, boxes: pd.DataFr
             prev, pf = grey, fr.index
         if need_regs and (fr.index - start) % every == 0:
             t = time.perf_counter()
-            fit = hg.register(fr.image, found=hashes.find(fr.image, "sideline"), prior=PRIOR)["fit"]
+            fit = hg.register(fr.image, found=hashes.find(fr.image, "sideline"), prior=prior)["fit"]
             t_reg += time.perf_counter() - t
             n_reg += 1
             regs[fr.index] = None if fit is None else {"G": fit["G"], "easy": fit["easy"], "rms_px": fit["rms_px"]}
@@ -617,7 +643,7 @@ def take_motion_and_registrations(source, start: int, end: int, boxes: pd.DataFr
 
 
 def relative_take(paths, play_index: int, source, every: int = EVERY, regs: dict | None = None,
-                  motion: dict | None = None) -> dict:
+                  motion: dict | None = None, prior: tuple[float, float] | None = None) -> dict:
     """Everything about one sideline take that needs no anchor: boxes, homographies in one relative
     frame (`bridge`), relative positions, smoothed speeds, and the snap."""
     from formation_zero.perception.tracking import take_paths
@@ -628,7 +654,7 @@ def relative_take(paths, play_index: int, source, every: int = EVERY, regs: dict
     start, end = summary["start_frame"], summary["end_frame"]
     team_of = {int(t["track_id"]): int(t.get("team", -1)) for t in summary["tracks_detail"]}
     shape = (source.height, source.width)
-    motion, regs, timing = take_motion_and_registrations(source, start, end, boxes, every, regs, motion)
+    motion, regs, timing = take_motion_and_registrations(source, start, end, boxes, every, regs, motion, prior)
     easy = {f: r["G"] for f, r in regs.items() if r is not None and r["easy"]}
     frames = list(range(start, end))
     br = bridge(frames, easy, motion, shape, source.fps)
@@ -782,12 +808,14 @@ def run(paths, plays: pd.DataFrame, every: int = EVERY, video: bool = True, cach
     from formation_zero.labelling.sample import best_source
 
     pbp = pd.read_parquet(paths.pbp_path).dropna(subset=["play_uid"]).set_index("play_uid")
+    prior = game_camera(paths)
+    print(f"  game camera (y, height): {prior}", flush=True)
     takes = []
     with FileSource(best_source(paths)) as source:
         for play in plays.itertuples():
             c = (cache or {}).get(int(play.play_index), {})
             t0 = time.perf_counter()
-            t = relative_take(paths, int(play.play_index), source, every, c.get("regs"), c.get("motion"))
+            t = relative_take(paths, int(play.play_index), source, every, c.get("regs"), c.get("motion"), prior)
             t["timing"]["total_s"] = time.perf_counter() - t0
             takes.append(t)
             print(f"  {t['play_uid']}: {t['end'] - t['start']} frames, snap {t['snap']}, "
@@ -839,7 +867,7 @@ def main(argv: list[str] | None = None) -> int:
 
 
 __all__ = ["EVERY", "Field", "absolute_take", "anchor_take", "blend", "bridge", "carry", "choose_team_club", "footprint",
-           "frame_motion", "positions", "probe_points", "relative_take", "render", "run", "shift", "smooth_tracks",
+           "frame_motion", "game_camera", "positions", "probe_points", "relative_take", "render", "run", "shift", "smooth_tracks",
            "snap_frame", "step_offset", "take_camera", "yard_lines_on_picture"]
 
 

@@ -168,8 +168,18 @@
       "at": "2026-10-31 16:30"
     },
     {
-      "text": "Owner, about 10 minutes: review the 40 test frames of Chargers-Chiefs (review.html in that game's frames folder on the drive), then Export. They become the first fair score on a game neither model trained on, and decide whether tracking moves to round 1",
-      "status": "todo"
+      "text": "Owner reviewed the 40 test frames of Chargers-Chiefs (38 kept): the first fair score on a game neither model trained on. Players: precision 0.80 to 0.95 with recall holding at 0.95-0.96. False boxes 173 to 34, missed 29 to 35. Tracking moves to the round-1 student",
+      "status": "done",
+      "at": "2026-10-31 17:05"
+    },
+    {
+      "text": "Bird's-eye works at a second stadium: each game's camera is now measured from its own frames (51 yd up at Arrowhead, 27 at the 49ers-Rams game). First two plays pinned to the official line within 0.12 yd",
+      "status": "done",
+      "at": "2026-10-31 17:05"
+    },
+    {
+      "text": "Chargers-Chiefs plays 1-60 tracked with the round-1 student, with overlay and bird's-eye videos",
+      "status": "active"
     }
   ]
 }

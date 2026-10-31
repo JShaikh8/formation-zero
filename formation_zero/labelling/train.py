@@ -58,13 +58,23 @@ Round 1 in tracking (plays 1-60 of 49ers-Rams, each play tracked by the fold stu
 it, NMS 0.5, against the round-0 run): sideline tracks 5,584 to 3,144, tracks off the field 1,304 to
 16, fronts right at the snap 52 to 54 of 56, anchor error p90 0.44 to 0.36 yd. The price is about 0.6
 fewer players a frame before the snap: exactly 22 on 33% of frames against 43%, 21-23 on 75% against
-85%. Where the boxes differ, the ones lost are real linemen buried in the clump. Tracking stays on
-round 0 until the Chargers-Chiefs test frames can say how many are really missed.
+85%. Where the boxes differ, the ones lost are real linemen buried in the clump, or duplicates.
 
 The first game it never saw (Chargers-Chiefs, 2026-10-31, no training on it): on 300 random frames
 the student at NMS 0.5 boxes no one extra on the sideline camera (over 26 players, 15% to 0%), and
 frames with 20-24 players go from 88% to 94% before the snap and 69% to 83% in the play. After the
-whistle they fall from 28% to 22%, unexplained until the test frames are in.
+whistle they fall from 28% to 22%.
+
+The test (`fz-train test`): counts mislead, so the owner reviewed 40 random frames of that game, and
+38 kept are the answer key, <game>.test.json, out of every training set and review sheet
+(`test_frames`). It is the one number that compares two models fairly. Against 711 players and 52
+officials, at confidence 0.25: round 0 at NMS 0.7 has player precision 0.798, recall 0.959, referee
+0.587 and 0.846; the round-1 student at NMS 0.5 has 0.952 and 0.951, referee 0.889 and 0.923. False
+player boxes 173 to 34, missed 29 to 35. Bootstrapped by frame, the precision gain is 0.10 to 0.21
+and the recall change -0.02 to +0.003, so no measured loss. Sideline frames before the snap: precision
+0.74 to 0.96, recall 0.98 both, 4 missed either way. So tracking moves to `runs/student` at NMS 0.5.
+Of the 34 false boxes 8 are the NFL shield painted on the field, up to 0.86 confident. Most of the
+35 missed are players buried in a clump or on the ground.
 """
 
 from __future__ import annotations
@@ -128,8 +138,11 @@ def export_dataset(games, out_dir: Path = DATASET, *, source: str = "approved", 
         if rows is None:
             continue
         play_of = {s["frame"]: s["play_uid"] for s in json.loads(paths.samples_path.read_text())["samples"]}
+        held = test_frames(paths)
         for row in rows:
             frame = row["frame"]
+            if frame in held:
+                continue
             uid = play_of[frame]
             split = "val" if (val_play(uid) if fold is None else fold_of(uid) == fold) else "train"
             src = paths.frames_dir / f"{frame:06d}.jpg"
@@ -146,6 +159,15 @@ def export_dataset(games, out_dir: Path = DATASET, *, source: str = "approved", 
         f"path: {out_dir.resolve()}\ntrain: images/train\nval: images/val\n"
         f"names:\n" + "".join(f"  {i}: {c}\n" for i, c in enumerate(CLASSES)))
     return counts
+
+
+def test_frames(paths) -> set[int]:
+    """The game's test frames (<game>.test.json), random frames kept out of every training set and review sheet."""
+    f = paths.groundtruth_dir / f"{paths.game_key}.test.json"
+    if not f.exists():
+        return set()
+    t = json.loads(f.read_text())
+    return {r["frame"] for r in t["kept"]} | set(t["flagged"]) | set(t["dropped"])
 
 
 def labelled_frames(paths, source: str) -> list[dict] | None:
@@ -178,6 +200,22 @@ def disagreement(teacher: list[dict], student: list[dict], iou_min: float = DISA
             missing += 1
         missing += len(free)
     return missing
+
+
+def matched(pred: list, truth: list, iou_min: float = DISAGREE_IOU) -> tuple[int, int, int]:
+    """(true, false, missed) boxes of one class: `pred`, best score first, each take one unused truth box."""
+    from formation_zero.labelling.teacher_sam3 import iou
+
+    free = [np.array(t, float) for t in truth]
+    hit = 0
+    for p in pred:
+        if free:
+            scores = iou(np.array(p, float), np.array(free))
+            k = int(np.argmax(scores))
+            if scores[k] >= iou_min:
+                free.pop(k)
+                hit += 1
+    return hit, len(pred) - hit, len(free)
 
 
 def fit(data_yaml: Path, *, base: str = "yolo11s.pt", epochs: int = 60, imgsz: int = 1280, batch: int = 8,
@@ -215,6 +253,23 @@ def score_frames(paths, weights: Path, frames: list[str], *, imgsz: int = 1280, 
     return out
 
 
+def score_test(paths, weights: Path, *, imgsz: int = 960, conf: float = 0.25, nms: float = NMS_IOU,
+               device: str = "mps") -> dict[str, dict]:
+    """A student against the owner's test frames: the one score that compares any two models fairly."""
+    from ultralytics import YOLO
+
+    frames = json.loads((paths.groundtruth_dir / f"{paths.game_key}.test.json").read_text())["kept"]
+    model = YOLO(str(weights))
+    counts = {c: np.zeros(3, int) for c in CLASSES}
+    for row in frames:
+        r = model.predict(str(paths.frames_dir / f"{row['frame']:06d}.jpg"), imgsz=imgsz, conf=conf, iou=nms, device=device, verbose=False)[0]
+        boxes, cls = r.boxes.xyxy.cpu().numpy(), r.boxes.cls.cpu().numpy()
+        for k, label in enumerate(CLASSES):
+            counts[label] += matched(boxes[cls == k].tolist(), [b["box"] for b in row["boxes"] if b["label"] == label])
+    return {c: {"precision": round(float(t / max(1, t + f)), 3), "recall": round(float(t / max(1, t + m)), 3),
+                "true": int(t), "false": int(f), "missed": int(m)} for c, (t, f, m) in counts.items()}
+
+
 def heldout(paths, weights_by_fold: dict[int, Path], **kw) -> Path:
     """Round 0: each fold's student scores the frames of the plays it never saw. Writes
     <game>.round0_disagreement.json, {frame: unmatched boxes}, for `fz-review build --order`."""
@@ -235,10 +290,10 @@ def next_sheet(paths, weights: Path, *, top: int = 300, imgsz: int = 1280, devic
     review no longer finds benches, and without this they would fill the sheet."""
     teacher = json.loads((paths.labels_dir / f"{paths.game_key}.teacher_sam3.json").read_text())
     approved = paths.groundtruth_dir / f"{paths.game_key}.detections.json"
-    seen = set()
+    seen = test_frames(paths)
     if approved.exists():
         a = json.loads(approved.read_text())
-        seen = {r["frame"] for r in a["kept"]} | set(a["flagged"]) | set(a.get("dropped", []))
+        seen |= {r["frame"] for r in a["kept"]} | set(a["flagged"]) | set(a.get("dropped", []))
     suggestions = paths.labels_dir / f"{paths.game_key}.field_suggestions.json"
     removed = json.loads(suggestions.read_text())["suggestions"] if suggestions.exists() else None
     todo = [f for f in teacher["frames"] if int(f) not in seen]
@@ -264,7 +319,7 @@ def main(argv: list[str] | None = None) -> int:
     import argparse
 
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("action", choices=["export", "fit", "disagree", "heldout"])
+    ap.add_argument("action", choices=["export", "fit", "disagree", "heldout", "test"])
     ap.add_argument("--games", nargs="+", default=["2025:20:LA:CHI", "2026:1:SF:LA"], help="season:week:away:home")
     ap.add_argument("--source", choices=sorted(DATASETS), default="approved",
                     help="approved review labels, or the unreviewed teacher boxes (round 0)")
@@ -284,6 +339,9 @@ def main(argv: list[str] | None = None) -> int:
         print(f"{export_dataset(_games(a.games, a.data_root), out, source=a.source, fold=a.fold)} frames -> {out}")
     elif a.action == "fit":
         fit(out / "data.yaml", base=a.base, epochs=a.epochs, imgsz=a.imgsz, batch=a.batch, val=not a.no_val, name=name)
+    elif a.action == "test":
+        for paths in _games(a.games, a.data_root):
+            print(paths.game_key, score_test(paths, Path(a.weights), imgsz=a.imgsz))
     elif a.action == "heldout":
         runs = Path("data/derived/labels/runs")
         weights = {k: weights_of(runs / f"{RUN_NAMES['teacher']}_f{k}") for k in (0, 1)}
@@ -296,8 +354,8 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
-__all__ = ["CLASSES", "disagreement", "export_dataset", "fit", "fold_of", "heldout", "labelled_frames", "next_sheet",
-           "score_frames", "val_play", "weights_of", "yolo_lines"]
+__all__ = ["CLASSES", "disagreement", "export_dataset", "fit", "fold_of", "heldout", "labelled_frames", "matched", "next_sheet",
+           "score_frames", "score_test", "test_frames", "val_play", "weights_of", "yolo_lines"]
 
 
 if __name__ == "__main__":

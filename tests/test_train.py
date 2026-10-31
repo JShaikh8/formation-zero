@@ -92,3 +92,29 @@ def test_next_sheet_skips_every_reviewed_frame_and_ignores_boxes_off_the_field(t
     sheet = json.loads(train.next_sheet(paths, tmp_path / "w.pt").read_text())
     assert asked == {"frames": ["4", "5"], "removed": {"4": [1]}}
     assert sheet["frames"] == {"5": [on, bench]}        # teacher boxes stay whole: suggestion indices point into them
+
+
+def test_matching_counts_each_truth_box_once():
+    from formation_zero.labelling.train import matched
+
+    truth = [[0, 0, 10, 30], [50, 0, 60, 30]]
+    assert matched([[0, 0, 10, 30], [1, 0, 11, 30], [100, 0, 110, 30]], truth) == (1, 2, 1)   # a stacked box is false
+    assert matched([], truth) == (0, 0, 2)
+
+
+def test_test_frames_stay_out_of_training_and_review(tmp_path, monkeypatch):
+    from formation_zero.labelling import train
+
+    paths = GamePaths(tmp_path / "data", 2025, 1, "AA", "BB", film_root=tmp_path / "film")
+    for d in (paths.frames_dir, paths.labels_dir, paths.groundtruth_dir):
+        d.mkdir(parents=True)
+    box = {"label": "player", "box": [1, 1, 10, 20]}
+    for f in (100, 101):
+        Image.new("RGB", (64, 36)).save(paths.frames_dir / f"{f:06d}.jpg")
+    paths.samples_path.write_text(json.dumps({"samples": [{"frame": 100, "play_uid": "p1"}, {"frame": 101, "play_uid": "p2"}]}))
+    (paths.groundtruth_dir / f"{paths.game_key}.detections.json").write_text(
+        json.dumps({"kept": [{"frame": 100, "boxes": [box]}, {"frame": 101, "boxes": [box]}], "flagged": []}))
+    (paths.groundtruth_dir / f"{paths.game_key}.test.json").write_text(
+        json.dumps({"kept": [{"frame": 101, "boxes": [box]}], "flagged": [], "dropped": [7]}))
+    counts = train.export_dataset([paths], tmp_path / "ds")
+    assert counts["train"] + counts["val"] == 1 and train.test_frames(paths) == {101, 7}
