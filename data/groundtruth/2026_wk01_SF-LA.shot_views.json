@@ -575,7 +575,7 @@
   {
    "start_s": 1590.56,
    "end_s": 1598.24,
-   "view": "ENDZONE",
+   "view": "SIDELINE",
    "confident": true,
    "source": "claude",
    "round": 2,
@@ -908,7 +908,7 @@
   {
    "start_s": 3593.6,
    "end_s": 3602.0,
-   "view": "ENDZONE",
+   "view": "SIDELINE",
    "confident": true,
    "source": "claude",
    "round": 2,
@@ -989,7 +989,7 @@
   {
    "start_s": 4390.32,
    "end_s": 4397.28,
-   "view": "ENDZONE",
+   "view": "SIDELINE",
    "confident": true,
    "source": "claude",
    "round": 2,
