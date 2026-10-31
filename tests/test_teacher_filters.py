@@ -25,6 +25,17 @@ def test_a_ball_as_big_as_a_player_is_a_logo():
     assert dropped == 1 and [b["box"] for b in kept if b["label"] == "football"] == [[80, 10, 86, 14]]
 
 
+def test_a_long_thin_ball_is_the_shield_even_in_a_close_shot():
+    boxes = [box("player", 0, 0, 30, 240), box("football", 40, 0, 260, 78, 0.5), box("football", 0, 100, 30, 120, 0.5)]
+    kept, dropped = drop_giant_balls(boxes)
+    assert dropped == 1 and [b["box"] for b in kept if b["label"] == "football"] == [[0, 100, 30, 120]]
+
+
+def test_without_players_only_the_shape_test_applies():
+    kept, dropped = drop_giant_balls([box("football", 0, 0, 30, 10), box("football", 0, 0, 12, 10)])
+    assert dropped == 1 and kept[0]["box"] == [0, 0, 12, 10]
+
+
 def test_filters_report_what_they_dropped():
     _, dropped = apply_filters([box("player", 0, 0, 10, 60), box("player", 0, 0, 10, 61, 0.5)])
     assert dropped == {"duplicates": 1, "giant_balls": 0}
@@ -46,3 +57,10 @@ def test_the_frame_size_names_the_teacher_when_the_log_has_it():
     old = detections_file([{"frame": 1, "boxes": []}])["teacher"]
     new = detections_file([{"frame": 1, "size": [1920, 1080], "boxes": []}])["teacher"]
     assert "x" not in old.split(",")[0] and new.split(",")[0].endswith("batched 1920x1080")
+
+
+def test_detections_file_reapplies_the_ball_rules_to_old_logs():
+    from formation_zero.labelling.teacher_sam3 import detections_file
+
+    rows = [{"frame": 7, "boxes": [box("player", 0, 0, 30, 240), box("football", 40, 0, 260, 78, 0.5)]}]
+    assert [b["label"] for b in detections_file(rows)["frames"]["7"]] == ["player"]

@@ -16,7 +16,11 @@ Speed (GRD-32): about 6.3 s a frame once the fanless laptop is warm, so 2,000 fr
 Filters (architecture 7.1), applied before review:
 - duplicates: within a class, a box overlapping a better-scoring one by IoU > 0.7 goes;
 - football: a "football" taller than a third of the frame's median player goes (SAM 3 called the
-  ball painted in the NFL shield a football);
+  ball painted in the NFL shield a football), and so does one more than 2.5 times as wide as it is
+  tall. In close shots the shield's ball passes the height test: on 49ers-Rams at 1080p, 21 of the
+  23 balls wider than 2.2:1 were the shield (the other two, 2.3 and 2.9:1, were held sideways), and
+  no snow-game ball is wider than 1.9:1. The detections file applies this again to the log, so a
+  rule added later reaches frames logged before it;
 - field mask: not yet. Uniformed people on the sidelines come back as players (9 of 29 in one
   kickoff frame) until field registration exists (milestone 4); the reviewer sees them.
 """
@@ -42,6 +46,7 @@ LOG_FLOOR = {"player": 0.5, "referee": 0.5, "football": 0.3}
 THRESHOLDS = {"player": 0.5, "referee": 0.5, "football": 0.4}
 DUPLICATE_IOU = 0.7
 BALL_MAX_OF_PLAYER = 1 / 3
+BALL_MAX_ASPECT = 2.5
 SAM3_COMMIT = "f1647e8"
 
 
@@ -72,13 +77,18 @@ def drop_duplicates(boxes: list[dict], threshold: float = DUPLICATE_IOU) -> tupl
     return kept, dropped
 
 
-def drop_giant_balls(boxes: list[dict], ratio: float = BALL_MAX_OF_PLAYER) -> tuple[list[dict], int]:
-    """A football is a fraction of a player's height; anything bigger is a logo or a mistake."""
+def drop_giant_balls(boxes: list[dict], ratio: float = BALL_MAX_OF_PLAYER,
+                     aspect: float = BALL_MAX_ASPECT) -> tuple[list[dict], int]:
+    """A football is a fraction of a player's height and never much wider than tall; anything bigger
+    or longer is a logo or a mistake."""
     heights = [b["box"][3] - b["box"][1] for b in boxes if b["label"] == "player"]
-    if not heights:
-        return boxes, 0
-    limit = ratio * float(np.median(heights))
-    kept = [b for b in boxes if b["label"] != "football" or b["box"][3] - b["box"][1] <= limit]
+    limit = ratio * float(np.median(heights)) if heights else np.inf
+
+    def ball(b):
+        w, h = b["box"][2] - b["box"][0], b["box"][3] - b["box"][1]
+        return h <= limit and w <= aspect * h
+
+    kept = [b for b in boxes if b["label"] != "football" or ball(b)]
     return kept, len(boxes) - len(kept)
 
 
@@ -228,7 +238,8 @@ def detections_file(rows: list[dict]) -> dict:
     sizes = {tuple(r["size"]) for r in rows if "size" in r}
     size = f" {'/'.join(f'{w}x{h}' for w, h in sorted(sizes))}" if sizes else ""
     return {"teacher": f"sam3@{SAM3_COMMIT} bf16 batched{size}, {cut}", "thresholds": THRESHOLDS,
-            "frames": {str(r["frame"]): [b for b in r["boxes"] if b["score"] > THRESHOLDS[b["label"]]] for r in rows}}
+            "frames": {str(r["frame"]): [b for b in drop_giant_balls(r["boxes"])[0] if b["score"] > THRESHOLDS[b["label"]]]
+                       for r in rows}}
 
 
 def main(argv: list[str] | None = None) -> int:
