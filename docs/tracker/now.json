@@ -138,8 +138,13 @@
       "at": "2026-10-31 02:22"
     },
     {
-      "text": "Owner: review about 300 frames of each game, most disputed first (review.html in each game's frames folder on the drive, review_guide.html beside the games shows how); Export when done. 49ers-Rams has its 1080p page",
-      "status": "todo"
+      "text": "Owner reviewed 210 frames of 49ers-Rams on the rebuilt page: 175 kept, 17 dropped, 18 flagged; of 2,724 pre-removals only 35 restored (33 officials, 2 players); imported",
+      "status": "done",
+      "at": "2026-10-31 02:57"
+    },
+    {
+      "text": "Round 1 students training on the 371 approved frames, scored against round 0 on plays neither saw",
+      "status": "doing"
     }
   ]
 }
