@@ -16,6 +16,13 @@ Rechecked with round-1 students, which score real players lower, on every third 
 (2026-10-31): starting at 0.25 moved frames with 21-23 players before the snap from 82% to 86%, for
 35% more sideline tracks and 49% more fragments. 0.5 stays.
 
+The two jobs that one line does cannot be split usefully either (2026-11-01). Replayed on 20 takes of
+Chargers-Chiefs with new tracks still starting at 0.6, letting boxes down to 0.25, 0.15 or 0.1 follow a
+track left flickers about the same or worse (444 to 482, 515, 565) and restarts about the same (114 to
+102, 97, 98). supervision multiplies IoU by score in its first match and asks IoU 0.5 in its second,
+both hard-coded, so a weak box needs a tight fit whichever pass it lands in. Lost players are
+rejoined after tracking instead (`track.stitch`).
+
 supervision dropped ByteTrack in 0.30 (pyproject pins below it). Runs in the ML environment.
 """
 

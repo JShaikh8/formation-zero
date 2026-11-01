@@ -30,7 +30,8 @@ part after the cut taking a new id. Checked 2026-10-31 on 49ers-Rams plays 1-60,
 (a 49er one side, a Ram the other; the other one a running Ram scored weakly, which SWAP_STRONG now
 keeps whole). Rerun with the cuts (`field.topdown` holds the rest): players on the wrong side of
 the line in the 5 frames before the snap 5 on 4 takes, against 25 on 20. End-zone takes got 299 cuts,
-not checked. `--revote` redoes the teams of tracked takes without detecting again.
+not checked. Broken tracks are then rejoined and short gaps filled (`track.stitch`). `--revote` redoes
+all of this on tracked takes without detecting again.
 """
 
 from __future__ import annotations
@@ -316,12 +317,13 @@ def run(paths, plays: pd.DataFrame, detector: Detector, *, overlay: bool = False
                 start, end = trim_span(*index_span, cuts, source.fps)
                 boxes = boxes[(boxes["frame"] >= start) & (boxes["frame"] < end)].reset_index(drop=True)
                 off = vote_field(source, start, end, boxes, angle)
-                boxes, tracks, take, team_of = label_take(source, start, end, boxes, off, teams)
+                inside = [c for c in cuts if start < c < end]
+                boxes, tracks, take, team_of = label_take(source, start, end, boxes, off, teams, inside)
                 box_path, summary_path, video = take_paths(paths, int(play.play_index), angle)
                 boxes.to_parquet(box_path, index=False)
                 take.update({"play_uid": play.play_uid, "angle": angle, "start_frame": start, "end_frame": end,
                              "frames": end - start, "index_span": list(index_span),
-                             "cuts": [c for c in cuts if start < c < end],
+                             "cuts": inside,
                              "fps_processed": round((index_span[1] - index_span[0]) / secs, 1),
                              "tracks_detail": tracks.to_dict("records")})
                 summary_path.write_text(json.dumps(take, indent=1))
@@ -331,22 +333,27 @@ def run(paths, plays: pd.DataFrame, detector: Detector, *, overlay: bool = False
                 print(f"  {play.play_uid} {angle}: {end - start} frames (trimmed {index_span[1] - index_span[0] - (end - start)}, "
                       f"{len(take['cuts'])} cuts inside), {take['tracks']} tracks "
                       f"({take['by_label']}, {len(off)} off the field), {take['fragments']} fragments, teams {take.get('teams')}, "
-                      f"{take.get('swaps', 0)} id swaps cut, {take['fps_processed']} fps", flush=True)
+                      f"{take.get('swaps', 0)} id swaps cut, {take['joined']} joined, {take['filled']} boxes filled, "
+                      f"{take['fps_processed']} fps", flush=True)
     return out
 
 
-def label_take(source, start: int, end: int, boxes: pd.DataFrame, off: set[int], teams):
-    """Off-field flags, teams (after the id-swap cuts) and the per-track summary of one tracked take.
-    Returns (boxes, tracks, take, team_of); team_of is None without `teams`. The take's fragments
-    count the cuts too."""
+def label_take(source, start: int, end: int, boxes: pd.DataFrame, off: set[int], teams, cuts=()):
+    """Off-field flags, teams (after the id-swap cuts), broken tracks rejoined, short gaps filled, and the
+    per-track summary of one tracked take. Returns (boxes, tracks, take, team_of); team_of is None
+    without `teams`, and tracks are then not joined, since nothing keeps opposing players apart. The
+    summary describes the boxes the tracker gave, and the take's fragments count the swap cuts too."""
     from formation_zero.perception.track.bytetrack import summarise
+    from formation_zero.perception.track.stitch import fill, stitch
 
     boxes = boxes.assign(off_field=boxes["track_id"].isin(off))
     team_of = None
+    joined = 0
     if teams is not None:
         before = boxes["track_id"].nunique()
         boxes, team_of = vote_teams(source, start, end, boxes, teams)
         swaps = boxes["track_id"].nunique() - before
+        boxes, team_of, joined = stitch(boxes, team_of, source.fps, cuts)
     tracks, take = summarise(boxes, source.fps)
     if len(tracks):
         tracks["off_field"] = tracks["track_id"].isin(off)
@@ -356,6 +363,9 @@ def label_take(source, start: int, end: int, boxes: pd.DataFrame, off: set[int],
         tracks["team"] = tracks["track_id"].map(team_of).fillna(-1).astype(int)
         take["teams"] = {str(k): int(v) for k, v in pd.Series(team_of).value_counts().items()}
         take["swaps"] = int(swaps)
+    boxes = fill(boxes, source.fps, cuts)
+    take["joined"] = joined
+    take["filled"] = int(boxes["filled"].sum())
     return boxes, tracks, take, team_of
 
 
@@ -375,9 +385,12 @@ def revote(paths, plays: pd.DataFrame, teams, *, overlay: bool = False) -> list[
                     continue
                 old = json.loads(summary_path.read_text())
                 boxes = pd.read_parquet(box_path)
+                if "filled" in boxes:
+                    boxes = boxes[~boxes["filled"]]
                 off = set(boxes.loc[boxes["off_field"], "track_id"].astype(int)) if "off_field" in boxes else set()
-                boxes = boxes.drop(columns=["team", "off_field"], errors="ignore")
-                boxes, tracks, take, team_of = label_take(source, old["start_frame"], old["end_frame"], boxes, off, teams)
+                boxes = boxes.drop(columns=["team", "off_field", "filled"], errors="ignore")
+                boxes, tracks, take, team_of = label_take(source, old["start_frame"], old["end_frame"], boxes, off, teams,
+                                                          old.get("cuts", []))
                 boxes.to_parquet(box_path, index=False)
                 take.update({k: old[k] for k in ("play_uid", "angle", "start_frame", "end_frame", "frames", "index_span",
                                                  "cuts", "fps_processed") if k in old})
@@ -387,7 +400,7 @@ def revote(paths, plays: pd.DataFrame, teams, *, overlay: bool = False) -> list[
                     render(source, old["start_frame"], old["end_frame"], boxes, video, team_of=team_of)
                 out.append(take)
                 print(f"  {play.play_uid} {angle}: {take['tracks']} tracks, teams {take.get('teams')}, "
-                      f"{take.get('swaps', 0)} id swaps cut", flush=True)
+                      f"{take.get('swaps', 0)} id swaps cut, {take['joined']} joined, {take['filled']} boxes filled", flush=True)
     return out
 
 

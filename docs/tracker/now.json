@@ -193,7 +193,22 @@
       "at": "2026-10-31 23:50"
     },
     {
-      "text": "NFL shield painted on the field still tracked as a player: it lands on one spot in yards on 7 plays, so it is a clear target. Not fixed yet",
+      "text": "Owner saw players vanish and come back during the play. Measured on 50 plays: 1,313 dropouts and 594 restarts in 5 minutes of live play. Only 24% of missing moments were the detector seeing nothing; 36% were a box the tracker threw away",
+      "status": "done",
+      "at": "2026-11-01 01:30"
+    },
+    {
+      "text": "Broken tracks now rejoined after tracking, within a team, and gaps up to a second filled and drawn thin. Dropouts 1,313 to 36, players missing 4.5% of the time to 0.8%, frames in play with 20-24 players 54% to 72%. About 7 visible breaks a play remain, against about 38",
+      "status": "done",
+      "at": "2026-11-01 05:30"
+    },
+    {
+      "text": "Whole game done: all 143 plays tracked, with overlay and bird's-eye videos on the drive. Plays 121-143 run for the first time with everything in place: 19 of 21 anchored, fronts right on 17 of 19, 21-23 players on 95% of frames before the snap",
+      "status": "done",
+      "at": "2026-11-01 05:30"
+    },
+    {
+      "text": "NFL shield tracked as a player on dozens of Arrowhead plays. The approved labels are clean, so the model has simply never seen it as background; it needs training on it. Until then a track that wide joins nothing",
       "status": "todo"
     }
   ]

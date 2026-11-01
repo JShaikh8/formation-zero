@@ -430,13 +430,13 @@ def positions(boxes: pd.DataFrame, gs: dict[int, np.ndarray], source: dict[int, 
         rr = r[whole]
         rows.append(pd.DataFrame({"frame": int(f), "track_id": rr["track_id"].astype(int).to_numpy(),
                                   "label": rr["label"].to_numpy(), "x_yd": xy[:, 0], "y_yd": xy[:, 1],
-                                  "source": source[f]}))
+                                  "filled": rr["filled"].to_numpy() if "filled" in rr else False, "source": source[f]}))
     out = pd.concat(rows, ignore_index=True) if rows else pd.DataFrame(
-        columns=["frame", "track_id", "label", "x_yd", "y_yd", "source"])
+        columns=["frame", "track_id", "label", "x_yd", "y_yd", "filled", "source"])
     team = team_of or {}
     out["team"] = [team.get(int(t), -1) if lab == "player" else -1 for t, lab in zip(out["track_id"], out["label"])]
     out["easy"] = out["source"] == "direct"
-    return out[["frame", "track_id", "label", "team", "x_yd", "y_yd", "easy", "source"]]
+    return out[["frame", "track_id", "label", "team", "x_yd", "y_yd", "easy", "filled", "source"]]
 
 
 def in_field(x, y, margin: float = FIELD_MARGIN_YD):

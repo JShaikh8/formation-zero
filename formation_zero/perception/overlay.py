@@ -2,7 +2,7 @@
 
 Colours say team when teams are known (`team_of`: track id -> 0 or 1), else label; people off the
 field are thin and grey. A track keeps its number, so an id switch shows as a number changing on one
-player.
+player. Boxes filled in between two real ones (`track.stitch`) are drawn thin: an estimate, not a sighting.
 """
 
 from __future__ import annotations
@@ -32,7 +32,7 @@ def draw(image: np.ndarray, boxes: pd.DataFrame, team_of: dict[int, int] | None 
             continue
         team = (team_of or {}).get(int(r.track_id), -1)
         colour = LABEL_COLOURS["referee"] if r.label == "referee" else TEAM_COLOURS.get(team, LABEL_COLOURS["player"])
-        d.rectangle([r.x1, r.y1, r.x2, r.y2], outline=colour, width=width)
+        d.rectangle([r.x1, r.y1, r.x2, r.y2], outline=colour, width=1 if getattr(r, "filled", False) else width)
         x0, y0, x1, y1 = d.textbbox((r.x1, r.y1), str(int(r.track_id)), font=font, anchor="lb")
         d.rectangle([x0 - 2, y0 - 2, x1 + 2, y1 + 2], fill=(0, 0, 0))
         d.text((r.x1, r.y1), str(int(r.track_id)), fill=colour, font=font, anchor="lb")
