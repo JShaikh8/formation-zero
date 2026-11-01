@@ -3,6 +3,7 @@
 import numpy as np
 import pytest
 
+from formation_zero.perception import team
 from formation_zero.perception.team import MIN_HEIGHT, PALETTE, ColourTeams, crop_features
 
 GREEN, SNOW = (70, 110, 60), (200, 205, 210)
@@ -39,6 +40,33 @@ def test_features_are_two_unit_histograms():
     n = len(PALETTE)
     assert f.shape == (2 * n,)
     assert np.isclose((f[:n] ** 2).sum(), 1) and np.isclose((f[n:] ** 2).sum(), 1)
+
+
+def shaded(crop, light=0.1):
+    """The same crop with `light` of the sun on it, as shade does: a scale in linear light."""
+    c = crop.astype(np.float32) / 255
+    c = np.where(c > 0.04045, ((c + 0.055) / 1.055) ** 2.4, c / 12.92) * light
+    return (np.where(c > 0.0031308, 1.055 * c ** (1 / 2.4) - 0.055, 12.92 * c) * 255).astype(np.uint8)
+
+
+def test_a_shirt_in_shade_stays_on_its_team(monkeypatch):
+    """Both teams across hard sun and shade. Read as they are, shaded shirts of both teams look alike and
+    the split follows the light (Chargers-Chiefs, 2026 wk6); scaled by the ground beside them, it follows the team."""
+    rng = np.random.default_rng(0)
+    chiefs, chargers = ((200, 30, 40), (245, 245, 245)), ((225, 230, 240), (235, 190, 60))
+    crops, truth = [], []
+    for i in range(120):
+        c = player((chargers, chiefs)[i % 2], GREEN, h=int(rng.integers(40, 120)), w=40, rng=rng)
+        crops.append(shaded(c) if i % 4 >= 2 else c)
+        truth.append(i % 2)
+
+    def right():
+        pred = ColourTeams().fit(crops).predict(crops)
+        return max((pred == truth).mean(), (pred != truth).mean())
+
+    assert right() == 1
+    monkeypatch.setattr(team, "MAX_GAIN", 1.0)
+    assert right() < 0.8
 
 
 def test_unusable_crops_have_no_features():

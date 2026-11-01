@@ -30,6 +30,19 @@ median Lab about 90%; the band histograms with plain 2-means 94% and 99% by half
 but on 48 crops per game where versions disagreed, 2-means alone got 12-22 of 30 (snow) and 7-20
 of 25 (clear), and the LDA step 27 of 30 and 25 of 25.
 
+Shade (2026-10-31): Chargers-Chiefs has hard sun and stadium shadow, and shaded shirts of both teams
+read alike. On plays 1-60 only 38 of 55 scrimmage plays anchored and fronts were right on 22 of 38; 13
+of the 16 takes in plays 29-44 put at least 90% of their tracks on one team. Fitting on 6,000 crops instead of 40 frames made it
+worse, splitting sun from shade more cleanly (13 of 60 takes balanced). Shade scales the light, and the
+ground beside a player shows by how much, so a crop on darker ground than the game's median is
+brightened to it first (`side_light`), one gain for all channels, up only, capped at MAX_GAIN. Fitted
+on the same 40 frames, all 60 takes balance, 53 of 55 anchor and fronts are right on 49 of 53. Plays
+61-120, run after this was fixed: 49 of 55 anchored (all 6 misses "no snap seen"), median 0.14 yd from the
+official line, fronts right on 48 of 50, teams right by eye on 50 random frames. It changes little where
+it is not needed: 99.8% of crops as before on 49ers-Rams, 98.6% on snow, whose changes by eye are
+mostly mixed pairs and blurs, going both ways. Gains by channel moved snow more (91.7%), as did
+darkening bright ground too (96.9%), and the shade balance gained nothing from either.
+
 What still goes wrong: two players of opposite teams in one box; motion blur from camera pans;
 referees SAM 3 called players, and sideline people. Blurs, referees and staff land on whichever
 side looks greyer (the Bears in the snow game, the 49ers in the clear one), often with confident
@@ -56,6 +69,7 @@ MIN_HEIGHT = 24                          # px; shorter crops are unusable (-1): 
 MIN_WIDTH = 6
 RIDGE = 0.1                              # LDA covariance shrinkage, as a fraction of its mean variance
 UNSURE = 0.25                            # |margin| below this is usually a mixed pair or a blur
+MAX_GAIN = 6.0                           # the most a crop in shade is brightened (deep shade is about 5x)
 
 
 def palette(levels=(12, 30, 50, 70, 90), chromas=(18, 42), hues: int = 8) -> np.ndarray:
@@ -69,10 +83,15 @@ def palette(levels=(12, 30, 50, 70, 90), chromas=(18, 42), hues: int = 8) -> np.
 PALETTE = palette()
 
 
-def lab(rgb: np.ndarray) -> np.ndarray:
-    """sRGB uint8 (..., 3) -> CIE Lab, D65 white."""
+def linear(rgb: np.ndarray) -> np.ndarray:
+    """sRGB uint8 -> linear light, 0-1."""
     c = rgb.astype(np.float32) / 255
-    c = np.where(c > 0.04045, ((c + 0.055) / 1.055) ** 2.4, c / 12.92)
+    return np.where(c > 0.04045, ((c + 0.055) / 1.055) ** 2.4, c / 12.92)
+
+
+def lab(rgb: np.ndarray, gain: float = 1.0) -> np.ndarray:
+    """sRGB uint8 (..., 3) -> CIE Lab, D65 white, with the light scaled by `gain` first."""
+    c = np.minimum(linear(rgb) * gain, 1.0)
     m = np.array([[0.4124, 0.3576, 0.1805], [0.2126, 0.7152, 0.0722], [0.0193, 0.1192, 0.9505]], np.float32)
     xyz = c @ m.T / np.array([0.95047, 1.0, 1.08883], np.float32)
     f = np.where(xyz > 0.008856, np.cbrt(xyz), 7.787 * xyz + 16 / 116)
@@ -87,11 +106,22 @@ def resample(crop: np.ndarray, rows: int, cols: int) -> np.ndarray:
     return crop[ys][:, xs]
 
 
-def crop_features(crop: np.ndarray) -> np.ndarray | None:
-    """Shirt and pants colour histograms of one RGB crop, background down-weighted; None if unusable."""
-    if crop is None or crop.ndim != 3 or crop.shape[2] != 3 or crop.shape[0] < MIN_HEIGHT or crop.shape[1] < MIN_WIDTH:
+def usable(crop: np.ndarray | None) -> bool:
+    return crop is not None and crop.ndim == 3 and crop.shape[2] == 3 and crop.shape[0] >= MIN_HEIGHT and crop.shape[1] >= MIN_WIDTH
+
+
+def side_light(grid: np.ndarray) -> float:
+    """How much light falls on the ground beside a player: linear green of a grid's side columns."""
+    return float(np.median(linear(np.concatenate([grid[:, :SIDE, 1], grid[:, -SIDE:, 1]]))))
+
+
+def crop_features(crop: np.ndarray, light: float | None = None) -> np.ndarray | None:
+    """Shirt and pants colour histograms of one RGB crop, background down-weighted; None if unusable.
+    With the game's `light`, a crop on darker ground is brightened to it first."""
+    if not usable(crop):
         return None
-    g = lab(resample(crop, *GRID))
+    grid = resample(crop, *GRID)
+    g = lab(grid, 1.0 if light is None else float(np.clip(light / max(side_light(grid), 1e-3), 1.0, MAX_GAIN)))
     rows, cols = GRID
     background = np.median(np.concatenate([g[:, :SIDE], g[:, -SIDE:]]).reshape(-1, 3), axis=0)
     x0, x1 = int(cols * COLUMNS[0]), int(cols * COLUMNS[1])
@@ -158,13 +188,14 @@ class ColourTeams:
 
     def __init__(self, seed: int = 0):
         self.seed = seed
-        self.w = self.b = None
+        self.w = self.b = self.light = None
 
     def fit(self, crops: list[np.ndarray]) -> ColourTeams:
-        feats = [f for f in map(crop_features, crops) if f is not None]
-        if len(feats) < 4:
-            raise ValueError(f"need at least 4 usable crops to split teams, got {len(feats)}")
-        x = np.stack(feats).astype(np.float64)
+        kept = [c for c in crops if usable(c)]
+        if len(kept) < 4:
+            raise ValueError(f"need at least 4 usable crops to split teams, got {len(kept)}")
+        self.light = float(np.median([side_light(resample(c, *GRID)) for c in kept]))
+        x = np.stack([crop_features(c, self.light) for c in kept]).astype(np.float64)
         self.mean = x.mean(0)
         x -= self.mean
         w, b = lda_split(x, kmeans2(x, self.seed))
@@ -182,7 +213,7 @@ class ColourTeams:
         """Signed score per crop: > 0 is team 1, about 1 for a typical crop, under UNSURE doubtful; NaN if unusable."""
         out = np.full(len(crops), np.nan)
         for i, crop in enumerate(crops):
-            f = crop_features(crop)
+            f = crop_features(crop, self.light)
             if f is not None:
                 out[i] = (f - self.mean) @ self.w + self.b
         return out

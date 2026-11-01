@@ -178,8 +178,23 @@
       "at": "2026-10-31 17:05"
     },
     {
-      "text": "Chargers-Chiefs plays 1-60 tracked with the round-1 student, with overlay and bird's-eye videos",
-      "status": "active"
+      "text": "Chargers-Chiefs plays 1-60 tracked with the round-1 student, with overlay and bird's-eye videos: tracks and boxes held up, but team colours failed in shade, leaving 38 of 55 plays anchored and fronts right on only 22 of 38",
+      "status": "done",
+      "at": "2026-10-31 19:40"
+    },
+    {
+      "text": "Team colours fixed for shade: a crop is brightened by how dark the ground beside it is. Plays 1-60 of Chargers-Chiefs: anchored 38 to 53 of 55, fronts right 22 of 38 to 49 of 53. The other two games barely move (99.8% and 98.6% of crops unchanged)",
+      "status": "done",
+      "at": "2026-10-31 21:05"
+    },
+    {
+      "text": "Held out on plays 61-120, run with nothing changed: 49 of 55 anchored, median 0.14 yd from the official line, fronts right on 48 of 50, yard lines on the paint and teams right by eye on 50 random frames. The 6 misses all saw no snap: 3 field goals, 2 goal-line runs and one other. Overlay and bird's-eye videos of plays 1-120 are on the drive",
+      "status": "done",
+      "at": "2026-10-31 23:50"
+    },
+    {
+      "text": "NFL shield painted on the field still tracked as a player: it lands on one spot in yards on 7 plays, so it is a clear target. Not fixed yet",
+      "status": "todo"
     }
   ]
 }
