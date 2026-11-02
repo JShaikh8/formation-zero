@@ -360,7 +360,8 @@
         {
           "key": "GRD-41",
           "title": "Ball trajectory fit",
-          "status": "todo"
+          "status": "active",
+          "note": "First proof 2026-11-01 on one play, started by hand (Chargers-Chiefs play 61, scripts/spikes/sam3d_body/room.py). The ball is followed through its flight as a small dark smear from one sighting picked by eye, and a ballistic arc is fitted to the rays and the hands at each end: 13 sightings, worst 3 px, once frames are put on the film's true clock. Ends at x 89.0, the official spot 89.0. Held, it is inferred from the arms. A game needs a ball model: the student has no ball class and the teacher found it about 1 frame in 8."
         },
         {
           "key": "GRD-42",
@@ -534,7 +535,7 @@
           "key": "GRD-59",
           "title": "SAM 3D Body on keyframes",
           "status": "todo",
-          "note": "First proof 2026-11-01: every player on every frame of Chargers-Chiefs play 40 (best-tracked take, so a best case), real lens, 1.45 s a body on the M4, about 7 h a game at 6 poses a play. Steady before the snap; in play 3.3% of steps flip, mostly on small players, and 65 of 2,372 bodies come out giants. Needs filtering over time, a giant check, and placing by feet in yards at a real height. scripts/spikes/sam3d_body/play.py."
+          "note": "First proof 2026-11-01: every player on every frame of Chargers-Chiefs play 40 (best-tracked take, so a best case), real lens, 1.45 s a body on the M4, about 7 h a game at 6 poses a play. Steady before the snap; in play 3.3% of steps flip, mostly on small players, and 65 of 2,372 bodies come out giants. Needs filtering over time, a giant check, and placing by feet in yards at a real height. scripts/spikes/sam3d_body/play.py. 2026-11-01 later: filtering, the giant check and placing in yards done per play in room.py; pose parameters now saved with the fits (play 61 has them, play 40 does not)."
         },
         {
           "key": "GRD-95",
@@ -545,7 +546,8 @@
         {
           "key": "GRD-60",
           "title": "Web film room (Next.js + Three.js) reading the Parquet",
-          "status": "todo"
+          "status": "active",
+          "note": "First page 2026-11-01: a single-file Three.js page per play from room.py, opened from the drive, with free orbit, pause, slow motion, follow views and the ball; plays 40 and 61 built. Not yet Next.js or reading the Parquet, and each play is about 30 MB."
         },
         {
           "key": "GRD-61",

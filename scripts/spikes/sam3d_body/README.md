@@ -91,5 +91,36 @@ painted lines. Play 40 of Chargers-Chiefs, 2026-11-01, the game's best-tracked t
 
 Flips follow size: 0.2% of steps on boxes over 110 px, 10.7% under 55 px. Bones hold within 4% in a
 track, but thigh 0.38 m and shin 0.35 m are short, and bodies sit at 0.81 of the true distance from the
-camera. Stand them on the field by their feet in yards, not by the model's distance. Fits hold vertices
-and joints only; pose-space filtering needs the pose parameters saved too.
+camera. Stand them on the field by their feet in yards, not by the model's distance. Fits made since
+play 40 also hold the pose parameters, which rebuild the vertices to 0.0 mm.
+
+## A play you can walk around
+
+`room.py` turns the fits of a play into a scene in field yards and `room.html` draws it. It opens from
+the drive in Chrome (`<game>/bodies/p061.room/index.html`) and needs the network for three.js. Orbit,
+pause, ¼ and ½ speed, follow views, teams on and off, the empty field. `f` shows the frame rate.
+
+    PY=.venv-sam3d/bin/python; S=scripts/spikes/sam3d_body/room.py
+    $PY $S camera --play 61
+    $PY $S ball --play 61 --seed 53642,764,440 --spot 53562,695,685 --snapped 53570 --release 53626 \\
+        --catch 53643 --tuck 53680 --thrower 12 --catcher 3
+    $PY $S build --play 61 --mark 3=Kelce 12=Mahomes --last 53724 --teams "Chargers,Chiefs"
+
+`--last` ends the scene when the star's track ends; bodies only exist where the detector has a box.
+
+The film runs on its own clock. It was 30 frames a second with every sixth dropped to make 25, so every
+fifth step in it is a double one, and `camera` measures where that falls for the take. The scene works
+in ticks of 1/30 s and fills in the dropped frame.
+
+| Ball, play 61 | |
+|---|---|
+| Sightings on the arc | 13, median 2.1 px off, worst 2.8 |
+| The same arc on 25 frames a second | median 6, worst 12 |
+| The throw | 13.4 yd in 0.67 s, 20.3 yd/s, peak 2.6 yd |
+| Down before the snap | x 64.7, official line 65 |
+| At the tackle | x 89.0, official spot 89.0 |
+
+Down and in flight the ball is measured. Held it is inferred from the arms, and it lands about 10 px
+from the ball on the two carry frames checked where the film shows it. The sighting to start from, the spot and the
+moments of the snap, release, catch and tuck are picked by eye: this is one play, not a ball model.
+

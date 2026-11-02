@@ -217,7 +217,32 @@
       "at": "2026-11-01 20:15"
     },
     {
-      "text": "Before bodies on a whole game: filter over time to take out flips, catch giants, stand bodies on the field by their feet in yards at a real height (they come out about a fifth too small)",
+      "text": "Bodies filtered over time, flips and giants bridged, stood on the field by their feet in yards at a real height (scale 1.22): done for one play at a time in the film-room scene, not yet for a whole game",
+      "status": "done",
+      "at": "2026-11-01 23:17"
+    },
+    {
+      "text": "Demo chosen by the owner: Chargers-Chiefs play 61, Mahomes to Kelce for 24 yards. 5,542 bodies on every frame in 2 h 22 min on the Air, 1.53 s each",
+      "status": "done",
+      "at": "2026-11-01 23:17"
+    },
+    {
+      "text": "Film room: a play you can orbit, pause and slow down, bodies on a to-scale field, follow views for Kelce and the ball (bodies/p061.room/index.html on the drive; play 40 too)",
+      "status": "done",
+      "at": "2026-11-01 23:17"
+    },
+    {
+      "text": "Ball in the scene: followed through 16 frames on the film, the arc 3 px off at worst; down and in flight it is measured, held it is inferred from the arms. Ends at x 89.0, the official spot 89.0. One play, started by hand",
+      "status": "done",
+      "at": "2026-11-01 23:17"
+    },
+    {
+      "text": "The film was 30 frames a second with every sixth dropped: found from the ball's arc. Everything in the scene now runs on the true clock; the five-a-second swing in limb speed falls from 15% to 6%",
+      "status": "done",
+      "at": "2026-11-01 23:17"
+    },
+    {
+      "text": "Owner: say whether Kelce's scene moves smoothly in Chrome. Press f for the frame rate; only a person can judge this",
       "status": "todo"
     }
   ]

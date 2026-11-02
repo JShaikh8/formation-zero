@@ -43,6 +43,9 @@ ALPHA = 0.75
 FLIP = 60.0                 # degrees of hip turn in one frame
 GIANT = 0.8                 # distance from the camera over its track's running median: 12 of 12 random fits below it wrong
 YD_M = 0.9144
+POSE = {"global_rot": "global_rot", "body_pose": "body_pose_params", "hand_pose": "hand_pose_params",
+        "scale": "scale_params", "shape": "shape_params", "expr": "expr_params",
+        "joint_coords": "pred_joint_coords", "joint_rots": "pred_global_rots"}   # saved field: the model's name
 
 
 def take_dir(paths: GamePaths, play: int) -> Path:
@@ -144,7 +147,8 @@ def cmd_fit(paths: GamePaths, a) -> int:
                 box=boxes, focal=np.float32(focal_of(outs[0]["focal_length"])),
                 cam_t=np.stack([o["pred_cam_t"] for o in outs]).astype(np.float32),
                 keypoints=np.stack([o["pred_keypoints_3d"] for o in outs]).astype(np.float32),
-                vertices=np.stack([np.round(o["pred_vertices"] * 1000) for o in outs]).astype(np.int16))   # mm
+                vertices=np.stack([np.round(o["pred_vertices"] * 1000) for o in outs]).astype(np.int16),   # mm
+                **{k: np.stack([o[v] for o in outs]).astype(np.float32) for k, v in POSE.items()})
             fits += len(outs)
             s = time.perf_counter() - t0
             print(f"frame {fr.index}: {len(outs)} people, {s / fits:.2f} s a body, "

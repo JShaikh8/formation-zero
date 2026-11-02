@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Film Room</title>
+<style>
+  :root { --ink:#f2f4f1; --dim:#a9b3ad; --panel:rgba(14,19,16,.78); --line:rgba(255,255,255,.14); --hot:#ffd34d; }
+  * { box-sizing:border-box; }
+  html,body { margin:0; height:100%; overflow:hidden; background:#0b0f0d; color:var(--ink);
+    font:14px/1.35 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+  canvas { position:fixed; inset:0; display:block; }
+  .panel { position:fixed; background:var(--panel); backdrop-filter:blur(10px); border:1px solid var(--line); border-radius:10px; }
+  #info { top:16px; left:16px; padding:12px 14px; max-width:min(420px,calc(100vw - 32px)); }
+  #info h1 { margin:0 0 3px; font-size:16px; font-weight:650; }
+  #info p { margin:0; color:var(--dim); font-size:13px; }
+  #info p#ballnote { margin-top:6px; color:var(--ink); font-size:12px; }
+  #info p#ballnote:empty { display:none; }
+  #views { top:16px; right:16px; padding:8px; display:flex; flex-direction:column; gap:4px; min-width:150px; }
+  #views h2 { margin:4px 6px 2px; font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--dim); }
+  button { all:unset; cursor:pointer; padding:6px 10px; border-radius:7px; color:var(--ink); font-size:13px; }
+  button:hover { background:rgba(255,255,255,.1); }
+  button:focus-visible { outline:2px solid var(--hot); outline-offset:1px; }
+  button[aria-pressed=true] { background:rgba(255,255,255,.18); }
+  #bar { left:50%; transform:translateX(-50%); bottom:16px; width:min(880px,calc(100vw - 32px)); padding:8px 12px; display:flex; align-items:center; gap:10px; }
+  #play { width:64px; text-align:center; background:rgba(255,255,255,.14); }
+  #t { flex:1; min-width:60px; accent-color:var(--hot); }
+  #clock { font-variant-numeric:tabular-nums; color:var(--dim); white-space:nowrap; min-width:92px; text-align:right; }
+  #speed { display:flex; gap:2px; }
+  #speed button { padding:6px 7px; font-size:12px; }
+  .tag { position:fixed; transform:translate(-50%,-140%); padding:2px 7px; border-radius:6px; background:rgba(0,0,0,.72); color:var(--hot);
+    font-size:12px; font-weight:600; pointer-events:none; white-space:nowrap; }
+  #load { position:fixed; inset:0; display:grid; place-items:center; color:var(--dim); font-size:15px; }
+  #fps { left:16px; bottom:16px; padding:4px 8px; font-size:12px; font-variant-numeric:tabular-nums; color:var(--dim); }
+  @media (max-width:640px) { #views { top:auto; bottom:84px; right:16px; } #speed { display:none; } }
+</style>
+</head>
+<body>
+<div id="load">Loading the play…</div>
+<div class="panel" id="info"><h1 id="title"></h1><p id="note"></p><p id="ballnote"></p></div>
+<div class="panel" id="views"><h2>View</h2></div>
+<div class="panel" id="bar">
+  <button id="play">Play</button>
+  <input id="t" type="range" min="0" step="0.01" aria-label="Time in the play">
+  <div id="speed"></div>
+  <div id="clock"></div>
+</div>
+<div class="panel" id="fps" hidden></div>
+<script src="scene.js"></script>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+"three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+const S = window.SCENE, TEAM = [0xffc62e, 0xe2233f];
+const $ = id => document.getElementById(id);
+const FIELD_W = 160 / 3, nv = S.nv;
+
+// ------------------------------------------------------------ the bodies
+async function bodies() {
+  const s = atob(window.BODIES), u = new Uint8Array(s.length);
+  for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i);
+  window.BODIES = null;
+  const out = new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream("gzip")));
+  return new Int16Array(await out.arrayBuffer());
+}
+
+// ------------------------------------------------------------ the field
+function turf() {
+  const ppy = 20, c = document.createElement("canvas"); c.width = 120 * ppy; c.height = Math.round(FIELD_W * ppy);
+  const g = c.getContext("2d"), H = c.height, X = x => x * ppy, Y = y => H - y * ppy;
+  for (let x = 10, i = 0; x < 110; x += 5, i++) { g.fillStyle = i % 2 ? "#2f6b3a" : "#2a6334"; g.fillRect(X(x), 0, 5 * ppy, H); }
+  g.fillStyle = "#23402c"; g.fillRect(0, 0, X(10), H); g.fillRect(X(110), 0, X(10), H);
+  g.strokeStyle = g.fillStyle = "#f1f3ee";
+  g.lineWidth = 0.5 * ppy; g.strokeRect(0, 0, c.width, H);
+  for (let x = 10; x <= 110; x += 5) { g.lineWidth = (x % 10 ? 0.2 : 0.25) * ppy; g.beginPath(); g.moveTo(X(x), 0); g.lineTo(X(x), H); g.stroke(); }
+  for (let x = 11; x < 110; x++) if ((x - 10) % 5) for (const y of [0.4, 23.58, 29.75, FIELD_W - 0.9]) g.fillRect(X(x) - 2, Y(y + 0.67), 4, 0.67 * ppy);
+  g.font = `700 ${2.2 * ppy}px Georgia, serif`; g.textAlign = "center"; g.textBaseline = "middle";
+  for (let x = 20; x <= 100; x += 10) {
+    const n = String(x <= 60 ? x - 10 : 110 - x);
+    for (const [y, flip] of [[9, false], [FIELD_W - 9, true]]) {
+      g.save(); g.translate(X(x), Y(y)); if (flip) g.rotate(Math.PI);
+      g.fillText(n[0], -1.1 * ppy, 0); g.fillText(n[1], 1.1 * ppy, 0); g.restore();
+    }
+  }
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 16;
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(120, FIELD_W), new THREE.MeshStandardMaterial({ map: t, roughness: 1 }));
+  m.position.set(60, FIELD_W / 2, 0); m.receiveShadow = true;
+  return m;
+}
+function stripe(x, colour) {
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(0.35, FIELD_W), new THREE.MeshBasicMaterial({ color: colour, transparent: true, opacity: .85 }));
+  m.position.set(x, FIELD_W / 2, 0.02); return m;
+}
+
+// ------------------------------------------------------------ the ball
+function football() {
+  const c = document.createElement("canvas"); c.width = 256; c.height = 128;
+  const g = c.getContext("2d"); g.fillStyle = "#7a4222"; g.fillRect(0, 0, 256, 128);
+  g.fillStyle = "#f4efe6"; g.fillRect(58, 42, 12, 44); for (let y = 46; y < 84; y += 7) g.fillRect(52, y, 24, 3);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+  const geo = new THREE.SphereGeometry(1, 28, 20), p = geo.attributes.position;
+  for (let i = 0; i < p.count; i++) {                                     // pointed ends, not an egg
+    const x = p.getX(i), y = p.getY(i), z = p.getZ(i), r = Math.hypot(x, z) || 1, w = 1 - y * y;
+    p.setXYZ(i, x / r * w, y, z / r * w);
+  }
+  geo.computeVertexNormals(); geo.scale(0.093, 0.153, 0.093);             // 11 by 6.7 inches, in yards
+  const m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: t, roughness: .5 }));
+  m.castShadow = true; return m;
+}
+
+// ------------------------------------------------------------ build
+const data = await bodies();
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.prepend(renderer.domElement);
+const scene = new THREE.Scene(); scene.background = new THREE.Color(0x0b0f0d); scene.fog = new THREE.Fog(0x0b0f0d, 170, 420);
+THREE.Object3D.DEFAULT_UP.set(0, 0, 1);
+const cam = new THREE.PerspectiveCamera(32, innerWidth / innerHeight, 1, 900); cam.up.set(0, 0, 1);
+const ctl = new OrbitControls(cam, renderer.domElement);
+ctl.enableDamping = true; ctl.maxPolarAngle = Math.PI / 2 - 0.01; ctl.minDistance = 3; ctl.maxDistance = 260;
+scene.add(new THREE.HemisphereLight(0xdfe9f5, 0x34523b, 1.5));
+const sun = new THREE.DirectionalLight(0xfff3e0, 2.6); sun.position.set(40, -30, 90); sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048); Object.assign(sun.shadow.camera, { left: -45, right: 45, top: 45, bottom: -45, near: 10, far: 220 });
+sun.shadow.bias = -0.0004; scene.add(sun, sun.target);
+scene.add(turf());
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(900, 700), new THREE.MeshStandardMaterial({ color: 0x141c17, roughness: 1 }));
+ground.position.set(60, FIELD_W / 2, -0.05); scene.add(ground);
+if (S.los != null) scene.add(stripe(S.los, 0x3f8cff));
+if (S.first_down != null) scene.add(stripe(S.first_down, 0xffd400));
+
+const faces = new Uint32Array(S.faces);
+let off = 0;
+const players = S.tracks.map(k => {
+  const n = k.frames.length, v = data.subarray(off, off + n * nv * 3); off += n * nv * 3;
+  for (let i = nv * 3; i < v.length; i++) v[i] += v[i - nv * 3];        // deltas over time -> thousandths of a yard
+  const pos = new THREE.BufferAttribute(new Float32Array(nv * 3), 3); pos.setUsage(THREE.DynamicDrawUsage);
+  const g = new THREE.BufferGeometry(); g.setAttribute("position", pos); g.setIndex(new THREE.BufferAttribute(faces, 1));
+  const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color: TEAM[k.team], roughness: .55, metalness: .05, side: THREE.DoubleSide }));
+  m.castShadow = true; m.frustumCulled = false; scene.add(m);
+  const ix = new Map(k.frames.map((f, i) => [f, i]));
+  return { ...k, v, pos, m, ix };
+});
+const star = players.find(p => p.name), named = players.filter(p => p.name);
+for (const p of named) { p.tag = document.createElement("div"); p.tag.className = "tag"; p.tag.textContent = p.name; p.tag.hidden = true; document.body.append(p.tag); }
+const B = S.ball, ball = B ? football() : null, ballAt = new THREE.Vector3(), UP = new THREE.Vector3(0, 1, 0), lean = new THREE.Vector3();
+let path = null, pathOn = true;
+if (B) {
+  scene.add(ball);
+  const n = B.catch - B.release + 1, pts = [];
+  for (let i = 0; i < n; i++) { const j = (B.release - S.first + i) * 3; pts.push(new THREE.Vector3(B.pos[j], B.pos[j + 1], B.pos[j + 2])); }
+  path = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), (n - 1) * 3, 0.035, 6), new THREE.MeshBasicMaterial({ color: 0xffe066, transparent: true, opacity: .75 }));
+  path.visible = false; scene.add(path);
+}
+const ring = new THREE.Mesh(new THREE.RingGeometry(0.9, 1.15, 48), new THREE.MeshBasicMaterial({ color: 0xffe066, transparent: true, opacity: .9, side: THREE.DoubleSide }));
+ring.position.z = 0.03; ring.visible = false; scene.add(ring);
+
+// ------------------------------------------------------------ the clock
+const F0 = S.first, F1 = S.last, Tk = $("t");
+Tk.max = F1 - F0;
+let t = 0, playing = false, speed = 1, last = performance.now(), hidden = [false, false], hideAll = false;
+const centre = new THREE.Vector3(), starAt = new THREE.Vector3(), FADE = 8;
+for (const p of named) p.at = new THREE.Vector3();
+
+function at(p, f) {                                                       // root and index for a whole frame
+  const i = p.ix.get(f); return i === undefined ? null : i;
+}
+function draw() {
+  const f = F0 + Math.floor(t), w = t - Math.floor(t);
+  let n = 0, cx = 0, cy = 0; ring.visible = false;
+  for (const p of players) {
+    const a = at(p, f), b = at(p, f + 1) ?? a;
+    const show = a !== null && !hideAll && !hidden[p.team];
+    p.m.visible = show;
+    if (p.tag) p.show = show;
+    if (a === null) continue;
+    const r = p.root, x = r[a * 3] + (r[b * 3] - r[a * 3]) * w, y = r[a * 3 + 1] + (r[b * 3 + 1] - r[a * 3 + 1]) * w, z = r[a * 3 + 2] + (r[b * 3 + 2] - r[a * 3 + 2]) * w;
+    cx += x; cy += y; n++;
+    if (p === star) { starAt.set(x, y, 1); }
+    if (!show) continue;
+    const A = a * nv * 3, B = b * nv * 3, o = p.pos.array, v = p.v;
+    for (let i = 0; i < nv * 3; i++) o[i] = (v[A + i] + (v[B + i] - v[A + i]) * w) * 0.001;
+    p.pos.needsUpdate = true; p.m.geometry.computeVertexNormals(); p.m.position.set(x, y, z);
+    const now = f + w, seen = Math.min(p.frames[0] > F0 ? (now - p.frames[0]) / FADE : 1, p.frames[p.frames.length - 1] < F1 ? (p.frames[p.frames.length - 1] - now) / FADE : 1);
+    p.m.material.transparent = seen < 1; p.m.material.opacity = Math.max(0, Math.min(1, seen));   // a body leaving the picture, not popping out of it
+    if (p.tag) p.at.set(x, y, z + 1.05);
+    if (p === star) { ring.position.x = x; ring.position.y = y; ring.visible = true; }
+  }
+  if (B) {
+    const i = (Math.min(f, F1) - F0) * 3, j = (Math.min(f + 1, F1) - F0) * 3, P = B.pos, X = B.axis;
+    ballAt.set(P[i] + (P[j] - P[i]) * w, P[i + 1] + (P[j + 1] - P[i + 1]) * w, P[i + 2] + (P[j + 2] - P[i + 2]) * w);
+    lean.set(X[i] + (X[j] - X[i]) * w, X[i + 1] + (X[j + 1] - X[i + 1]) * w, X[i + 2] + (X[j + 2] - X[i + 2]) * w).normalize();
+    ball.position.copy(ballAt); ball.quaternion.setFromUnitVectors(UP, lean);
+    const now = f + w, n = B.catch - B.release;
+    path.visible = pathOn && now > B.release;
+    path.geometry.setDrawRange(0, Math.round(Math.min(1, (now - B.release) / n) * n * 3) * 36);
+    $("ballnote").textContent = now <= B.snap ? "Ball: down, measured from the film" : now < B.held ? "Ball: snapped, inferred" : now <= B.release ? `Ball: in ${B.names[0]}'s hands, inferred`
+      : now <= B.catch ? "Ball: in the air, measured from the film" : `Ball: in ${B.names[1]}'s hands, inferred`;
+  }
+  if (n) { centre.set(cx / n, cy / n, 0); sun.target.position.copy(centre); sun.position.set(centre.x + 40, centre.y - 30, 90); }
+  const s = (F0 + t - S.snap) / S.fps;
+  $("clock").textContent = `${s < 0 ? "before snap" : "snap"} ${s >= 0 ? "+" : "−"}${Math.abs(s).toFixed(1)} s`;
+  Tk.value = t;
+}
+
+// ------------------------------------------------------------ views
+const views = {
+  "Film camera": () => ({ p: new THREE.Vector3(...S.camera), l: centre.clone(), fov: 9 }),
+  "Behind the offense": () => ({ p: new THREE.Vector3(centre.x - S.attack * 26, centre.y, 9), l: new THREE.Vector3(centre.x + S.attack * 6, centre.y, 1), fov: 32 }),
+  "End zone": () => ({ p: new THREE.Vector3(S.attack > 0 ? 165 : -45, FIELD_W / 2, 38), l: centre.clone(), fov: 22 }),
+  "Overhead": () => ({ p: new THREE.Vector3(centre.x, centre.y - 1, 92), l: centre.clone(), fov: 32 }),
+  "Field level": () => ({ p: new THREE.Vector3(centre.x - S.attack * 4, -4, 1.9), l: centre.clone().setZ(1), fov: 32 }),
+};
+if (star) views[`Follow ${star.name}`] = () => ({ p: new THREE.Vector3(starAt.x - S.attack * 11, starAt.y - 7, 6), l: starAt.clone(), fov: 34, follow: true });
+if (B) views["Follow the ball"] = () => ({ p: new THREE.Vector3(ballAt.x - S.attack * 8, ballAt.y - 8, Math.max(4, ballAt.z + 3)), l: ballAt.clone(), fov: 30, follow: true });
+let fly = null, follow = null;
+function go(name) {
+  const v = views[name](); follow = v.follow ? name : null;
+  fly = { p0: cam.position.clone(), l0: ctl.target.clone(), fov0: cam.fov, ...v, t: 0 };
+  for (const b of $("views").querySelectorAll("button[data-view]")) b.setAttribute("aria-pressed", b.dataset.view === name);
+}
+function button(parent, label, fn, cls) { const b = document.createElement("button"); b.textContent = label; b.onclick = fn; if (cls) b.dataset[cls] = label; parent.append(b); return b; }
+for (const name in views) button($("views"), name, () => go(name), "view");
+const h = document.createElement("h2"); h.textContent = "Show"; $("views").append(h);
+S.teams.forEach((name, i) => { const b = button($("views"), name, () => { hidden[i] = !hidden[i]; b.setAttribute("aria-pressed", !hidden[i]); draw(); }); b.setAttribute("aria-pressed", true); });
+const empty = button($("views"), "Empty field", () => { hideAll = !hideAll; empty.setAttribute("aria-pressed", hideAll); draw(); });
+empty.setAttribute("aria-pressed", false);
+if (B) { const b = button($("views"), "Ball path", () => { pathOn = !pathOn; b.setAttribute("aria-pressed", pathOn); draw(); }); b.setAttribute("aria-pressed", true); }
+for (const [lab, v] of [["¼×", .25], ["½×", .5], ["1×", 1]]) {
+  const b = button($("speed"), lab, () => { speed = v; for (const c of $("speed").children) c.setAttribute("aria-pressed", c === b); });
+  b.setAttribute("aria-pressed", v === 1);
+}
+function toggle() { playing = !playing; if (playing && t >= F1 - F0) t = 0; $("play").textContent = playing ? "Pause" : "Play"; last = performance.now(); }
+$("play").onclick = toggle;
+Tk.oninput = () => { t = +Tk.value; playing = false; $("play").textContent = "Play"; draw(); };
+addEventListener("keydown", e => {
+  if (e.key === " ") { e.preventDefault(); toggle(); }
+  if (e.key === "f") $("fps").hidden = !$("fps").hidden;
+  if (e.key === "ArrowRight" || e.key === "ArrowLeft") { e.preventDefault(); playing = false; $("play").textContent = "Play"; t = Math.max(0, Math.min(F1 - F0, Math.round(t) + (e.key === "ArrowRight" ? 1 : -1))); draw(); }
+});
+addEventListener("resize", () => { cam.aspect = innerWidth / innerHeight; cam.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
+ctl.addEventListener("start", () => { follow = null; fly = null; });
+
+let count = 0, since = performance.now();
+function loop(now) {
+  const dt = Math.min((now - last) / 1000, .1); last = now;
+  if (++count === 30) { $("fps").textContent = `${(30000 / (now - since)).toFixed(0)} fps`; count = 0; since = now; }
+  if (playing) { t += dt * S.fps * speed; if (t >= F1 - F0) { t = F1 - F0; toggle(); } draw(); }
+  if (fly) {
+    fly.t = Math.min(fly.t + dt / .9, 1); const e = fly.t * fly.t * (3 - 2 * fly.t);
+    const v = follow ? views[follow]() : fly;
+    cam.position.lerpVectors(fly.p0, v.p, e); ctl.target.lerpVectors(fly.l0, v.l, e);
+    cam.fov = fly.fov0 + (fly.fov - fly.fov0) * e; cam.updateProjectionMatrix();
+    if (fly.t === 1) fly = null;
+  } else if (follow) { const v = views[follow](); cam.position.lerp(v.p, .12); ctl.target.lerp(v.l, .12); }
+  ctl.update(); renderer.render(scene, cam);
+  for (const p of named) {
+    p.tag.hidden = !p.show; if (!p.show) continue;
+    const q = p.at.clone().project(cam);
+    p.tag.style.left = `${(q.x + 1) / 2 * innerWidth}px`; p.tag.style.top = `${(1 - q.y) / 2 * innerHeight}px`;
+  }
+  requestAnimationFrame(loop);
+}
+
+$("title").textContent = S.title; $("note").textContent = S.note; document.title = S.title;
+t = Math.max(0, Math.min(F1 - F0, S.start ?? 0)); draw();
+const q = new URLSearchParams(location.search);
+if (q.has("t")) { t = +q.get("t"); draw(); }
+const first = q.get("view") || "Behind the offense", now0 = views[first]();
+cam.position.copy(now0.p); ctl.target.copy(now0.l); cam.fov = now0.fov; cam.updateProjectionMatrix();
+if (q.has("cam")) { const c = q.get("cam").split(",").map(Number); cam.position.set(c[0], c[1], c[2]); ctl.target.set(c[3], c[4], c[5]); }
+for (const b of $("views").querySelectorAll("button[data-view]")) b.setAttribute("aria-pressed", b.dataset.view === first);
+$("load").remove(); last = performance.now(); requestAnimationFrame(loop);
+window.READY = true;
+</script>
+</body>
+</html>

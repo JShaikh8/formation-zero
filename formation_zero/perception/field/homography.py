@@ -228,8 +228,8 @@ def camera(h: np.ndarray, shape: tuple[int, int]) -> dict | None:
 
     h = K [r1 r2 t]: the focal length comes from |K^-1 h1| = |K^-1 h2| (well conditioned when the
     camera looks across the field; r1 . r2 = 0 is not, there), and "orth" is then the angle between
-    r1 and r2, 90 for a true rotation. Returns {"f": px, "orth": deg, "C": camera centre (field yd;
-    z up)} or None when no real focal length fits.
+    r1 and r2, 90 for a true rotation. Returns {"f": px, "orth": deg, "R": field -> camera rotation,
+    "C": camera centre (field yd; z up)} or None when no real focal length fits.
     """
     t = np.array([[1.0, 0, -shape[1] / 2], [0, 1, -shape[0] / 2], [0, 0, 1]])
     hc = t @ h
@@ -249,7 +249,7 @@ def camera(h: np.ndarray, shape: tuple[int, int]) -> dict | None:
     if tr[2] < 0:                           # the field is in front of the camera
         r1, r2, tr = -r1, -r2, -tr
     r = np.column_stack([r1, r2, np.cross(r1, r2)])
-    return {"f": f, "orth": float(np.degrees(np.arccos(np.clip(r1 @ r2, -1, 1)))), "C": -r.T @ tr}
+    return {"f": f, "orth": float(np.degrees(np.arccos(np.clip(r1 @ r2, -1, 1)))), "R": r, "C": -r.T @ tr}
 
 
 def plausible(cam: dict | None, prior: tuple[float, float] | None = None, angle: str = "sideline",
