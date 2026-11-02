@@ -533,7 +533,8 @@
         {
           "key": "GRD-59",
           "title": "SAM 3D Body on keyframes",
-          "status": "todo"
+          "status": "todo",
+          "note": "First proof 2026-11-01: every player on every frame of Chargers-Chiefs play 40 (best-tracked take, so a best case), real lens, 1.45 s a body on the M4, about 7 h a game at 6 poses a play. Steady before the snap; in play 3.3% of steps flip, mostly on small players, and 65 of 2,372 bodies come out giants. Needs filtering over time, a giant check, and placing by feet in yards at a real height. scripts/spikes/sam3d_body/play.py."
         },
         {
           "key": "GRD-95",

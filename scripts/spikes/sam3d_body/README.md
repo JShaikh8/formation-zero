@@ -76,3 +76,20 @@ Record the outcome on GRD-95 and, if it changes the plan, as a decision next to 
   lenses, so `--hfov` is there to check whether the lens assumption changes the bodies.
 - The turf filter drops players standing on painted end zones.
 - The labelled takes cover the first 32 minutes of the film only.
+
+## One whole play
+
+`play.py` runs the same model down a tracked take on the 1080p film, with the real lens read from the
+painted lines. Play 40 of Chargers-Chiefs, 2026-11-01, the game's best-tracked take, so a best case:
+4,924 bodies on 226 frames in 1 h 58 min, 1.45 s a body.
+
+| | Before the snap | In play | After |
+|---|---|---|---|
+| Joints about the pelvis, median cm a frame | 1.6 | 7.0 | 2.9 |
+| Hip turn past 60 degrees in one frame | 0 of 1,298 | 79 of 2,368 | 2 of 1,232 |
+| Giants (under 0.8 of the track's running distance) | 1 of 1,320 | 65 of 2,372 | 3 of 1,232 |
+
+Flips follow size: 0.2% of steps on boxes over 110 px, 10.7% under 55 px. Bones hold within 4% in a
+track, but thigh 0.38 m and shin 0.35 m are short, and bodies sit at 0.81 of the true distance from the
+camera. Stand them on the field by their feet in yards, not by the model's distance. Fits hold vertices
+and joints only; pose-space filtering needs the pose parameters saved too.

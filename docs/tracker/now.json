@@ -210,6 +210,15 @@
     {
       "text": "NFL shield tracked as a player on dozens of Arrowhead plays. The approved labels are clean, so the model has simply never seen it as background; it needs training on it. Until then a track that wide joins nothing",
       "status": "todo"
+    },
+    {
+      "text": "SAM 3D Body on every player on every frame of one play (Chargers-Chiefs play 40, the game's best-tracked): 4,924 bodies in 1 h 58 min on the Air, 1.45 s each. On the players by eye; steady before the snap; in play 3.3% of steps flip and 65 bodies come out giants. Video on the drive (bodies/p040.sideline.mp4)",
+      "status": "done",
+      "at": "2026-11-01 20:15"
+    },
+    {
+      "text": "Before bodies on a whole game: filter over time to take out flips, catch giants, stand bodies on the field by their feet in yards at a real height (they come out about a fifth too small)",
+      "status": "todo"
     }
   ]
 }
